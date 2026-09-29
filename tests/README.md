@@ -18,7 +18,7 @@ against any teammate's branch.
 | `security/` | Secrets, committed artifacts, `.gitignore`, air-gap (no external calls), dependency audit, Tauri hardening |
 | `frontend/` | Desktop UI build/lint smoke tests and the manual desktop smoke checklist |
 | `fixtures/` | Malicious ZIP generator (the vulnerable demo repo lives on the `tests/pushpam` branch) |
-| `reports/` | `QA+Security_fixes.md` (living fix list) and `daily/` (one report per day, with that day's raw results in a folder of the same date) |
+| `reports/` | Daily QA reports and the fix list (only on the `qa/pushpam` branch) |
 
 ## Setup
 
@@ -52,12 +52,12 @@ Example: `PQC_INGESTION_ROOT=.worktrees/hima PQC_ANALYSIS_ROOT=.worktrees/harshi
 ## Reading results
 
 - **PASS** — behaviour matches the contract.
-- **FAIL** — a real product defect; see the findings list in `reports/`.
+- **FAIL** — a real product defect; see `tests/reports/QA+Security_fixes.md` on the `qa/pushpam` branch.
 - **SKIPPED with `BLOCKED: …`** — the feature or service isn't delivered yet. Reported as *Blocked*, not as a failure.
 - **XFAIL with `FINDING: …`** — a known, accepted Day 1 gap (e.g. auth not enforced yet) that stays visible until fixed.
 
 ## Rules
 
-- The intentionally insecure demo repo is kept off this branch, on `tests/pushpam`. All secrets in it are fake. Never deploy it, run it, or merge that branch.
+- The intentionally insecure demo repo is not in this folder; it lives on the `tests/pushpam` branch. All secrets in it are fake. Never deploy it, run it, or merge that branch.
 - Generated ZIPs are built at test time by `fixtures/make_zips.py` and are never committed.
 - Record evidence (command, output, branch, commit) for every result. "Works on my machine" is not a result.
