@@ -34,3 +34,16 @@ def test_bad_config_is_detected(tmp_path):
     assert tc.check_connect_src(BAD)
     assert tc.check_no_wildcards(BAD, d) and tc.check_shell_open(BAD, d) and tc.check_fs_scope(BAD, d)
     assert tc.check_devtools_off(BAD, d) and tc.check_updater(BAD, d)
+
+
+def test_new_checks_good_and_bad(tmp_path):
+    good = {"identifier": "com.silicofeller.pqc-platform", "app": {"security": {"csp": "default-src 'self'; script-src 'self'"},
+            "windows": [{"title": "x"}]}, "build": {"devUrl": "http://localhost:5173"}}
+    bad = {"identifier": "com.tauri.dev", "app": {"withGlobalTauri": True, "windows": [{"url": "https://example.com"}],
+           "security": {"dangerousDisableAssetCspModification": True, "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'"}},
+           "build": {"devUrl": "https://evil.example"}}
+    d = _dir(tmp_path, {"windows": ["main"], "permissions": ["core:default", {"identifier": "http:default", "allow": [{"url": "https://api.example.com/*"}]}, "opener:default"]})
+    assert not tc.check_identifier(good) and not tc.check_dangerous_flags(good) and not tc.check_windows_local_only(good)
+    assert not tc.check_script_src_strict(good) and not tc.check_network_permissions(good, tmp_path / "nonexistent")
+    assert tc.check_identifier(bad) and len(tc.check_dangerous_flags(bad)) == 2 and len(tc.check_windows_local_only(bad)) == 2
+    assert tc.check_script_src_strict(bad) and len(tc.check_network_permissions(bad, d)) == 2

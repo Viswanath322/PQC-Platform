@@ -67,7 +67,7 @@ def test_cors_does_not_allow_arbitrary_origin(api):
     r = api.get(f"{V1}/projects", headers={"Origin": "http://evil.example"})
     acao = r.headers.get("access-control-allow-origin")
     assert acao not in ("*", "http://evil.example"), f"ACAO={acao}"
-    assert r.headers.get("access-control-allow-credentials", "").lower() != "true" or acao not in (None, "*")
+    # Allow-Credentials without an Allow-Origin is inert (browsers ignore it), so only ACAO matters.
 
 
 def test_cors_preflight_from_evil_origin_denied(api):
@@ -76,13 +76,35 @@ def test_cors_preflight_from_evil_origin_denied(api):
     assert r.headers.get("access-control-allow-origin") not in ("*", "http://evil.example")
 
 
-def test_cors_allows_tauri_origin(api):
-    """The desktop UI (Tauri webview) must be able to call the API."""
-    for origin in ("tauri://localhost", "http://tauri.localhost", "http://localhost:1420"):
-        r = api.options(f"{V1}/projects", headers={"Origin": origin, "Access-Control-Request-Method": "GET"})
-        if r.headers.get("access-control-allow-origin") == origin:
-            return
-    pytest.fail("no Tauri/dev origin is allowed by CORS: the desktop UI cannot call the API from its webview")
+def _preflight(api, origin, path="/projects", method="POST"):
+    return api.options(f"{V1}{path}", headers={"Origin": origin, "Access-Control-Request-Method": method,
+                                               "Access-Control-Request-Headers": "authorization,content-type"})
+
+
+@pytest.mark.parametrize("origin", [
+    "tauri://localhost",
+    "http://tauri.localhost",
+    "http://localhost:5173",   # devUrl in desktop/src-tauri/tauri.conf.json
+    pytest.param("http://localhost:1420", marks=pytest.mark.xfail(
+        reason="INFO: 1420 is the Tauri template default, but this repo's devUrl is 5173", strict=False)),
+])
+def test_cors_allows_desktop_origin(api, origin):
+    """The desktop UI (Tauri webview or its dev server) must be able to call the API."""
+    r = _preflight(api, origin)
+    assert r.headers.get("access-control-allow-origin") == origin, \
+        f"{origin} not allowed (status {r.status_code}, headers {dict(r.headers)})"
+
+
+@pytest.mark.parametrize("origin", ["http://evil.example", "null", "http://localhost.evil.example",
+                                    "https://tauri.localhost.evil.example", "tauri://localhost.evil.example"])
+def test_cors_preflight_rejects_foreign_origin(api, origin):
+    r = _preflight(api, origin)
+    assert r.headers.get("access-control-allow-origin") not in ("*", origin)
+
+
+def test_cors_no_wildcard_with_credentials(api):
+    r = _preflight(api, "tauri://localhost")
+    assert r.headers.get("access-control-allow-origin") != "*"
 
 
 def test_responses_contain_no_absolute_paths(api, openapi, scan):

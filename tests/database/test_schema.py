@@ -5,6 +5,8 @@ import uuid
 import pymysql
 import pytest
 
+from dbenv import blocked
+
 TABLES = ["organizations", "users", "projects", "scans", "scan_files", "findings"]
 REQUIRED_COLS = {
     "organizations": {"id", "name"},
@@ -243,31 +245,70 @@ def test_utf8mb4_roundtrip(run, q, org):
         run("DELETE FROM projects WHERE id=%s", (pid,))
 
 
+# ---- UUID id contract ------------------------------------------------------------------------
+
+ID_COLUMNS = [("organizations", "id"), ("users", "id"), ("projects", "id"), ("scans", "id"),
+              ("scan_files", "id"), ("findings", "id"), ("users", "organization_id"),
+              ("projects", "organization_id"), ("scans", "project_id"), ("scan_files", "scan_id"),
+              ("findings", "scan_id")]
+
+
+@pytest.mark.parametrize("table,col", ID_COLUMNS)
+def test_id_columns_are_36_char_strings(q, table, col):
+    """Unified id standard: every id / FK column is a string wide enough for a UUID (36 chars), never an integer."""
+    r = q("SELECT DATA_TYPE t, CHARACTER_MAXIMUM_LENGTH n FROM information_schema.columns "
+          "WHERE table_schema=DATABASE() AND table_name=%s AND column_name=%s", (table, col))[0]
+    assert r["t"] in ("char", "varchar"), f"{table}.{col} is {r['t']}, expected a string type"
+    assert r["n"] >= 36, f"{table}.{col} is {r['t']}({r['n']}), too short for a UUID"
+
+
 # ---- seed data -----------------------------------------------------------------------------
 
+SEEDED_TABLES = ("organizations", "users", "projects", "scans", "findings")
+
+
 def test_seed_data_present(q):
-    assert q("SELECT COUNT(*) n FROM organizations")[0]["n"] >= 1
-    assert q("SELECT COUNT(*) n FROM users")[0]["n"] >= 1
+    """The documented dev seed must load completely on first boot (org, admin user, demo project, QUEUED scan, findings)."""
+    counts = {t: q(f"SELECT COUNT(*) n FROM {t}")[0]["n"] for t in SEEDED_TABLES}
+    empty = [t for t, n in counts.items() if n < 1]
+    assert not empty, f"FINDING: seed did not load, empty tables {empty} (counts {counts}); check `docker logs` for a seed.sql error"
     assert q("SELECT COUNT(*) n FROM projects WHERE name='Demo Banking Application'")[0]["n"] >= 1
     assert q("SELECT COUNT(*) n FROM scans WHERE status='QUEUED'")[0]["n"] >= 1
 
 
 def test_seed_users_are_clearly_dev_only(q):
-    for r in q("SELECT email FROM users WHERE id LIKE 'usr-%'"):
+    rows = q("SELECT email FROM users WHERE role='admin' AND email NOT LIKE 'qa-%%'")
+    if not rows:
+        blocked("no seeded admin user found (see test_seed_data_present)")
+    for r in rows:
         assert r["email"].endswith((".local", ".test", ".example")), f"seed user {r['email']} looks like a real domain"
 
 
 def test_seed_password_hash_is_real_bcrypt(q):
     """A bcrypt hash is `$2b$NN$` + 53 chars of [./A-Za-z0-9] (60 total). Placeholders fail this."""
     rx = re.compile(r"^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$")
-    bad = [(r["email"], r["password_hash"], len(r["password_hash"]))
-           for r in q("SELECT email,password_hash FROM users WHERE id LIKE 'usr-%'") if not rx.match(r["password_hash"])]
+    rows = q("SELECT email,password_hash FROM users WHERE role='admin' AND email NOT LIKE 'qa-%%'")
+    if not rows:
+        blocked("no seeded admin user found (see test_seed_data_present)")
+    bad = [(r["email"], r["password_hash"], len(r["password_hash"])) for r in rows if not rx.match(r["password_hash"])]
     assert not bad, f"seed password_hash is not a valid bcrypt hash: {bad}"
 
 
+UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+
+
 def test_seed_ids_are_uuid_format(q):
-    """Schema ids default to UUID(); seed uses human-readable ids (informational check)."""
-    ids = [r["id"] for r in q("SELECT id FROM organizations WHERE id LIKE 'org-%'")]
-    bad = [i for i in ids if not re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", i)]
+    """Schema ids default to UUID(); seed rows should follow the same standard in every table."""
+    bad = []
+    for t in SEEDED_TABLES:
+        bad += [(t, r["id"]) for r in q(f"SELECT id FROM {t}") if not UUID_RE.match(r["id"])]
     if bad:
-        pytest.xfail(f"FINDING: seed ids are not UUIDs ({bad}); mixed id formats in one table")
+        pytest.xfail(f"FINDING: seed ids are not UUIDs ({bad[:6]}); mixed id formats in one table")
+
+
+def test_only_one_default_organization(q):
+    """Two identical 'Default Organization' rows (one with id '1') exist only to satisfy a hardcoded backend value."""
+    rows = q("SELECT id FROM organizations WHERE name LIKE 'Default Organization%%'")
+    if len(rows) > 1:
+        pytest.xfail(f"FINDING: duplicate default organizations {[r['id'] for r in rows]}; "
+                     "the backend should reference one org, not a compatibility copy")

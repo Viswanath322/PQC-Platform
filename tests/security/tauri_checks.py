@@ -183,3 +183,78 @@ def check_updater(conf, app_dir: Path):
     if cargo.is_file() and "tauri-plugin-updater" in cargo.read_text() and not up:
         bad.append("Cargo.toml depends on tauri-plugin-updater but no local endpoint is configured")
     return bad
+
+
+# ---------------------------------------------------------------------------------------------
+# Additional Tauri v2 checks (retest): identifier, dangerous flags, remote windows, script-src, http/opener scopes
+# ---------------------------------------------------------------------------------------------
+DEFAULT_IDENTIFIERS = {"com.tauri.dev", "com.tauri.app", "com.example.app"}
+
+
+def check_identifier(conf):
+    ident = conf.get("identifier") or ""
+    if not ident:
+        return ["identifier missing"]
+    if ident in DEFAULT_IDENTIFIERS or ident.startswith(("com.tauri.", "com.example.")):
+        return [f"identifier is the scaffold default '{ident}' (tauri build refuses it; use a product-specific reverse-DNS id)"]
+    return []
+
+
+def check_dangerous_flags(conf):
+    """Security keys that weaken the WebView sandbox must be absent / false."""
+    sec = security(conf)
+    bad = []
+    for key in ("dangerousDisableAssetCspModification", "dangerousRemoteDomainIpcAccess", "dangerousUseHttpScheme"):
+        if sec.get(key):
+            bad.append(f"app.security.{key} = {sec[key]!r}")
+    if (conf.get("app", {}) or {}).get("withGlobalTauri") is True:
+        bad.append("app.withGlobalTauri = true (exposes window.__TAURI__ to every script; use the npm API instead)")
+    if sec.get("freezePrototype") is False:
+        bad.append("app.security.freezePrototype = false")
+    return bad
+
+
+def check_windows_local_only(conf):
+    bad = []
+    for i, w in enumerate((conf.get("app", {}) or {}).get("windows", []) or []):
+        url = w.get("url") if isinstance(w, dict) else None
+        if isinstance(url, str) and re.match(r"^(?:https?|wss?)://", url) and not LOCAL_HOST_RE.match(url):
+            bad.append(f"app.windows[{i}].url loads remote content: {url}")
+    dev = (conf.get("build", {}) or {}).get("devUrl")
+    if isinstance(dev, str) and re.match(r"^https?://", dev) and not LOCAL_HOST_RE.match(dev):
+        bad.append(f"build.devUrl is remote: {dev}")
+    return bad
+
+
+def check_script_src_strict(conf):
+    """script-src (or default-src when absent) must be self-only: no 'unsafe-inline' scripts."""
+    d = csp_directives(conf)
+    if not d:
+        return []  # reported by check_csp_set
+    src = d.get("script-src") or d.get("default-src") or []
+    bad = []
+    if "'unsafe-inline'" in src:
+        bad.append("script-src allows 'unsafe-inline'")
+    if not (d.get("script-src") or d.get("default-src")):
+        bad.append("neither script-src nor default-src is set")
+    if "object-src" not in d and "default-src" not in d:
+        bad.append("object-src not restricted")
+    return bad
+
+
+def check_network_permissions(conf, app_dir: Path):
+    """http:/opener: plugin permissions must be absent or carry an explicit local-only scope."""
+    bad = []
+    for f, p in _all_permissions(app_dir):
+        name = p if isinstance(p, str) else (p.get("identifier", "") if isinstance(p, dict) else "")
+        if name.startswith(("opener:", "http:", "websocket:", "process:", "os:allow-hostname")):
+            scope = p.get("allow") if isinstance(p, dict) else None
+            urls = [str(s.get("url", s.get("path", ""))) if isinstance(s, dict) else str(s) for s in scope or []]
+            if not urls:
+                bad.append(f"{f}: '{name}' without an explicit scope")
+            for u in urls:
+                if re.match(r"^(?:https?|wss?)://", u) and not LOCAL_HOST_RE.match(u):
+                    bad.append(f"{f}: '{name}' scope allows remote URL {u}")
+                if u in ("*", "http://*", "https://*", "http://*/*", "https://*/*"):
+                    bad.append(f"{f}: '{name}' scope is a wildcard {u}")
+    return bad

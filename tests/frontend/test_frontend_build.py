@@ -12,6 +12,8 @@ from pathlib import Path
 import pytest
 
 DAY1_PAGES = ["Dashboard", "Projects", "Scans", "Findings", "PQC", "Reports"]
+# strings inside third-party libraries that are only printed in warnings / comments, never fetched
+INERT_LIB_URLS = ("https://react.dev/errors", "https://reactjs.org/docs/error", "https://reactrouter.com/", "https://github.com/ungap/")
 FETCH_RE = re.compile(r"\b(?:fetch|axios(?:\.\w+)?|XMLHttpRequest)\b\s*\(?")
 
 
@@ -127,6 +129,6 @@ def test_built_dist_has_no_external_urls(installed):
         if p.suffix in (".html", ".css", ".js", ".mjs", ".json", ".svg"):
             for ln, u, line in find_external_urls(p.read_text(errors="replace")):
                 entry = f"{p.relative_to(dist)}:{ln} {u[:100]}"
-                (info if (u in mock_urls or u.startswith(("https://react.dev/errors", "https://reactjs.org/docs/error"))) else hits).append(entry)
+                (info if (u in mock_urls or u.startswith(INERT_LIB_URLS)) else hits).append(entry)
     print("INFO inert URLs in bundle (React error decoder / mock display data):", sorted(set(info)))
     assert not hits, "external URLs in built bundle (loaded at runtime):\n" + "\n".join(sorted(set(hits))[:40])

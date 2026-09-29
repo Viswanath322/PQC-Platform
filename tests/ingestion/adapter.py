@@ -1,22 +1,19 @@
 """Adapter between the ingestion contract tests and Hima Bindu's `ingestion/` module.
 
-The real module is NOT delivered yet, so every assumption about its API lives
-HERE. When it lands, edit only this file (names in ASSUMED_API below, plus the
-summary-key helpers at the bottom).
+Every assumption about the module API lives HERE. Mapped on Hima's branch
+`backend/hima-ingestion` @67e7f11 (run with PQC_INGESTION_ROOT=.worktrees/hima).
 
-Assumed layout (from the team guide), repo-root package `ingestion/`:
-    ingestion/validator.py         validate_zip(zip_path)            -> raises on invalid ZIP / returns info
-    ingestion/extractor.py         extract_zip(zip_path, dest_dir)   -> summary dict (see below)
-    ingestion/file_filter.py       is_excluded(rel_path)             -> bool
-    ingestion/classifier.py        classify_file(rel_path)           -> str  source|config|manifest|docs|data|binary|generated
-    ingestion/language_detector.py detect_language(rel_path)         -> str | None  ("python", "java", "javascript", ...)
-
-Assumed extract_zip behaviour:
-  * unsafe / invalid archives are REJECTED by raising an exception (any Exception subclass),
-    or by returning a dict with status in {"rejected","error","failed"} or a truthy "error" key;
-  * on success returns a JSON-serialisable dict with (all optional, read via helpers below):
-        "total_files": int, "files": [{"path": str, "language": str, "category": str}, ...],
-        "languages": {name: count}, "skipped"/"excluded": ...
+Real API (package `ingestion/`):
+    ingestion.summary.ingest_repository(archive, scan_dir) -> dict   validate + extract + summarise
+    ingestion.extractor.extract_zip_safely(archive, dest)  -> list[Path]
+    ingestion.validator.validate_zip(archive)              -> Path (raises InvalidArchiveError)
+    ingestion.file_filter.is_excluded(path)                -> bool
+    ingestion.classifier.classify_file(path)               -> source|config|manifest|docs|data|binary|generated
+    ingestion.language_detector.detect_language(path)      -> str | None
+    ingestion.scan_adapter.ingest_scan_upload(archive, scan_uuid, storage_root) -> dict (+ writes JSON)
+Rejection contract: raises ExtractionError or InvalidArchiveError (both ValueError subclasses).
+Summary keys: files_seen, files_included, files_excluded, file_type_counts, language_counts,
+              files=[{path, file_type, language, size_bytes}].
 """
 from __future__ import annotations
 
@@ -30,15 +27,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root
 
 from tests.conftest import blocked  # noqa: E402  (shared convention)
 
-NOT_DELIVERED = "ingestion module not delivered yet (Hima Bindu)"
+NOT_DELIVERED = "ingestion module not importable (set PQC_INGESTION_ROOT=.worktrees/hima, Hima Bindu)"
 
 # ---- the ONE place to change when the real API differs -----------------------
 ASSUMED_API = {
-    "extract": ("ingestion.extractor", "extract_zip"),
+    "extract": ("ingestion.summary", "ingest_repository"),
     "validate": ("ingestion.validator", "validate_zip"),
     "is_excluded": ("ingestion.file_filter", "is_excluded"),
     "classify": ("ingestion.classifier", "classify_file"),
     "language": ("ingestion.language_detector", "detect_language"),
+    "scan_upload": ("ingestion.scan_adapter", "ingest_scan_upload"),
 }
 # ------------------------------------------------------------------------------
 
@@ -78,6 +76,11 @@ class Outcome:
         """True if there was no crash-type exception."""
         return not isinstance(self.error, CRASH_TYPES)
 
+    @property
+    def deliberate(self) -> bool:
+        """True if the error is one of the module's own typed rejections (not a raw OSError etc.)."""
+        return type(self.error).__name__ in {"ExtractionError", "InvalidArchiveError"}
+
 
 def extract(zip_path: Path, dest_dir: Path) -> Outcome:
     fn = _fn("extract")
@@ -93,6 +96,14 @@ def extract(zip_path: Path, dest_dir: Path) -> Outcome:
     return Outcome(True, summary, None)
 
 
+def validate(zip_path: Path):
+    return _fn("validate")(str(zip_path))
+
+
+def scan_upload(zip_path: Path, scan_id: str, storage_root: Path):
+    return _fn("scan_upload")(str(zip_path), scan_id, str(storage_root))
+
+
 def detect_language(rel_path: str):
     return _fn("language")(rel_path)
 
@@ -105,14 +116,16 @@ def is_excluded(rel_path: str):
     return _fn("is_excluded")(rel_path)
 
 
-# ---- summary accessors (adjust to the real summary schema) -------------------
+# ---- summary accessors (Hima's schema) ----------------------------------------
 def summary_total_files(summary: dict) -> int | None:
-    for k in ("total_files", "file_count", "files_extracted", "count"):
-        if isinstance(summary.get(k), int):
-            return summary[k]
-    if isinstance(summary.get("files"), list):
-        return len(summary["files"])
-    return None
+    """Files INCLUDED in the inventory (excluded dirs are not counted)."""
+    if isinstance(summary.get("files_included"), int):
+        return summary["files_included"]
+    return len(summary["files"]) if isinstance(summary.get("files"), list) else None
+
+
+def summary_files_seen(summary: dict) -> int | None:
+    return summary.get("files_seen") if isinstance(summary.get("files_seen"), int) else None
 
 
 def summary_paths(summary: dict) -> list[str]:

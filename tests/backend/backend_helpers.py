@@ -4,24 +4,38 @@ Test modules do `from backend_helpers import *` to pick up the fixtures.
 """
 import io
 import os
+import sys
 import uuid
 import zipfile
+from pathlib import Path
 
 import pytest
 
-from conftest import require_endpoint  # tests/conftest.py
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root
+
+from tests.conftest import require_endpoint  # noqa: E402
 
 
 V1 = "/api/v1"
 ALLOWED_STATUSES = {"QUEUED", "INGESTING", "ANALYZING", "PROCESSING", "AI_ANALYSIS",
                     "COMPLETED", "FAILED", "CANCELLED"}
 UUID_RE = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+NIL_UUID = "00000000-0000-4000-8000-000000000000"
 # Optional: where the backend stores uploads (lets tests inspect the disk).
 UPLOAD_DIR = os.getenv("PQC_UPLOAD_DIR")
 
 
 def uniq(prefix="qa"):
     return f"{prefix}-{uuid.uuid4().hex[:10]}"
+
+
+def unknown_id_like(sample_id):
+    """An id that is well formed for this backend but does not exist.
+
+    Yesterday's branch used integer ids, the current one uses UUID strings; the tests must
+    not depend on which, so the shape is copied from a real project id.
+    """
+    return 999999999 if isinstance(sample_id, int) else NIL_UUID
 
 
 def zip_bytes(files=None) -> bytes:

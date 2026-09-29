@@ -95,3 +95,17 @@ def test_mysql_root_password_not_same_as_app_password(services):
         env = s.get("environment", {}) or {}
         if isinstance(env, dict) and env.get("MYSQL_ROOT_PASSWORD"):
             assert env["MYSQL_ROOT_PASSWORD"] != env.get("MYSQL_PASSWORD"), "root and app share the same password"
+
+
+def test_no_obsolete_version_key(compose):
+    """`version:` is obsolete in Compose v2; it prints a warning on every command."""
+    assert "version" not in compose, "FINDING: obsolete top-level `version:` key (Compose warns on every run)"
+
+
+@pytest.mark.security
+def test_redis_and_mysql_passwords_differ(services):
+    r = str([s.get("command", "") for s in services.values() if "redis" in str(s.get("image", ""))])
+    m = [s.get("environment", {}) for s in services.values() if "mysql" in str(s.get("image", ""))]
+    pw = (m[0] or {}).get("MYSQL_PASSWORD") if m else None
+    if pw and pw in r:
+        pytest.xfail("FINDING: Redis requirepass equals the MySQL password (one leaked value opens both)")

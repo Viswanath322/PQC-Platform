@@ -91,7 +91,8 @@ def test_tauri_config_has_no_remote_urls(scan_root):
     hits = []
     for r, text in _desktop_files(scan_root):
         if r.startswith("desktop/src-tauri/") and not r.endswith(".rs"):
-            hits += [f"{r}:{ln} {u}" for ln, u, _ in find_external_urls(text)]
+            hits += [f"{r}:{ln} {u}" for ln, u, line in find_external_urls(text)
+                     if not line.lstrip().startswith(("#", "//"))]  # comments (e.g. scaffold doc links) are not fetched
     assert not hits, "remote URLs in Tauri config:\n" + "\n".join(hits)
 
 

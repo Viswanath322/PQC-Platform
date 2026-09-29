@@ -12,8 +12,10 @@ from sec_helpers import (LOCK_FILES, is_allowlisted, list_files, read_text, repo
 
 pytestmark = pytest.mark.security
 
-PLACEHOLDERS = ("change_me_locally", "admin123", "changeme", "change_me", "your_password", "example")
+PLACEHOLDERS = ("change_me_locally", "admin123", "changeme", "change_me", "your_password", "example",
+                "replace-this", "replace_this", "replace-me", "development-only", "mock_jwt_")
 TEST_NOISE = {"Secret Keyword", "Basic Auth Credentials"}  # dummy values in test code
+MOCK_DATA_RE = re.compile(r"^desktop/src/data/[^/]*[mM]ock[^/]*\.(?:ts|tsx|json)$")
 DOC_EXAMPLE_KEYS = {"AKIAIOSFODNN7EXAMPLE"}  # AWS's own documentation example key
 
 PRIVATE_KEY_RE = re.compile(r"-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY(?: BLOCK)?-----")
@@ -78,7 +80,8 @@ def test_hardcoded_passwords(scan_root):
                     if not NON_LITERAL.match(m.group("val")) and (m.group("q") or not code)]
             vals += [m.group("val") for m in URL_CRED_RE.finditer(line) if not NON_LITERAL.match(m.group("val"))]
             for v in vals:
-                is_warn = _classify(v) == "placeholder" or r.startswith("tests/")  # test code: dummy values
+                # test code and UI mock-data files carry dummy values by design (mock data must be labelled: see frontend tests)
+                is_warn = _classify(v) == "placeholder" or r.startswith("tests/") or bool(MOCK_DATA_RE.search(r))
                 (warn if is_warn else real).append(f"{r}:{i} {snippet(line, 100)}")
     report_warnings(warn, "Dev placeholder credentials in code/config (not failures; must not reach a release)")
     assert not real, "possible hard-coded credentials:\n" + "\n".join(real)
@@ -115,7 +118,8 @@ def test_detect_secrets(scan_root):
             if any(k in line for k in DOC_EXAMPLE_KEYS):
                 continue
             entry = f"{rp}:{s.line_number} {s.type} | {snippet(line, 90)}"
-            is_warn = _classify(line) == "placeholder" or (rp.startswith("tests/") and s.type in TEST_NOISE)
+            is_warn = _classify(line) == "placeholder" or (rp.startswith("tests/") and s.type in TEST_NOISE) \
+                or bool(MOCK_DATA_RE.search(rp))
             (warn if is_warn else real).append(entry)
     report_warnings(warn, "detect-secrets hits that are dev placeholders")
     assert not real, "detect-secrets findings:\n" + "\n".join(real)

@@ -38,5 +38,7 @@ committed-artifact rules, the external-call scan and the dependency audit (`sec_
 7. **Devtools off in release** - no `devtools` cargo feature / `devtools: true`; devtools exposes state and lets users bypass UI controls.
 8. **Updater disabled or local** - an updater pointing at the internet is an outbound call and a supply-chain path.
 
+9. **Identifier / dangerous flags / local windows / strict script-src / scoped http+opener** (added at retest, Tauri v2 config shape: `identifier`, `app.security.*`, `app.windows[].url`, `capabilities/*.json`).
+
 ## Requirements
 `pip install -r tests/requirements.txt` (pytest, detect-secrets, pip-audit). `git`, and `npm` for the audit/frontend tests.

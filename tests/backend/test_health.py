@@ -1,5 +1,5 @@
 from backend_helpers import *  # noqa: F401,F403
-from conftest import blocked
+from tests.conftest import blocked
 
 
 def test_health_ok(api, openapi):

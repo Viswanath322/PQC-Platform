@@ -130,7 +130,7 @@ def test_upload_oversized_rejected_413(api, openapi):
         yield tail
 
     import httpx
-    from conftest import API_URL
+    from tests.conftest import API_URL
     try:
         r = httpx.post(API_URL + U, content=gen(), timeout=120,
                        headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})

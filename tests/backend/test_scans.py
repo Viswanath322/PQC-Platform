@@ -52,9 +52,9 @@ def test_create_scan_unknown_upload_404(api, openapi, project):
     assert r.status_code == 404
 
 
-def test_create_scan_unknown_project_404(api, openapi, upload):
+def test_create_scan_unknown_project_404(api, openapi, project, upload):
     require_endpoint(openapi, "post", S)
-    r = api.post(S, json={"project_id": 999999999, "upload_id": upload["upload_id"]})
+    r = api.post(S, json={"project_id": unknown_id_like(project["id"]), "upload_id": upload["upload_id"]})
     assert r.status_code == 404
 
 
@@ -110,9 +110,9 @@ def test_list_scans_and_filter_by_project(api, openapi, make_project, make_uploa
     assert {s1["id"], s2["id"]} <= allids
 
 
-def test_list_scans_filter_unknown_project_empty(api, openapi):
+def test_list_scans_filter_unknown_project_empty(api, openapi, project):
     require_endpoint(openapi, "get", S)
-    r = api.get(S, params={"project_id": 999999999})
+    r = api.get(S, params={"project_id": unknown_id_like(project["id"])})
     assert r.status_code == 200 and r.json() == []
 
 

@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from backend_helpers import *  # noqa: F401,F403
 
@@ -10,8 +12,21 @@ def test_create_project(api, openapi):
     r = api.post(P, json={"name": name, "description": "d"})
     assert r.status_code == 201, r.text
     b = r.json()
-    assert isinstance(b["id"], int) and b["name"] == name and b["description"] == "d"
+    assert isinstance(b["id"], (int, str)) and b["name"] == name and b["description"] == "d"
     assert b["created_at"]
+
+
+def test_project_id_is_uuid_string(api, openapi, project):
+    """Agreed contract (INT-01): ids are UUID strings, same as VARCHAR(36) in the MySQL schema."""
+    require_endpoint(openapi, "post", P)
+    assert isinstance(project["id"], str) and re.match(UUID_RE, project["id"].lower()), project["id"]
+
+
+def test_project_ids_are_unique_and_not_guessable(api, openapi, make_project):
+    require_endpoint(openapi, "post", P)
+    ids = [make_project()["id"] for _ in range(5)]
+    assert len(set(ids)) == 5
+    assert not all(isinstance(i, int) for i in ids), "sequential integer ids are enumerable"
 
 
 def test_create_project_without_description(api, openapi):
@@ -81,9 +96,9 @@ def test_get_project(api, openapi, project):
     assert r.status_code == 200 and r.json()["id"] == project["id"]
 
 
-def test_get_project_unknown_404(api, openapi):
+def test_get_project_unknown_404(api, openapi, project):
     require_endpoint(openapi, "get", f"{P}/{{project_id}}")
-    assert api.get(f"{P}/999999999").status_code == 404
+    assert api.get(f"{P}/{unknown_id_like(project['id'])}").status_code == 404
 
 
 @pytest.mark.parametrize("bad", ["abc", "1.5", "-", "null", "%27%20OR%201%3D1", "0x10"])

@@ -51,3 +51,23 @@ def test_devtools_off_in_release(app):
 
 def test_updater_disabled_or_local(app):
     _assert(tc.check_updater(app[1], app[0]))
+
+
+def test_bundle_identifier_not_default(app):
+    _assert(tc.check_identifier(app[1]))
+
+
+def test_no_dangerous_webview_flags(app):
+    _assert(tc.check_dangerous_flags(app[1]))
+
+
+def test_windows_load_local_content_only(app):
+    _assert(tc.check_windows_local_only(app[1]))
+
+
+def test_script_src_is_strict(app):
+    _assert(tc.check_script_src_strict(app[1]))
+
+
+def test_network_permissions_scoped(app):
+    _assert(tc.check_network_permissions(app[1], app[0]))

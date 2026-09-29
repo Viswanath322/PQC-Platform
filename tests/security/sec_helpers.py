@@ -18,7 +18,7 @@ BINARY_EXT = {".png", ".jpg", ".jpeg", ".gif", ".ico", ".webp", ".woff", ".woff2
               ".eot", ".zip", ".gz", ".db", ".sqlite", ".pyc", ".pdf", ".mp4", ".icns", ".so"}
 LOCK_FILES = {"package-lock.json", "yarn.lock", "pnpm-lock.yaml", "Cargo.lock", "poetry.lock"}
 
-LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1", "[::1]", "0.0.0.0", "ipc.localhost"}
+LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1", "[::1]", "0.0.0.0", "ipc.localhost", "tauri.localhost", "asset.localhost"}
 # Namespace / schema identifiers that are never fetched at runtime.
 NAMESPACE_HOSTS = {"www.w3.org", "w3.org", "schema.tauri.app", "json-schema.org"}
 CDN_FONT_HOSTS = ("fonts.googleapis.com", "fonts.gstatic.com", "cdn.jsdelivr.net", "unpkg.com",
@@ -99,7 +99,7 @@ def find_external_urls(text: str):
         for m in STRICT_URL_RE.finditer(line):
             url = m.group(0).rstrip(".")
             h = host_of(url)
-            if not h or h in LOCAL_HOSTS or h in NAMESPACE_HOSTS or "." not in h:
+            if not h or h in LOCAL_HOSTS or h.endswith(".localhost") or h in NAMESPACE_HOSTS or "." not in h:
                 continue
             yield i, url, line
         for m in PROTO_REL_RE.finditer(line):

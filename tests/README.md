@@ -12,6 +12,7 @@ against any teammate's branch.
 |---|---|
 | `backend/` | API contract tests: health, auth, projects, uploads, scans, findings, reports |
 | `database/` | MySQL schema and constraints, Redis connectivity, docker-compose hardening |
+| `analysis/` | Analysis engine contract: `AnalysisEngine`, `Finding`, `AnalysisResult`, `DummyEngine`, API/DB field consistency |
 | `ingestion/` | ZIP extraction safety (path traversal, symlinks, zip bombs), filtering, classification |
 | `integration/` | Day 1 end-to-end flow: project → upload → scan `QUEUED` → row in MySQL |
 | `security/` | Secrets, committed artifacts, `.gitignore`, air-gap (no external calls), dependency audit, Tauri hardening |
@@ -44,6 +45,10 @@ Configuration is by environment variable:
 | `PQC_MYSQL_URL` | `mysql://pqc:change_me_locally@127.0.0.1:3306/pqc_security` |
 | `PQC_REDIS_URL` | `redis://127.0.0.1:6379/0` |
 | `PQC_SCAN_ROOT` | repository root (tree scanned by `tests/security`) |
+| `PQC_INGESTION_ROOT` | unset. Checkout containing `ingestion/`, e.g. `.worktrees/hima`. Without it `tests/ingestion` is Blocked |
+| `PQC_ANALYSIS_ROOT` | unset. Checkout containing `analysis-engines/`, e.g. `.worktrees/harshitha`. Without it `tests/analysis` is Blocked |
+
+Example: `PQC_INGESTION_ROOT=.worktrees/hima PQC_ANALYSIS_ROOT=.worktrees/harshitha pytest tests/ingestion tests/analysis -v -rs`
 
 ## Reading results
 
