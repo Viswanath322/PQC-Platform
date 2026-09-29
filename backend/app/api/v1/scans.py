@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -49,7 +49,7 @@ def cancel_scan(scan_id: str, db: Session = Depends(get_db)):
     if scan.status in FINAL_STATES:
         raise HTTPException(409, f"Scan already {scan.status}")
     scan.status = "CANCELLED"
-    scan.completed_at = datetime.utcnow()
+    scan.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
     db.refresh(scan)
     return scan
