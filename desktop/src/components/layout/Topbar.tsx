@@ -1,4 +1,6 @@
 import { Search, Bell, RefreshCw, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "@/context/UserContext";
 
 export function Topbar({
   page = "Dashboard",
@@ -15,6 +17,9 @@ export function Topbar({
   onRefresh?: () => void;
   isRefreshing?: boolean;
 }) {
+  const navigate = useNavigate();
+  const { profile } = useUser();
+
   return (
     <header className="flex h-14 shrink-0 items-center gap-4 border-b border-white/70 bg-white/40 px-4 backdrop-blur-md lg:px-6">
       <nav className="flex min-w-0 items-center gap-2 text-[13px]">
@@ -51,7 +56,13 @@ export function Topbar({
         <button aria-label="Notifications" className="grid h-9 w-9 place-items-center rounded-lg border border-white/80 bg-white/70 hover:bg-white">
           <Bell className="h-4 w-4 text-slate-600" />
         </button>
-        <div className="grid h-9 w-9 place-items-center rounded-full bg-primary/10 text-[12px] font-semibold text-primary ring-1 ring-primary/25">SO</div>
+        <button
+          onClick={() => navigate('/profile')}
+          title={`Profile: ${profile.fullName} (@${profile.name}) - Click to view and edit`}
+          className="grid h-9 w-9 place-items-center rounded-full bg-primary/10 text-[12px] font-semibold text-primary ring-1 ring-primary/25 hover:ring-primary/50 hover:scale-105 transition-all cursor-pointer"
+        >
+          {profile.avatarInitials}
+        </button>
       </div>
     </header>
   );
