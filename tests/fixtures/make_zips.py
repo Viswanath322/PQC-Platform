@@ -7,16 +7,46 @@ API:    build_all(out_dir) -> {name: Path}
 Generated ZIPs are never committed (see tests/fixtures/.gitignore). Nothing here
 writes to disk outside out_dir; the zip bomb is streamed through zlib so the
 ~1 GiB of zeros never exists on disk (the archive is ~1 MB).
+
+demo-banking.zip is built from the intentionally vulnerable demo repo on the
+`tests/pushpam` branch when PQC_DEMO_REPO points at it, e.g.
+    PQC_DEMO_REPO=.worktrees/tests-pushpam/vulnerable-demo-repo
+Otherwise it is built from SAFE_SAMPLE below: same file layout, harmless content.
 """
 from __future__ import annotations
 
+import os
 import stat
 import sys
 import zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DEMO_REPO = HERE / "vulnerable-demo-repo"
+REPO_ROOT = HERE.parents[1]
+
+# Harmless stand-in for the vulnerable demo repo (same paths, so ingestion tests don't change).
+SAFE_SAMPLE = {
+    "README.md": "# Demo banking (safe sample)\n\nHarmless files used when PQC_DEMO_REPO is not set.\n",
+    "requirements.txt": "flask==3.0.3\n",
+    "config/app.yaml": "debug: false\nallowed_hosts: [\"127.0.0.1\"]\n",
+    "demo_bank/__init__.py": "",
+    "demo_bank/app.py": "def balance(account):\n    return account.get(\"balance\", 0)\n",
+    "java/com/silicofeller/demo/AccountService.java": (
+        "package com.silicofeller.demo;\n\npublic class AccountService {\n"
+        "    public int balance() { return 0; }\n}\n"
+    ),
+    "web/statement.js": "function render(el, text) { el.textContent = text; }\nmodule.exports = { render };\n",
+}
+
+
+def demo_repo() -> Path | None:
+    """The vulnerable demo repo from PQC_DEMO_REPO, or None when it isn't configured."""
+    raw = os.getenv("PQC_DEMO_REPO")
+    if not raw:
+        return None
+    path = Path(raw)
+    path = (path if path.is_absolute() else REPO_ROOT / path).resolve()
+    return path if (path / "EXPECTED_FINDINGS.json").is_file() else None
 
 BOMB_UNCOMPRESSED = 1024 * 1024 * 1024  # 1 GiB
 MANY_FILES_COUNT = 5000
@@ -40,16 +70,16 @@ EXCLUDED_JUNK = [
 ]
 
 
-def _demo_files():
-    for p in sorted(DEMO_REPO.rglob("*")):
-        if p.is_file() and "__pycache__" not in p.parts:
-            yield p, p.relative_to(DEMO_REPO).as_posix()
-
-
 def _demo_banking(path: Path):
+    root = demo_repo()
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
-        for p, rel in _demo_files():
-            z.write(p, rel)
+        if root:
+            for p in sorted(root.rglob("*")):
+                if p.is_file() and "__pycache__" not in p.parts:
+                    z.write(p, p.relative_to(root).as_posix())
+        else:
+            for rel, text in SAFE_SAMPLE.items():
+                z.writestr(rel, text)
         for name in EXCLUDED_JUNK:
             z.writestr(name, "junk generated for exclusion test\n")
 
