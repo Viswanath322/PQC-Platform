@@ -1,6 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
 
 :root {
+  /* Bjork Button Group Design System Tokens */
+  --bjork-border: #eee6db;
+  --bjork-surface-muted: rgba(250, 246, 237, 0.94);
+  --bjork-shadow-surface: inset 0 7px 14px rgba(88, 72, 49, 0.045), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.92), inset 1px 0 0 rgba(88, 72, 49, 0.026), inset -1px 0 0 rgba(255, 255, 255, 0.68), 0 14px 22px -9px rgba(66, 52, 33, 0.11);
+  --bjork-text: #2d261e;
+  --bjork-text-muted: #8c7e6d;
+  --bjork-field: #ffffff;
+  --bjork-surface-hover: rgba(240, 234, 224, 0.8);
+
   /* Three-Color Palette */
   --color-primary: #243447;        /* Deep Slate: Navigation, headings, strong text */
   --color-primary-dark: #1a2736;
@@ -45,6 +56,16 @@
   --radius-lg: 18px;
   --radius-xl: 24px;
   --radius-full: 9999px;
+}
+
+.dark {
+  --bjork-border: #232323;
+  --bjork-surface-muted: rgba(22, 22, 22, 0.92);
+  --bjork-shadow-surface: inset 0 7px 14px rgba(255, 255, 255, 0.03), inset 0 0.5px 0.5px rgba(255, 255, 255, 0.06), 0 14px 20px -6px rgba(0, 0, 0, 0.45);
+  --bjork-text: #f5f2eb;
+  --bjork-text-muted: #888888;
+  --bjork-field: #2a2a2a;
+  --bjork-surface-hover: rgba(45, 45, 45, 0.8);
 }
 
 * {
