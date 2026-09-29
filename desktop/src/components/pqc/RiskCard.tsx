@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldAlert, AlertTriangle, ShieldCheck } from 'lucide-react';
 import type { RiskLevel } from '../../types/pqc';
+import { cn } from '@/lib/utils';
 
 interface RiskCardProps {
   level: RiskLevel;
@@ -21,119 +22,61 @@ export const RiskCard: React.FC<RiskCardProps> = ({
   onClick,
   isActive = false,
 }) => {
-  const getCardTheme = () => {
-    switch (level) {
-      case 'HIGH':
-        return {
-          title: 'HIGH QUANTUM RISK',
-          color: 'var(--color-risk-high)',
-          bgColor: 'rgba(254, 242, 242, 0.75)',
-          borderColor: isActive ? 'var(--color-risk-high)' : 'rgba(239, 68, 68, 0.3)',
-          indicatorBg: 'rgba(197, 48, 48, 0.12)',
-          icon: <ShieldAlert size={22} color="var(--color-risk-high)" />,
-        };
-      case 'MEDIUM':
-        return {
-          title: 'MEDIUM QUANTUM RISK',
-          color: 'var(--color-accent-dark)',
-          bgColor: 'rgba(254, 247, 236, 0.75)',
-          borderColor: isActive ? 'var(--color-accent)' : 'rgba(233, 162, 59, 0.35)',
-          indicatorBg: 'var(--color-accent-faded)',
-          icon: <AlertTriangle size={22} color="var(--color-accent-dark)" />,
-        };
-      case 'LOW':
-        return {
-          title: 'LOW QUANTUM RISK',
-          color: 'var(--color-secondary-dark)',
-          bgColor: 'rgba(232, 245, 244, 0.75)',
-          borderColor: isActive ? 'var(--color-secondary)' : 'rgba(42, 157, 143, 0.3)',
-          indicatorBg: 'var(--color-secondary-faded)',
-          icon: <ShieldCheck size={22} color="var(--color-secondary-dark)" />,
-        };
-    }
+  const config = {
+    HIGH: {
+      text: 'text-critical',
+      bg: 'bg-critical/10',
+      ring: 'ring-critical/25',
+      icon: ShieldAlert,
+    },
+    MEDIUM: {
+      text: 'text-medium',
+      bg: 'bg-medium/10',
+      ring: 'ring-medium/25',
+      icon: AlertTriangle,
+    },
+    LOW: {
+      text: 'text-low',
+      bg: 'bg-low/10',
+      ring: 'ring-low/25',
+      icon: ShieldCheck,
+    },
+  }[level] || {
+    text: 'text-muted-foreground',
+    bg: 'bg-surface-2',
+    ring: 'ring-border',
+    icon: ShieldCheck,
   };
 
-  const theme = getCardTheme();
+  const Icon = config.icon;
 
   return (
     <div
       onClick={onClick}
-      className="glass-panel"
-      style={{
-        padding: '20px 24px',
-        cursor: onClick ? 'pointer' : 'default',
-        borderColor: theme.borderColor,
-        borderWidth: isActive ? '2px' : '1px',
-        backgroundColor: isActive ? theme.bgColor : undefined,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        minHeight: '140px',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
+      className={cn(
+        'card card-hover flex min-w-0 flex-col justify-between p-5 cursor-pointer',
+        isActive && 'ring-2 ring-primary border-primary/50'
+      )}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <div>
-          <span
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
-              color: 'var(--text-muted)',
-              display: 'block',
-              marginBottom: '6px',
-            }}
-          >
-            {label || theme.title}
+      <div>
+        <div className="flex items-center justify-between">
+          <span className="eyebrow">{label}</span>
+          <span className={cn('grid h-8 w-8 place-items-center rounded-lg ring-1', config.bg, config.ring)}>
+            <Icon className={cn('h-4 w-4', config.text)} aria-hidden />
           </span>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-            <span
-              style={{
-                fontSize: '32px',
-                fontWeight: 700,
-                color: theme.color,
-                lineHeight: 1.1,
-                fontFeatureSettings: '"tnum"',
-              }}
-            >
-              {count}
+        </div>
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className={cn('tabular text-[36px] font-semibold leading-none tracking-tight', config.text)}>
+            {count}
+          </span>
+          {percentage !== undefined && (
+            <span className="text-[12px] text-muted-foreground tabular">
+              ({percentage}%)
             </span>
-            {percentage !== undefined && (
-              <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                ({percentage}%)
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div
-          style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '10px',
-            background: theme.indicatorBg,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-          }}
-        >
-          {theme.icon}
+          )}
         </div>
       </div>
-
-      <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-          {subtext}
-        </span>
-        {onClick && (
-          <span style={{ fontSize: '11.5px', color: 'var(--color-secondary-dark)', fontWeight: 600 }}>
-            Filter →
-          </span>
-        )}
-      </div>
+      <p className="mt-4 truncate text-[13px] text-muted-foreground">{subtext}</p>
     </div>
   );
 };

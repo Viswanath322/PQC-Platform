@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldAlert, AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import type { FindingSeverity } from '../../types';
+import { cn } from '@/lib/utils';
 
 interface SeverityBadgeProps {
   severity: FindingSeverity | string;
@@ -17,66 +18,55 @@ export const SeverityBadge: React.FC<SeverityBadgeProps> = ({
 
   const styles = {
     CRITICAL: {
-      bg: 'rgba(239, 68, 68, 0.16)',
-      border: 'rgba(239, 68, 68, 0.35)',
-      text: '#fca5a5',
+      label: 'Critical',
+      classes: 'bg-critical/10 text-critical ring-critical/25',
       icon: ShieldAlert,
-      iconColor: '#f87171',
     },
     HIGH: {
-      bg: 'rgba(249, 115, 22, 0.16)',
-      border: 'rgba(249, 115, 22, 0.35)',
-      text: '#fdba74',
+      label: 'High',
+      classes: 'bg-high/10 text-high ring-high/25',
       icon: AlertTriangle,
-      iconColor: '#fb923c',
     },
     MEDIUM: {
-      bg: 'rgba(234, 179, 8, 0.16)',
-      border: 'rgba(234, 179, 8, 0.35)',
-      text: '#fde047',
+      label: 'Medium',
+      classes: 'bg-medium/10 text-medium ring-medium/25',
       icon: AlertCircle,
-      iconColor: '#facc15',
     },
     LOW: {
-      bg: 'rgba(42, 157, 143, 0.16)',
-      border: 'rgba(42, 157, 143, 0.35)',
-      text: '#5eead4',
+      label: 'Low',
+      classes: 'bg-low/10 text-low ring-low/25', // Sky blue, strictly not teal
       icon: Info,
-      iconColor: '#2dd4bf',
     },
   }[norm] || {
-    bg: 'rgba(148, 163, 184, 0.16)',
-    border: 'rgba(148, 163, 184, 0.35)',
-    text: '#cbd5e1',
+    label: norm,
+    classes: 'bg-surface-2 text-muted-foreground ring-border',
     icon: Info,
-    iconColor: '#94a3b8',
   };
 
   const Icon = styles.icon;
 
   const sizeClasses = {
-    sm: 'text-[10px] px-1.5 py-0.5 gap-1',
-    md: 'text-[11.5px] px-2 py-0.5 gap-1.5',
-    lg: 'text-xs px-2.5 py-1 gap-2 font-semibold',
+    sm: 'text-[11px] px-2 py-0.5 gap-1',
+    md: 'text-[12px] px-2.5 py-0.5 gap-1.5',
+    lg: 'text-[13px] px-3 py-1 gap-2 font-medium',
   }[size];
 
   const iconSizes = {
-    sm: 11,
-    md: 13,
-    lg: 15,
+    sm: 'w-3 h-3',
+    md: 'w-3.5 h-3.5',
+    lg: 'w-4 h-4',
   }[size];
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-md tracking-wide uppercase ${sizeClasses}`}
-      style={{
-        background: styles.bg,
-        border: `1px solid ${styles.border}`,
-        color: styles.text,
-      }}
+      className={cn(
+        'inline-flex items-center rounded-full font-medium ring-1',
+        styles.classes,
+        sizeClasses
+      )}
     >
-      {showIcon && <Icon size={iconSizes} color={styles.iconColor} />}
-      <span>{norm}</span>
+      {showIcon && <Icon className={iconSizes} aria-hidden />}
+      <span>{styles.label}</span>
     </span>
   );
 };

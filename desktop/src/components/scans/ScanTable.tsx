@@ -15,131 +15,136 @@ export const ScanTable: React.FC<ScanTableProps> = ({
   onCancelScan,
 }) => {
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/60 shadow-lg">
-      <table className="w-full text-left border-collapse text-xs">
-        <thead>
-          <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-semibold tracking-wider uppercase">
-            <th className="py-3 px-4">Scan ID</th>
-            <th className="py-3 px-4">Project</th>
-            <th className="py-3 px-4">Repository</th>
-            <th className="py-3 px-4">Status</th>
-            <th className="py-3 px-4">Created</th>
-            <th className="py-3 px-4">Findings</th>
-            <th className="py-3 px-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-800/60 text-slate-300">
-          {scans.map((scan) => {
-            const canCancel =
-              scan.status === 'QUEUED' ||
-              scan.status === 'INGESTING' ||
-              scan.status === 'ANALYZING' ||
-              scan.status === 'PROCESSING' ||
-              scan.status === 'AI_ANALYSIS';
+    <div className="glass-strong w-full overflow-hidden rounded-xl">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse text-[13px]">
+          <thead>
+            <tr className="border-b border-slate-200/60 bg-slate-50/70 text-[11px] font-medium uppercase tracking-[0.08em] text-slate-500">
+              <th className="py-3 px-4">Scan ID</th>
+              <th className="py-3 px-4">Project</th>
+              <th className="py-3 px-4">Repository</th>
+              <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">Created</th>
+              <th className="py-3 px-4">Findings</th>
+              <th className="py-3 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200/60 text-foreground">
+            {scans.map((scan) => {
+              const canCancel =
+                scan.status === 'QUEUED' ||
+                scan.status === 'INGESTING' ||
+                scan.status === 'ANALYZING' ||
+                scan.status === 'PROCESSING' ||
+                scan.status === 'AI_ANALYSIS';
 
-            return (
-              <tr
-                key={scan.id}
-                className="hover:bg-slate-800/40 transition-colors group cursor-pointer"
-                onClick={() => onViewScan(scan)}
-              >
-                {/* Scan ID */}
-                <td className="py-3.5 px-4 font-mono font-semibold text-teal-300">
-                  {scan.id}
-                </td>
+              return (
+                <tr
+                  key={scan.id}
+                  className="transition-colors hover:bg-white/70 cursor-pointer"
+                  onClick={() => onViewScan(scan)}
+                >
+                  {/* Scan ID */}
+                  <td className="py-3.5 px-4 font-mono font-semibold text-primary">
+                    {scan.id}
+                  </td>
 
-                {/* Project */}
-                <td className="py-3.5 px-4">
-                  <div className="font-medium text-slate-100">{scan.project_name}</div>
-                  <div className="text-[11px] text-slate-400 font-mono">branch: {scan.branch}</div>
-                </td>
+                  {/* Project */}
+                  <td className="py-3.5 px-4 min-w-[160px]">
+                    <div className="font-medium text-slate-900">{scan.project_name}</div>
+                    <div className="text-[11px] text-slate-500 font-mono">branch: {scan.branch}</div>
+                  </td>
 
-                {/* Repository / File */}
-                <td className="py-3.5 px-4">
-                  <div className="flex items-center gap-1.5 text-slate-300">
-                    <FileArchive className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{scan.repository_name || scan.file_name}</span>
-                  </div>
-                  {scan.file_size && (
-                    <div className="text-[11px] text-slate-500">{scan.file_size}</div>
-                  )}
-                </td>
+                  {/* Repository / File */}
+                  <td className="py-3.5 px-4 min-w-[180px]">
+                    <div className="flex items-center gap-1.5 text-slate-500">
+                      <FileArchive className="w-3.5 h-3.5 shrink-0" />
+                      <span className="font-mono text-[12px] truncate max-w-[220px]">
+                        {scan.repository_name}
+                      </span>
+                    </div>
+                  </td>
 
-                {/* Status */}
-                <td className="py-3.5 px-4">
-                  <ScanStatusBadge status={scan.status} size="sm" />
-                </td>
+                  {/* Status Badge */}
+                  <td className="py-3.5 px-4">
+                    <ScanStatusBadge status={scan.status} size="sm" />
+                  </td>
 
-                {/* Created */}
-                <td className="py-3.5 px-4 text-slate-400">
-                  {scan.created_at}
-                </td>
+                  {/* Created At */}
+                  <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap text-[12px]">
+                    <span className="tabular">{new Date(scan.created_at).toLocaleString()}</span>
+                  </td>
 
-                {/* Findings */}
-                <td className="py-3.5 px-4">
-                  {scan.total_findings > 0 ? (
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-slate-100">{scan.total_findings}</span>
-                      <div className="flex items-center gap-1 text-[10.5px]">
+                  {/* Findings breakdown */}
+                  <td className="py-3.5 px-4 whitespace-nowrap">
+                    {scan.total_findings > 0 ? (
+                      <div className="flex items-center gap-1 text-[11px] font-semibold tabular">
                         {scan.critical_count > 0 && (
-                          <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 font-medium">
+                          <span className="px-1.5 py-0.5 rounded bg-critical/10 text-critical ring-1 ring-critical/25">
                             {scan.critical_count}C
                           </span>
                         )}
                         {scan.high_count > 0 && (
-                          <span className="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 font-medium">
+                          <span className="px-1.5 py-0.5 rounded bg-high/10 text-high ring-1 ring-high/25">
                             {scan.high_count}H
                           </span>
                         )}
                         {scan.medium_count > 0 && (
-                          <span className="px-1.5 py-0.5 rounded bg-yellow-500/20 text-yellow-300 font-medium">
+                          <span className="px-1.5 py-0.5 rounded bg-medium/10 text-medium ring-1 ring-medium/25">
                             {scan.medium_count}M
                           </span>
                         )}
+                        {scan.low_count > 0 && (
+                          <span className="px-1.5 py-0.5 rounded bg-low/10 text-low ring-1 ring-low/25">
+                            {scan.low_count}L
+                          </span>
+                        )}
+                        <span className="text-slate-500 ml-1">({scan.total_findings})</span>
                       </div>
-                    </div>
-                  ) : scan.status === 'COMPLETED' ? (
-                    <span className="inline-flex items-center gap-1 text-emerald-400">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>0 findings</span>
-                    </span>
-                  ) : (
-                    <span className="text-slate-500 italic">Pending analysis</span>
-                  )}
-                </td>
-
-                {/* Actions */}
-                <td
-                  className="py-3.5 px-4 text-right"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => onViewScan(scan)}
-                      className="px-2.5 py-1 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-md transition-colors flex items-center gap-1"
-                      title="View Scan Details"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>View</span>
-                    </button>
-
-                    {canCancel && (
-                      <button
-                        onClick={() => onCancelScan(scan)}
-                        className="px-2.5 py-1 text-xs text-rose-300 hover:text-white bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 rounded-md transition-colors flex items-center gap-1"
-                        title="Cancel this scan"
-                      >
-                        <Ban className="w-3.5 h-3.5" />
-                        <span>Cancel</span>
-                      </button>
+                    ) : scan.status === 'COMPLETED' ? (
+                      <span className="inline-flex items-center gap-1 text-success text-[12px]">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Clean
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 text-[12px]">—</span>
                     )}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  </td>
+
+                  {/* Actions */}
+                  <td
+                    className="py-3.5 px-4 text-right whitespace-nowrap"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => onViewScan(scan)}
+                        className="btn h-7 px-2.5 text-[12px]"
+                        title="View Scan Details"
+                        aria-label="View Scan Details"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Inspect</span>
+                      </button>
+
+                      {canCancel && (
+                        <button
+                          onClick={() => onCancelScan(scan)}
+                          className="h-7 px-2 text-[12px] inline-flex items-center gap-1 rounded-lg border border-critical/30 bg-critical/10 text-critical hover:bg-critical/20"
+                          title="Cancel ongoing scan"
+                          aria-label="Cancel ongoing scan"
+                        >
+                          <Ban className="w-3.5 h-3.5" />
+                          <span>Cancel</span>
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

@@ -1,33 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ShieldAlert,
-  AlertTriangle,
-  Lightbulb,
-  CheckCircle2,
   Lock,
-  Layers,
   FileSpreadsheet,
-  FileText,
-  Code,
-  Download,
-  Clock,
-  ArrowRight,
 } from 'lucide-react';
-import { MockDataBadge } from '../components/pqc/MockDataBadge';
-import { RiskCard } from '../components/pqc/RiskCard';
-import { RiskDistribution } from '../components/pqc/RiskDistribution';
-import { CryptoInventoryTable } from '../components/pqc/CryptoInventoryTable';
-import { CBOMTable } from '../components/pqc/CBOMTable';
-import { MigrationCandidates } from '../components/pqc/MigrationCandidates';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { RiskCard } from '@/components/pqc/RiskCard';
+import { RiskDistribution } from '@/components/pqc/RiskDistribution';
+import { CryptoInventoryTable } from '@/components/pqc/CryptoInventoryTable';
+import { CBOMTable } from '@/components/pqc/CBOMTable';
+import { MigrationCandidates } from '@/components/pqc/MigrationCandidates';
+import { ScoreRing } from '@/components/dashboard/ScoreRing';
 import {
   mockRiskSummary,
-  mockKeyInsights,
   mockCryptoInventory,
   mockCBOM,
   mockMigrationCandidates,
-  mockReportOptions,
-} from '../data/pqcMockData';
+} from '@/data/pqcMockData';
 
 interface PQCPageProps {
   onNavigateToInventory?: () => void;
@@ -51,460 +40,139 @@ export const PQC: React.FC<PQCPageProps> = ({
     setSelectedRiskFilter(risk);
   };
 
-  const handleQuickExport = (format: string, title: string) => {
-    if (onShowToast) {
-      onShowToast(`Report export (${format}) for "${title}" will be available in a later release.`);
-    }
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
-      {/* 1. Page Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-        <div>
-          <h1 className="title-level-1">PQC Security Assessment</h1>
-          <p className="subtitle-muted" style={{ fontSize: '13px', marginTop: '2px' }}>
-            Quantum readiness, Shor/Grover vulnerability evaluation, and NIST FIPS migration candidates
-          </p>
-        </div>
+    <>
+      <PageHeader
+        title="PQC security assessment"
+        description="Quantum readiness, Shor/Grover vulnerability evaluation, and NIST FIPS 203/204 migration candidates."
+        actions={
+          <>
+            <button onClick={handleNavInventory} className="btn">
+              <Lock className="h-3.5 w-3.5" />
+              <span>Full inventory</span>
+            </button>
+            <button onClick={handleNavReports} className="btn-primary">
+              <FileSpreadsheet className="h-3.5 w-3.5" />
+              <span>View reports</span>
+            </button>
+          </>
+        }
+      />
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handleNavInventory} className="btn-secondary">
-            <Lock size={14} /> Full Inventory
-          </button>
-          <button onClick={handleNavReports} className="btn-teal">
-            <FileSpreadsheet size={14} /> View Reports
-          </button>
-        </div>
-      </div>
+      <div className="flex flex-col gap-6">
+        {/* 1. Top Risk Cards Grid (High / Medium / Low + Quantum Readiness Summary) */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <RiskCard
+            level="HIGH"
+            count={mockRiskSummary.high}
+            label="High quantum risk"
+            subtext="Shor vulnerable components"
+            percentage={Math.round((mockRiskSummary.high / mockRiskSummary.total) * 100)}
+            isActive={selectedRiskFilter === 'HIGH'}
+            onClick={() => handleRiskFilterChange(selectedRiskFilter === 'HIGH' ? 'ALL' : 'HIGH')}
+          />
 
-      {/* 2. Top Risk Cards Grid (High / Medium / Low + Quantum Readiness Summary) */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-          gap: '16px',
-        }}
-      >
-        {/* High Risk Card */}
-        <RiskCard
-          level="HIGH"
-          count={mockRiskSummary.high}
-          label="HIGH QUANTUM RISK"
-          subtext="Vulnerable components"
-          percentage={Math.round((mockRiskSummary.high / mockRiskSummary.total) * 100)}
-          isActive={selectedRiskFilter === 'HIGH'}
-          onClick={() => handleRiskFilterChange(selectedRiskFilter === 'HIGH' ? 'ALL' : 'HIGH')}
-        />
+          <RiskCard
+            level="MEDIUM"
+            count={mockRiskSummary.medium}
+            label="Medium quantum risk"
+            subtext="Components requiring hybrid review"
+            percentage={Math.round((mockRiskSummary.medium / mockRiskSummary.total) * 100)}
+            isActive={selectedRiskFilter === 'MEDIUM'}
+            onClick={() => handleRiskFilterChange(selectedRiskFilter === 'MEDIUM' ? 'ALL' : 'MEDIUM')}
+          />
 
-        {/* Medium Risk Card */}
-        <RiskCard
-          level="MEDIUM"
-          count={mockRiskSummary.medium}
-          label="MEDIUM QUANTUM RISK"
-          subtext="Components requiring review"
-          percentage={Math.round((mockRiskSummary.medium / mockRiskSummary.total) * 100)}
-          isActive={selectedRiskFilter === 'MEDIUM'}
-          onClick={() => handleRiskFilterChange(selectedRiskFilter === 'MEDIUM' ? 'ALL' : 'MEDIUM')}
-        />
+          <RiskCard
+            level="LOW"
+            count={mockRiskSummary.low}
+            label="Low quantum risk"
+            subtext="Quantum-safe / symmetric assets"
+            percentage={Math.round((mockRiskSummary.low / mockRiskSummary.total) * 100)}
+            isActive={selectedRiskFilter === 'LOW'}
+            onClick={() => handleRiskFilterChange(selectedRiskFilter === 'LOW' ? 'ALL' : 'LOW')}
+          />
 
-        {/* Low Risk Card */}
-        <RiskCard
-          level="LOW"
-          count={mockRiskSummary.low}
-          label="LOW QUANTUM RISK"
-          subtext="Lower-risk components"
-          percentage={Math.round((mockRiskSummary.low / mockRiskSummary.total) * 100)}
-          isActive={selectedRiskFilter === 'LOW'}
-          onClick={() => handleRiskFilterChange(selectedRiskFilter === 'LOW' ? 'ALL' : 'LOW')}
-        />
-
-        {/* Quantum Readiness Summary Card */}
-        <div
-          className="glass-panel"
-          style={{
-            padding: '20px 22px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '140px',
-            background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.88) 0%, rgba(244, 246, 249, 0.8) 100%)',
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                Quantum Readiness
-              </span>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  background: 'rgba(233, 162, 59, 0.15)',
-                  color: 'var(--color-accent-dark)',
-                }}
-              >
+          {/* Quantum Readiness Card */}
+          <div className="card flex flex-col justify-between p-5">
+            <div className="flex items-center justify-between">
+              <span className="eyebrow">Quantum Readiness</span>
+              <span className="rounded-full bg-critical/10 px-2 py-0.5 text-[11px] font-medium text-critical ring-1 ring-critical/25">
                 {mockRiskSummary.atRiskPercentage}% At Risk
               </span>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '6px' }}>
-              <span
-                style={{
-                  fontSize: '32px',
-                  fontWeight: 700,
-                  color: 'var(--color-primary)',
-                  lineHeight: 1.1,
-                }}
-              >
-                {mockRiskSummary.readinessPercentage}%
-              </span>
-              <span style={{ fontSize: '13px', color: 'var(--color-secondary-dark)', fontWeight: 600 }}>
-                Quantum Resilient
-              </span>
+            <div className="mt-3 flex items-center justify-between gap-4">
+              <div>
+                <div className="tabular text-[36px] font-semibold leading-none tracking-tight text-primary">
+                  {mockRiskSummary.readinessPercentage}%
+                </div>
+                <p className="mt-1 text-[12px] text-muted-foreground">Quantum Safe Readiness</p>
+              </div>
+              <ScoreRing value={mockRiskSummary.readinessPercentage} size={72} />
             </div>
-          </div>
-
-          {/* Simple Progress Bar */}
-          <div style={{ marginTop: '12px' }}>
-            <div
-              style={{
-                height: '8px',
-                width: '100%',
-                backgroundColor: 'rgba(239, 68, 68, 0.22)',
-                borderRadius: '4px',
-                overflow: 'hidden',
-                display: 'flex',
-              }}
-            >
-              <div
-                style={{
-                  width: `${mockRiskSummary.readinessPercentage}%`,
-                  backgroundColor: 'var(--color-secondary)',
-                  height: '100%',
-                }}
-                title={`Resilient: ${mockRiskSummary.readinessPercentage}%`}
-              />
-            </div>
-            <div
-              style={{
-                fontSize: '11.5px',
-                color: 'var(--text-muted)',
-                marginTop: '6px',
-                display: 'flex',
-                justifyContent: 'space-between',
-              }}
-            >
-              <span>{mockRiskSummary.analyzedComponents} components analyzed</span>
-              <span>Baseline NIST SP 800-208</span>
-            </div>
+            <p className="mt-3 truncate text-[12px] text-muted-foreground">
+              Based on FIPS 203/204 algorithm standards
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* 3. Middle Section: Risk Distribution & Key Insights */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: '18px',
-        }}
-      >
-        {/* Risk Distribution Card */}
-        <RiskDistribution
-          summary={mockRiskSummary}
-          selectedRisk={selectedRiskFilter}
-          onSelectRisk={handleRiskFilterChange}
+        {/* 2. Risk Distribution Chart */}
+        <RiskDistribution summary={mockRiskSummary} selectedRisk={selectedRiskFilter} />
+
+        {/* 3. Migration Candidates */}
+        <MigrationCandidates
+          candidates={mockMigrationCandidates}
+          onAssessCandidate={(c) => {
+            if (onShowToast) {
+              onShowToast(`Selected blueprint for ${c.recommendation} migration.`);
+            }
+          }}
         />
 
-        {/* Key Insights Card */}
-        <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Lightbulb size={18} color="var(--color-accent-dark)" />
-                <h3 className="title-level-2">Key Insights</h3>
-              </div>
-              <MockDataBadge size="sm" />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
-              {mockKeyInsights.map((insight) => (
-                <div
-                  key={insight.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '10px',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.65)',
-                    border: '1px solid rgba(226, 232, 240, 0.8)',
-                  }}
-                >
-                  <div style={{ marginTop: '2px', flexShrink: 0 }}>
-                    {insight.category === 'critical' ? (
-                      <ShieldAlert size={15} color="var(--color-risk-high)" />
-                    ) : insight.category === 'warning' ? (
-                      <AlertTriangle size={15} color="var(--color-accent-dark)" />
-                    ) : (
-                      <CheckCircle2 size={15} color="var(--color-secondary-dark)" />
-                    )}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.45, fontWeight: 500 }}>
-                      {insight.text}
-                    </p>
-                    {insight.componentRef && (
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          color: 'var(--text-muted)',
-                          fontFamily: 'monospace',
-                          display: 'inline-block',
-                          marginTop: '2px',
-                        }}
-                      >
-                        Target: {insight.componentRef}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+        {/* 4. Tabbed Table Section */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between border-b border-border pb-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveTableTab('inventory')}
+                className={`px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${
+                  activeTableTab === 'inventory'
+                    ? 'bg-primary/10 text-primary ring-1 ring-primary/25'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Cryptographic Assets Inventory ({mockCryptoInventory.length})
+              </button>
+              <button
+                onClick={() => setActiveTableTab('cbom')}
+                className={`px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${
+                  activeTableTab === 'cbom'
+                    ? 'bg-primary/10 text-primary ring-1 ring-primary/25'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                CycloneDX CBOM Specification ({mockCBOM.length})
+              </button>
             </div>
           </div>
 
-          <div
-            style={{
-              fontSize: '11.5px',
-              color: 'var(--text-muted)',
-              marginTop: '12px',
-              paddingTop: '10px',
-              borderTop: '1px solid var(--border-glass)',
-            }}
-          >
-            Insights generated from development AST rule engine ruleset v0.8.
-          </div>
+          {activeTableTab === 'inventory' ? (
+            <CryptoInventoryTable
+              data={mockCryptoInventory}
+              initialRiskFilter={selectedRiskFilter}
+              showFiltersHeader={true}
+              onItemSelect={(item) => {
+                if (onShowToast) {
+                  onShowToast(`Inspecting ${item.algorithm} in ${item.location}`);
+                }
+              }}
+            />
+          ) : (
+            <CBOMTable data={mockCBOM} />
+          )}
         </div>
       </div>
-
-      {/* 4. Cryptographic Inventory / CBOM Section */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <h2 className="title-level-2" style={{ fontSize: '18px' }}>
-                Cryptographic Inventory & CBOM
-              </h2>
-              <MockDataBadge size="sm" />
-            </div>
-            <p className="subtitle-muted">
-              Live components discovered across scanned source repositories
-            </p>
-          </div>
-
-          {/* View Mode Toggle */}
-          <div style={{ display: 'flex', background: '#e2e8f0', padding: '3px', borderRadius: '8px' }}>
-            <button
-              onClick={() => setActiveTableTab('inventory')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 14px',
-                fontSize: '12.5px',
-                fontWeight: 600,
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                background: activeTableTab === 'inventory' ? '#ffffff' : 'transparent',
-                color: activeTableTab === 'inventory' ? 'var(--color-primary)' : 'var(--text-secondary)',
-                boxShadow: activeTableTab === 'inventory' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <Lock size={13} />
-              Inventory View
-            </button>
-            <button
-              onClick={() => setActiveTableTab('cbom')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 14px',
-                fontSize: '12.5px',
-                fontWeight: 600,
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                background: activeTableTab === 'cbom' ? '#ffffff' : 'transparent',
-                color: activeTableTab === 'cbom' ? 'var(--color-primary)' : 'var(--text-secondary)',
-                boxShadow: activeTableTab === 'cbom' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <Layers size={13} />
-              CBOM View
-            </button>
-          </div>
-        </div>
-
-        {activeTableTab === 'inventory' ? (
-          <CryptoInventoryTable
-            data={mockCryptoInventory}
-            initialRiskFilter={selectedRiskFilter}
-          />
-        ) : (
-          <CBOMTable data={mockCBOM} />
-        )}
-      </div>
-
-      {/* 5. Bottom Section: Migration Candidates & Reports */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-          gap: '18px',
-          alignItems: 'start',
-        }}
-      >
-        {/* Migration Candidates */}
-        <div style={{ flex: 1 }}>
-          <MigrationCandidates candidates={mockMigrationCandidates} />
-        </div>
-
-        {/* Quick Reports Section */}
-        <div
-          className="glass-panel"
-          style={{
-            padding: '24px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            gap: '16px',
-          }}
-        >
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileSpreadsheet size={18} color="var(--color-primary)" />
-                <h3 className="title-level-2">Compliance Reports</h3>
-              </div>
-              <MockDataBadge size="sm" />
-            </div>
-            <p className="subtitle-muted" style={{ marginBottom: '16px' }}>
-              Export quantum risk assessments, CBOM documentation, and inventory audits
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {mockReportOptions.map((opt) => (
-                <div
-                  key={opt.id}
-                  style={{
-                    padding: '12px 14px',
-                    borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.65)',
-                    border: '1px solid var(--border-glass)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '12px',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div
-                      style={{
-                        width: '34px',
-                        height: '34px',
-                        borderRadius: '8px',
-                        background:
-                          opt.format === 'PDF'
-                            ? 'rgba(36, 52, 71, 0.08)'
-                            : opt.format === 'JSON'
-                            ? 'var(--color-secondary-light)'
-                            : 'var(--color-accent-light)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {opt.format === 'PDF' ? (
-                        <FileText size={17} color="var(--color-primary)" />
-                      ) : opt.format === 'JSON' ? (
-                        <Code size={17} color="var(--color-secondary-dark)" />
-                      ) : (
-                        <FileSpreadsheet size={17} color="var(--color-accent-dark)" />
-                      )}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-primary)' }}>
-                        {opt.title}
-                      </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        Format: {opt.format} • Approx: {opt.estimatedSize}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleQuickExport(opt.format, opt.title)}
-                    className="btn-secondary"
-                    style={{ padding: '6px 12px', fontSize: '12px', flexShrink: 0 }}
-                  >
-                    <Download size={13} />
-                    Export {opt.format}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div
-            style={{
-              paddingTop: '12px',
-              borderTop: '1px solid var(--border-glass)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '12px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}>
-              <Clock size={12} />
-              <span>Compilation ready on request</span>
-            </div>
-
-            <button
-              onClick={onNavigateToReports}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--color-secondary-dark)',
-                fontWeight: 600,
-                fontSize: '12px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
-              Full Reports Page <ArrowRight size={12} />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
+
+export default PQC;

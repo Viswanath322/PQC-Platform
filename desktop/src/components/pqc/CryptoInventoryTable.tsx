@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Copy, Check, ShieldAlert, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Search, Filter, Copy, Check, ShieldAlert, AlertTriangle, ShieldCheck, X } from 'lucide-react';
 import type { CryptoComponent, RiskLevel } from '../../types/pqc';
 
 interface CryptoInventoryTableProps {
@@ -71,111 +71,65 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
     switch (risk) {
       case 'HIGH':
         return (
-          <span className="badge-risk-high" title="Vulnerable to Shor's algorithm">
-            <ShieldAlert size={12} />
-            High
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-critical/10 text-critical ring-1 ring-critical/25">
+            <ShieldAlert className="h-3 w-3" />
+            <span>High</span>
           </span>
         );
       case 'MEDIUM':
         return (
-          <span className="badge-risk-medium" title="Requires review or transitional mitigation">
-            <AlertTriangle size={12} />
-            Medium
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-medium/10 text-medium ring-1 ring-medium/25">
+            <AlertTriangle className="h-3 w-3" />
+            <span>Medium</span>
           </span>
         );
       case 'LOW':
         return (
-          <span className="badge-risk-low" title="Symmetric / Quantum-resistant with appropriate key length">
-            <ShieldCheck size={12} />
-            Low
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-low/10 text-low ring-1 ring-low/25">
+            <ShieldCheck className="h-3 w-3" />
+            <span>Low</span>
           </span>
         );
     }
   };
 
   return (
-    <div className="glass-panel" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div className="card w-full overflow-hidden flex flex-col">
       {showFiltersHeader && (
-        <div
-          style={{
-            padding: '18px 24px',
-            borderBottom: '1px solid var(--border-glass)',
-            backgroundColor: 'rgba(255, 255, 255, 0.4)',
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '14px',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
+        <div className="p-4 border-b border-border bg-surface-2/40 flex flex-wrap gap-3 items-center justify-between">
           {/* Search Box */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: '#ffffff',
-              border: '1px solid var(--border-glass-strong)',
-              borderRadius: 'var(--radius-md)',
-              padding: '7px 12px',
-              minWidth: '260px',
-              flex: '1 1 260px',
-              maxWidth: '380px',
-            }}
-          >
-            <Search size={15} color="var(--text-muted)" />
+          <div className="relative min-w-[240px] max-w-sm flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search algorithm, file, library..."
+              placeholder="Search algorithm, file, library…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                border: 'none',
-                outline: 'none',
-                width: '100%',
-                fontSize: '13px',
-                color: 'var(--text-primary)',
-                background: 'transparent',
-              }}
+              className="h-9 w-full rounded-lg border bg-surface pl-9 pr-8 text-[13px] outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  padding: '2px',
-                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
               >
-                ✕
+                <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
 
           {/* Filter Dropdowns */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Filter size={13} color="var(--text-muted)" />
-              <span style={{ fontSize: '12.5px', fontWeight: 500, color: 'var(--text-secondary)' }}>Filters:</span>
+          <div className="flex flex-wrap gap-2.5 items-center">
+            <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              <Filter className="h-3.5 w-3.5" />
+              <span>Filters:</span>
             </div>
 
             {/* Risk Selector */}
             <select
               value={selectedRisk}
               onChange={(e) => setSelectedRisk(e.target.value)}
-              style={{
-                fontSize: '12.5px',
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-glass-strong)',
-                background: '#ffffff',
-                color: 'var(--color-primary)',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
+              className="h-8 rounded-lg border bg-surface px-2.5 text-[12px] text-foreground outline-none focus:border-primary/60"
             >
               <option value="ALL">All Risk Levels</option>
               <option value="HIGH">High Risk ({data.filter((d) => d.risk === 'HIGH').length})</option>
@@ -187,16 +141,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
             <select
               value={selectedAlgoGroup}
               onChange={(e) => setSelectedAlgoGroup(e.target.value)}
-              style={{
-                fontSize: '12.5px',
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-glass-strong)',
-                background: '#ffffff',
-                color: 'var(--color-primary)',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
+              className="h-8 rounded-lg border bg-surface px-2.5 text-[12px] text-foreground outline-none focus:border-primary/60"
             >
               <option value="ALL">All Algorithms</option>
               {algorithmFamilies.map((family) => (
@@ -210,16 +155,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
             <select
               value={selectedLibrary}
               onChange={(e) => setSelectedLibrary(e.target.value)}
-              style={{
-                fontSize: '12.5px',
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border-glass-strong)',
-                background: '#ffffff',
-                color: 'var(--color-primary)',
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
+              className="h-8 rounded-lg border bg-surface px-2.5 text-[12px] text-foreground outline-none focus:border-primary/60"
             >
               <option value="ALL">All Libraries</option>
               {libraries.map((lib) => (
@@ -237,10 +173,9 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                   setSelectedLibrary('ALL');
                   setSearchQuery('');
                 }}
-                className="btn-secondary"
-                style={{ padding: '5px 10px', fontSize: '11.5px', height: '30px' }}
+                className="btn h-8 px-2.5 text-[12px]"
               >
-                Reset Filters
+                Reset
               </button>
             )}
           </div>
@@ -248,65 +183,40 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
       )}
 
       {/* Table Container */}
-      <div style={{ overflowX: 'auto', width: '100%' }}>
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            textAlign: 'left',
-            fontSize: '13px',
-          }}
-        >
+      <div className="overflow-x-auto w-full">
+        <table className="w-full border-collapse text-left text-[13px]">
           <thead>
-            <tr
-              style={{
-                background: 'rgba(241, 245, 249, 0.75)',
-                borderBottom: '1px solid var(--border-glass)',
-                color: 'var(--text-secondary)',
-                fontWeight: 600,
-                fontSize: '12px',
-                letterSpacing: '0.03em',
-                textTransform: 'uppercase',
-              }}
-            >
-              <th style={{ padding: '12px 20px', width: '180px' }}>Algorithm</th>
-              <th style={{ padding: '12px 16px', width: '140px' }}>Library</th>
-              <th style={{ padding: '12px 14px', width: '90px' }}>Version</th>
-              <th style={{ padding: '12px 20px', minWidth: '220px' }}>Location</th>
-              <th style={{ padding: '12px 18px', width: '160px' }}>Usage</th>
-              <th style={{ padding: '12px 20px', width: '110px' }}>Risk</th>
+            <tr className="border-b border-border bg-surface-2/50 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+              <th className="py-3 px-4 w-44">Algorithm</th>
+              <th className="py-3 px-4 w-36">Library</th>
+              <th className="py-3 px-4 w-24">Version</th>
+              <th className="py-3 px-4 min-w-[220px]">Location</th>
+              <th className="py-3 px-4 w-40">Usage</th>
+              <th className="py-3 px-4 w-28">Risk</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border text-foreground">
             {filteredData.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <td colSpan={6} className="py-12 text-center text-muted-foreground">
                   No cryptographic components found matching the selected filter criteria.
                 </td>
               </tr>
             ) : (
-              filteredData.map((item, idx) => (
+              filteredData.map((item) => (
                 <tr
                   key={item.id}
                   onClick={() => onItemSelect && onItemSelect(item)}
-                  style={{
-                    borderBottom: '1px solid rgba(226, 232, 240, 0.6)',
-                    backgroundColor: idx % 2 === 0 ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.8)',
-                    cursor: onItemSelect ? 'pointer' : 'default',
-                    transition: 'background-color 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(241, 245, 249, 0.9)')}
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      idx % 2 === 0 ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.8)')
-                  }
+                  className={`transition-colors ${
+                    onItemSelect ? 'cursor-pointer hover:bg-surface-2/60' : 'hover:bg-surface-2/30'
+                  }`}
                 >
                   {/* Algorithm */}
-                  <td style={{ padding: '14px 20px', fontWeight: 600, color: 'var(--color-primary)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span>{item.algorithm}</span>
+                  <td className="py-3 px-4 font-medium text-foreground">
+                    <div className="flex flex-col">
+                      <span className="font-mono text-[13px]">{item.algorithm}</span>
                       {item.curveOrKeySize && (
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
+                        <span className="text-[11px] text-muted-foreground font-mono">
                           {item.curveOrKeySize}
                         </span>
                       )}
@@ -314,72 +224,50 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                   </td>
 
                   {/* Library */}
-                  <td style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                  <td className="py-3 px-4 text-muted-foreground font-medium text-[12px]">
                     {item.library}
                   </td>
 
                   {/* Version */}
-                  <td style={{ padding: '14px 14px' }}>
-                    <span
-                      style={{
-                        fontFamily: 'monospace',
-                        fontSize: '11.5px',
-                        padding: '2px 6px',
-                        background: 'rgba(36, 52, 71, 0.05)',
-                        borderRadius: '4px',
-                        color: 'var(--text-secondary)',
-                      }}
-                    >
+                  <td className="py-3 px-4">
+                    <span className="font-mono text-[11px] rounded bg-surface-2 px-1.5 py-0.5 text-muted-foreground">
                       {item.version}
                     </span>
                   </td>
 
                   {/* Location */}
-                  <td style={{ padding: '14px 20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <code
-                        style={{
-                          fontSize: '12px',
-                          color: 'var(--color-primary)',
-                          background: 'rgba(36, 52, 71, 0.04)',
-                          padding: '3px 7px',
-                          borderRadius: '4px',
-                          wordBreak: 'break-all',
-                        }}
-                      >
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-1.5">
+                      <code className="font-mono text-[11.5px] text-primary bg-surface-2 px-1.5 py-0.5 rounded break-all max-w-[300px] truncate">
                         {item.location}
                       </code>
                       <button
                         onClick={(e) => handleCopyLocation(e, item.id, item.location)}
                         title="Copy file path"
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          cursor: 'pointer',
-                          color: copiedId === item.id ? 'var(--color-secondary-dark)' : 'var(--text-light)',
-                          padding: '3px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          borderRadius: '4px',
-                        }}
+                        className="text-muted-foreground hover:text-foreground p-1 rounded"
+                        aria-label="Copy file path"
                       >
-                        {copiedId === item.id ? <Check size={13} /> : <Copy size={13} />}
+                        {copiedId === item.id ? (
+                          <Check className="h-3.5 w-3.5 text-success" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
                       </button>
                     </div>
                   </td>
 
                   {/* Usage */}
-                  <td style={{ padding: '14px 18px', color: 'var(--text-secondary)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontWeight: 500 }}>{item.usage}</span>
+                  <td className="py-3 px-4 text-muted-foreground">
+                    <div className="flex flex-col">
+                      <span className="text-[12px] font-medium text-foreground">{item.usage}</span>
                       {item.purpose && (
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.purpose}</span>
+                        <span className="text-[11px] text-muted-foreground">{item.purpose}</span>
                       )}
                     </div>
                   </td>
 
                   {/* Risk */}
-                  <td style={{ padding: '14px 20px' }}>{renderRiskBadge(item.risk)}</td>
+                  <td className="py-3 px-4">{renderRiskBadge(item.risk)}</td>
                 </tr>
               ))
             )}
@@ -388,22 +276,12 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
       </div>
 
       {/* Footer Info */}
-      <div
-        style={{
-          padding: '12px 24px',
-          borderTop: '1px solid var(--border-glass)',
-          backgroundColor: 'rgba(255, 255, 255, 0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontSize: '12px',
-          color: 'var(--text-muted)',
-        }}
-      >
+      <div className="p-3 px-4 border-t border-border bg-surface-2/30 flex items-center justify-between text-[12px] text-muted-foreground">
         <span>
-          Showing <strong>{filteredData.length}</strong> of <strong>{data.length}</strong> cryptographic components
+          Showing <strong className="text-foreground tabular">{filteredData.length}</strong> of{' '}
+          <strong className="text-foreground tabular">{data.length}</strong> cryptographic components
         </span>
-        <span>Standard cryptographic AST inspection</span>
+        <span className="font-mono text-[11px]">NIST FIPS 203 / 204 AST Inspector</span>
       </div>
     </div>
   );

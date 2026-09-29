@@ -52,94 +52,95 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+      <div className="card w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface-2/40">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400">
-              <FolderGit2 className="w-5 h-5" />
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 ring-1 ring-primary/25 text-primary">
+              <FolderGit2 className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-slate-100">Create New Project</h2>
-              <p className="text-xs text-slate-400">Register a repository for PQC and security assessments</p>
+              <h2 className="section-title">Register new repository target</h2>
+              <p className="section-sub mt-0.5">Configure continuous cryptographic baseline scanning</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+            className="grid h-8 w-8 place-items-center rounded-lg border bg-surface text-muted-foreground hover:text-foreground"
+            aria-label="Close dialog"
           >
-            <X className="w-5 h-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4 text-[13px]">
           {error && (
-            <div className="flex items-center gap-2 p-3 text-xs text-rose-300 bg-rose-950/30 border border-rose-500/30 rounded-lg">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <div className="p-3 rounded-lg border border-critical/30 bg-critical/10 text-critical text-[12px] flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="project-name" className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-              Project Name <span className="text-rose-400">*</span>
+            <label className="eyebrow">
+              Project Name *
             </label>
             <input
-              id="project-name"
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Core-Payment-Gateway"
-              className="px-3.5 py-2.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-teal-400 transition-colors"
+              className="h-10 w-full rounded-lg border bg-surface px-3.5 text-[13px] text-foreground outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="project-desc" className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-              Description
+            <label className="eyebrow">
+              Target Scope & Description
             </label>
             <textarea
-              id="project-desc"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description of the service, cryptographic scope, or compliance requirements..."
-              className="px-3.5 py-2.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-teal-400 transition-colors resize-none"
+              placeholder="e.g. Microservice backend processing cardholder cryptograms and HSM handshakes"
+              className="w-full rounded-lg border bg-surface p-3 text-[13px] text-foreground outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20 resize-none"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="project-repo" className="text-xs font-semibold text-slate-300 uppercase tracking-wider">
-              Repository URL (Optional)
+            <label className="eyebrow">
+              Local Air-Gapped Git Mirror (Optional)
             </label>
             <input
-              id="project-repo"
               type="text"
               value={repositoryUrl}
               onChange={(e) => setRepositoryUrl(e.target.value)}
-              placeholder="e.g. https://github.com/organization/repo.git"
-              className="px-3.5 py-2.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-100 text-sm focus:outline-none focus:border-teal-400 transition-colors"
+              placeholder="git@internal-git.corp:payments/core-gateway.git"
+              className="h-10 w-full rounded-lg border bg-surface px-3.5 text-[13px] font-mono text-foreground outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
             />
+            <span className="text-[11px] text-muted-foreground">
+              Air-gapped on-premises mirror url or leave empty for manual file bundle uploads.
+            </span>
           </div>
 
-          <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-800">
+          {/* Action buttons */}
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-border mt-2">
             <button
               type="button"
               onClick={onClose}
-              disabled={isSubmitting}
-              className="btn-secondary px-4 py-2 text-xs font-medium rounded-lg"
+              className="btn"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="btn-teal px-5 py-2 text-xs font-semibold rounded-lg shadow-md"
+              disabled={isSubmitting || !name.trim()}
+              className="btn-primary disabled:opacity-50"
             >
-              {isSubmitting ? 'Creating Project...' : 'Create Project'}
+              <span>{isSubmitting ? 'Registering…' : 'Register Repository'}</span>
             </button>
           </div>
         </form>

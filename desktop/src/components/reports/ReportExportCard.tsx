@@ -8,140 +8,68 @@ interface ReportExportCardProps {
 }
 
 export const ReportExportCard: React.FC<ReportExportCardProps> = ({ option, onExport }) => {
-  const getFormatIcon = () => {
-    switch (option.format) {
-      case 'PDF':
-        return <FileText size={24} color="var(--color-primary)" />;
-      case 'JSON':
-        return <Code size={24} color="var(--color-secondary-dark)" />;
-      case 'CSV':
-        return <FileSpreadsheet size={24} color="var(--color-accent-dark)" />;
-    }
+  const formatConfig = {
+    PDF: {
+      icon: <FileText className="h-6 w-6 text-primary" />,
+      iconBg: 'bg-primary/10 ring-primary/25',
+      badge: 'bg-primary/10 text-primary ring-primary/25',
+    },
+    JSON: {
+      icon: <Code className="h-6 w-6 text-sky-700" />,
+      iconBg: 'bg-sky-500/10 ring-sky-500/25',
+      badge: 'bg-sky-500/10 text-sky-700 ring-sky-500/25',
+    },
+    CSV: {
+      icon: <FileSpreadsheet className="h-6 w-6 text-amber-700" />,
+      iconBg: 'bg-amber-500/10 ring-amber-500/25',
+      badge: 'bg-amber-500/10 text-amber-700 ring-amber-500/25',
+    },
+  }[option.format] ?? {
+    icon: <FileText className="h-6 w-6 text-primary" />,
+    iconBg: 'bg-primary/10 ring-primary/25',
+    badge: 'bg-primary/10 text-primary ring-primary/25',
   };
-
-  const getFormatBadgeStyle = () => {
-    switch (option.format) {
-      case 'PDF':
-        return {
-          background: 'rgba(36, 52, 71, 0.08)',
-          color: 'var(--color-primary)',
-          borderColor: 'rgba(36, 52, 71, 0.2)',
-        };
-      case 'JSON':
-        return {
-          background: 'var(--color-secondary-light)',
-          color: 'var(--color-secondary-dark)',
-          borderColor: 'rgba(42, 157, 143, 0.3)',
-        };
-      case 'CSV':
-        return {
-          background: 'var(--color-accent-light)',
-          color: 'var(--color-accent-dark)',
-          borderColor: 'rgba(233, 162, 59, 0.35)',
-        };
-    }
-  };
-
-  const badgeStyle = getFormatBadgeStyle();
 
   return (
-    <div
-      className="glass-panel"
-      style={{
-        padding: '24px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        gap: '20px',
-        position: 'relative',
-      }}
-    >
+    <div className="card card-hover flex flex-col justify-between gap-5 p-6">
       <div>
-        {/* Header with Format and Estimated Size */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div
-              style={{
-                width: '44px',
-                height: '44px',
-                borderRadius: '10px',
-                background: badgeStyle.background,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: `1px solid ${badgeStyle.borderColor}`,
-              }}
-            >
-              {getFormatIcon()}
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className={`grid h-11 w-11 place-items-center rounded-xl ring-1 ${formatConfig.iconBg}`}>
+              {formatConfig.icon}
             </div>
-            <div>
-              <span
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  letterSpacing: '0.05em',
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  background: badgeStyle.background,
-                  color: badgeStyle.color,
-                  display: 'inline-block',
-                }}
-              >
-                {option.format}
-              </span>
-            </div>
+            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${formatConfig.badge}`}>
+              {option.format}
+            </span>
           </div>
-
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>
+          <span className="text-[12px] text-slate-500 font-medium">
             Approx: {option.estimatedSize}
           </span>
         </div>
 
         {/* Title & Description */}
-        <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '8px' }}>
-          {option.title}
-        </h4>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '14px' }}>
-          {option.description}
-        </p>
+        <h4 className="text-[16px] font-semibold text-slate-900 mb-2">{option.title}</h4>
+        <p className="text-[13px] text-slate-600 leading-relaxed mb-4">{option.description}</p>
 
         {/* Target Audience */}
-        <div
-          style={{
-            fontSize: '11.5px',
-            color: 'var(--text-muted)',
-            backgroundColor: 'rgba(241, 245, 249, 0.6)',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            border: '1px solid rgba(226, 232, 240, 0.7)',
-          }}
-        >
-          <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Target Audience: </span>
+        <div className="rounded-lg border border-slate-200/60 bg-white/60 px-3 py-2 text-[12px] text-slate-600">
+          <span className="font-semibold text-slate-700">Target Audience: </span>
           {option.recommendedFor}
         </div>
       </div>
 
       {/* Export Action */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingTop: '16px',
-          borderTop: '1px solid var(--border-glass)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11.5px', color: 'var(--text-muted)' }}>
-          <Clock size={12} />
+      <div className="flex items-center justify-between border-t border-slate-200/60 pt-4">
+        <div className="flex items-center gap-1.5 text-[12px] text-slate-500">
+          <Clock className="h-3.5 w-3.5" />
           <span>On-demand compilation</span>
         </div>
-
         <button
           onClick={() => onExport(option.format, option.title)}
-          className={option.format === 'PDF' ? 'btn-primary' : option.format === 'JSON' ? 'btn-teal' : 'btn-secondary'}
-          style={{ padding: '8px 16px', fontSize: '13px' }}
+          className={option.format === 'PDF' ? 'btn-primary' : 'btn'}
         >
-          <Download size={14} />
+          <Download className="h-3.5 w-3.5" />
           Export {option.format}
         </button>
       </div>
