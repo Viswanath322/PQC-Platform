@@ -48,9 +48,9 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
               flexDirection: 'column',
               justifyContent: 'space-between',
               gap: '14px',
-              borderLeft: '4px solid #ef4444',
-              backgroundColor: 'rgba(23, 34, 50, 0.75)',
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+              borderLeft: '3.5px solid var(--color-graphite)',
+              backgroundColor: 'rgba(255, 255, 255, 0.55)',
+              transition: 'transform 0.18s ease, box-shadow 0.18s ease',
             }}
           >
             {/* Header info */}
@@ -59,10 +59,11 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
                 <div>
                   <span
                     style={{
-                      fontSize: '16px',
+                      fontSize: '15.5px',
                       fontWeight: 700,
-                      color: '#f8fafc',
+                      color: 'var(--color-graphite)',
                       display: 'block',
+                      letterSpacing: '-0.01em',
                     }}
                   >
                     {item.algorithm}
@@ -72,8 +73,8 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
                     <code
                       style={{
                         fontSize: '11.5px',
-                        color: '#5eead4',
-                        background: 'rgba(255, 255, 255, 0.06)',
+                        color: 'var(--color-graphite)',
+                        background: 'rgba(41, 40, 36, 0.05)',
                         padding: '1px 5px',
                         borderRadius: '3px',
                       }}
@@ -101,33 +102,33 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
             <div
               style={{
                 padding: '12px 14px',
-                borderRadius: '8px',
-                background: 'rgba(42, 157, 143, 0.14)',
-                border: '1px solid rgba(42, 157, 143, 0.3)',
+                borderRadius: '10px',
+                background: 'rgba(120, 135, 119, 0.12)',
+                border: '1px solid rgba(120, 135, 119, 0.25)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                <Cpu size={13} color="#5eead4" />
+                <Cpu size={13} color="var(--color-muted-sage)" />
                 <span
                   style={{
                     fontSize: '11px',
                     fontWeight: 700,
                     textTransform: 'uppercase',
                     letterSpacing: '0.04em',
-                    color: '#5eead4',
+                    color: 'var(--color-muted-sage)',
                   }}
                 >
-                  Recommended Migration:
+                  Recommended:
                 </span>
               </div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-graphite)' }}>
                 {item.recommendation}
               </div>
 
               {item.nistStandard && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '6px' }}>
-                  <CheckCircle2 size={11} color="#5eead4" />
-                  <span style={{ fontSize: '11.5px', color: '#cbd5e1', fontWeight: 500 }}>
+                  <CheckCircle2 size={11} color="var(--color-muted-sage)" />
+                  <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                     Standard: {item.nistStandard}
                   </span>
                 </div>
@@ -141,7 +142,7 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 paddingTop: '6px',
-                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                borderTop: '1px solid rgba(41, 40, 36, 0.06)',
                 fontSize: '11.5px',
               }}
             >
@@ -155,7 +156,7 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#5eead4',
+                  color: 'var(--color-graphite)',
                   fontWeight: 600,
                   fontSize: '12px',
                   display: 'flex',
@@ -177,12 +178,13 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
         style={{
           fontSize: '11.5px',
           color: 'var(--text-muted)',
-          backgroundColor: 'rgba(255, 255, 255, 0.04)',
+          backgroundColor: 'rgba(41, 40, 36, 0.03)',
           padding: '8px 14px',
-          borderRadius: '6px',
+          borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
+          border: '1px solid rgba(41, 40, 36, 0.05)',
         }}
       >
         <span style={{ fontWeight: 600 }}>Note:</span>

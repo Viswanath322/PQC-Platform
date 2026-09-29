@@ -38,20 +38,20 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   return (
     <header
       style={{
-        height: '68px',
-        background: 'rgba(20, 31, 46, 0.8)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        borderTopLeftRadius: '22px',
-        borderTopRightRadius: '22px',
+        height: '66px',
+        background: 'rgba(255, 255, 255, 0.42)',
+        backdropFilter: 'blur(20px) saturate(120%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(120%)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.6)',
+        borderTopLeftRadius: '24px',
+        borderTopRightRadius: '24px',
         padding: '0 32px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
-        zIndex: 40,
+        zIndex: 20,
         boxSizing: 'border-box',
       }}
     >
@@ -62,14 +62,14 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'rgba(255, 255, 255, 0.06)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
+            background: 'rgba(255, 255, 255, 0.65)',
+            border: '1px solid rgba(255, 255, 255, 0.75)',
             padding: '6px 12px',
             borderRadius: 'var(--radius-md)',
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25)',
+            boxShadow: '0 2px 8px rgba(41, 40, 36, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
           }}
         >
-          <FolderGit2 size={16} color="#5eead4" />
+          <FolderGit2 size={16} color="var(--color-graphite)" />
           <select
             value={selectedProject}
             onChange={handleProjectChange}
@@ -78,13 +78,14 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
               background: 'transparent',
               fontSize: '13px',
               fontWeight: 600,
-              color: '#f8fafc',
+              color: 'var(--color-graphite)',
               cursor: 'pointer',
               outline: 'none',
+              fontFamily: 'inherit',
             }}
           >
             {projects.map((p) => (
-              <option key={p.name} value={p.name} style={{ background: '#162231', color: '#f8fafc' }}>
+              <option key={p.name} value={p.name}>
                 {p.name}
               </option>
             ))}
@@ -97,24 +98,25 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             alignItems: 'center',
             gap: '5px',
             fontSize: '12px',
-            color: '#94a3b8',
-            background: 'rgba(255, 255, 255, 0.05)',
+            color: 'var(--text-secondary)',
+            background: 'rgba(255, 255, 255, 0.5)',
             padding: '5px 10px',
             borderRadius: 'var(--radius-sm)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.6)',
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.5)',
           }}
         >
-          <GitBranch size={13} color="#94a3b8" />
+          <GitBranch size={13} color="var(--color-muted-sage)" />
           <span>{currentBranch}</span>
         </div>
       </div>
 
       {/* Right controls: Last Scan, Refresh, Mock Data Badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#94a3b8' }}>
-          <Clock size={13} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+          <Clock size={13} color="var(--text-muted)" />
           <span>Last Scan: </span>
-          <strong style={{ color: '#e2e8f0', fontWeight: 600 }}>{lastScanTimestamp}</strong>
+          <strong style={{ color: 'var(--color-graphite)', fontWeight: 600 }}>{lastScanTimestamp}</strong>
         </div>
 
         <button
@@ -132,11 +134,12 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         >
           <RefreshCw
             size={13}
+            color="var(--color-graphite)"
             style={{
               animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
             }}
           />
-          <span>{isRefreshing ? 'Scanning...' : 'Refresh Scan'}</span>
+          <span>{isRefreshing ? 'Scanning...' : 'Refresh'}</span>
         </button>
 
         <MockDataBadge />
