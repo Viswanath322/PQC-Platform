@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 # The intentionally-vulnerable demo repo (fake secrets, weak crypto). Never scanned.
-FIXTURE_ALLOWLIST = ("tests/fixtures/vulnerable-demo-repo/",)
+FIXTURE_ALLOWLIST = ("tests/fixtures/vulnerable-demo-repo/", "vulnerable-demo-repo/")  # old path, and its root on tests/pushpam
 # This test suite itself contains the regexes it searches for.
 SELF_EXCLUDE = ("tests/security/",)
 

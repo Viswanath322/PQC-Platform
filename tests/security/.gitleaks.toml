@@ -9,6 +9,7 @@ useDefault = true
 description = "Intentionally vulnerable demo repo (fake secrets) and dev placeholders"
 paths = [
   '''tests/fixtures/vulnerable-demo-repo/''',
+  '''^vulnerable-demo-repo/''',
   '''tests/security/''',
 ]
 regexes = [
