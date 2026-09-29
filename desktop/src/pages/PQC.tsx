@@ -126,7 +126,7 @@ export const PQC: React.FC<PQCPageProps> = ({
             flexDirection: 'column',
             justifyContent: 'space-between',
             minHeight: '140px',
-            background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.88) 0%, rgba(244, 246, 249, 0.8) 100%)',
+            background: 'linear-gradient(145deg, rgba(28, 42, 60, 0.9) 0%, rgba(20, 31, 46, 0.8) 100%)',
           }}
         >
           <div>
@@ -148,8 +148,9 @@ export const PQC: React.FC<PQCPageProps> = ({
                   fontWeight: 600,
                   padding: '2px 6px',
                   borderRadius: '4px',
-                  background: 'rgba(233, 162, 59, 0.15)',
-                  color: 'var(--color-accent-dark)',
+                  background: 'rgba(233, 162, 59, 0.2)',
+                  color: '#fcd34d',
+                  border: '1px solid rgba(233, 162, 59, 0.35)',
                 }}
               >
                 {mockRiskSummary.atRiskPercentage}% At Risk
@@ -161,13 +162,13 @@ export const PQC: React.FC<PQCPageProps> = ({
                 style={{
                   fontSize: '32px',
                   fontWeight: 700,
-                  color: 'var(--color-primary)',
+                  color: '#f8fafc',
                   lineHeight: 1.1,
                 }}
               >
                 {mockRiskSummary.readinessPercentage}%
               </span>
-              <span style={{ fontSize: '13px', color: 'var(--color-secondary-dark)', fontWeight: 600 }}>
+              <span style={{ fontSize: '13px', color: '#5eead4', fontWeight: 600 }}>
                 Quantum Resilient
               </span>
             </div>
@@ -179,7 +180,7 @@ export const PQC: React.FC<PQCPageProps> = ({
               style={{
                 height: '8px',
                 width: '100%',
-                backgroundColor: 'rgba(239, 68, 68, 0.22)',
+                backgroundColor: 'rgba(239, 68, 68, 0.25)',
                 borderRadius: '4px',
                 overflow: 'hidden',
                 display: 'flex',
@@ -246,8 +247,8 @@ export const PQC: React.FC<PQCPageProps> = ({
                     gap: '10px',
                     padding: '10px 12px',
                     borderRadius: '8px',
-                    background: 'rgba(255, 255, 255, 0.65)',
-                    border: '1px solid rgba(226, 232, 240, 0.8)',
+                    background: 'rgba(18, 27, 40, 0.65)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                   }}
                 >
                   <div style={{ marginTop: '2px', flexShrink: 0 }}>
@@ -256,18 +257,18 @@ export const PQC: React.FC<PQCPageProps> = ({
                     ) : insight.category === 'warning' ? (
                       <AlertTriangle size={15} color="var(--color-accent-dark)" />
                     ) : (
-                      <CheckCircle2 size={15} color="var(--color-secondary-dark)" />
+                      <CheckCircle2 size={15} color="#5eead4" />
                     )}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.45, fontWeight: 500 }}>
+                    <p style={{ fontSize: '13px', color: '#f1f5f9', lineHeight: 1.45, fontWeight: 500 }}>
                       {insight.text}
                     </p>
                     {insight.componentRef && (
                       <span
                         style={{
                           fontSize: '11px',
-                          color: 'var(--text-muted)',
+                          color: '#94a3b8',
                           fontFamily: 'monospace',
                           display: 'inline-block',
                           marginTop: '2px',
@@ -312,7 +313,7 @@ export const PQC: React.FC<PQCPageProps> = ({
           </div>
 
           {/* View Mode Toggle */}
-          <div style={{ display: 'flex', background: '#e2e8f0', padding: '3px', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', background: 'rgba(15, 23, 36, 0.75)', padding: '3px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
             <button
               onClick={() => setActiveTableTab('inventory')}
               style={{
@@ -325,9 +326,9 @@ export const PQC: React.FC<PQCPageProps> = ({
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                background: activeTableTab === 'inventory' ? '#ffffff' : 'transparent',
-                color: activeTableTab === 'inventory' ? 'var(--color-primary)' : 'var(--text-secondary)',
-                boxShadow: activeTableTab === 'inventory' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                background: activeTableTab === 'inventory' ? 'rgba(42, 157, 143, 0.28)' : 'transparent',
+                color: activeTableTab === 'inventory' ? '#5eead4' : '#94a3b8',
+                boxShadow: activeTableTab === 'inventory' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -346,9 +347,9 @@ export const PQC: React.FC<PQCPageProps> = ({
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                background: activeTableTab === 'cbom' ? '#ffffff' : 'transparent',
-                color: activeTableTab === 'cbom' ? 'var(--color-primary)' : 'var(--text-secondary)',
-                boxShadow: activeTableTab === 'cbom' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                background: activeTableTab === 'cbom' ? 'rgba(42, 157, 143, 0.28)' : 'transparent',
+                color: activeTableTab === 'cbom' ? '#5eead4' : '#94a3b8',
+                boxShadow: activeTableTab === 'cbom' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -391,12 +392,13 @@ export const PQC: React.FC<PQCPageProps> = ({
             flexDirection: 'column',
             justifyContent: 'space-between',
             gap: '16px',
+            backgroundColor: 'rgba(23, 34, 50, 0.75)',
           }}
         >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileSpreadsheet size={18} color="var(--color-primary)" />
+                <FileSpreadsheet size={18} color="#5eead4" />
                 <h3 className="title-level-2">Compliance Reports</h3>
               </div>
               <MockDataBadge size="sm" />
@@ -412,8 +414,8 @@ export const PQC: React.FC<PQCPageProps> = ({
                   style={{
                     padding: '12px 14px',
                     borderRadius: '10px',
-                    background: 'rgba(255, 255, 255, 0.65)',
-                    border: '1px solid var(--border-glass)',
+                    background: 'rgba(15, 23, 36, 0.65)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -428,29 +430,30 @@ export const PQC: React.FC<PQCPageProps> = ({
                         borderRadius: '8px',
                         background:
                           opt.format === 'PDF'
-                            ? 'rgba(36, 52, 71, 0.08)'
+                            ? 'rgba(255, 255, 255, 0.1)'
                             : opt.format === 'JSON'
-                            ? 'var(--color-secondary-light)'
-                            : 'var(--color-accent-light)',
+                            ? 'rgba(42, 157, 143, 0.16)'
+                            : 'rgba(233, 162, 59, 0.16)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                       }}
                     >
                       {opt.format === 'PDF' ? (
-                        <FileText size={17} color="var(--color-primary)" />
+                        <FileText size={17} color="#f8fafc" />
                       ) : opt.format === 'JSON' ? (
-                        <Code size={17} color="var(--color-secondary-dark)" />
+                        <Code size={17} color="#5eead4" />
                       ) : (
-                        <FileSpreadsheet size={17} color="var(--color-accent-dark)" />
+                        <FileSpreadsheet size={17} color="#fcd34d" />
                       )}
                     </div>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-primary)' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>
                         {opt.title}
                       </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
                         Format: {opt.format} • Approx: {opt.estimatedSize}
                       </div>
                     </div>
@@ -489,7 +492,7 @@ export const PQC: React.FC<PQCPageProps> = ({
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: 'var(--color-secondary-dark)',
+                color: '#5eead4',
                 fontWeight: 600,
                 fontSize: '12px',
                 cursor: 'pointer',

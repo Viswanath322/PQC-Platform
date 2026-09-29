@@ -36,12 +36,13 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
               fontSize: '12px',
               padding: '6px 12px',
               borderRadius: '6px',
-              background: 'rgba(42, 157, 143, 0.1)',
-              color: 'var(--color-secondary-dark)',
+              background: 'rgba(42, 157, 143, 0.16)',
+              color: '#5eead4',
               fontWeight: 600,
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
+              border: '1px solid rgba(42, 157, 143, 0.3)',
             }}
           >
             <ShieldCheck size={14} /> Ready for Generation
@@ -59,7 +60,8 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '16px',
-          borderLeft: '4px solid var(--color-primary)',
+          borderLeft: '4px solid #2A9D8F',
+          backgroundColor: 'rgba(23, 34, 50, 0.75)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -68,20 +70,21 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
               width: '42px',
               height: '42px',
               borderRadius: '10px',
-              background: 'var(--color-primary-faded)',
+              background: 'rgba(42, 157, 143, 0.15)',
+              border: '1px solid rgba(42, 157, 143, 0.25)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <FileBarChart size={20} color="var(--color-primary)" />
+            <FileBarChart size={20} color="#5eead4" />
           </div>
           <div>
-            <h4 style={{ fontSize: '14.5px', fontWeight: 600, color: 'var(--color-primary)' }}>
+            <h4 style={{ fontSize: '14.5px', fontWeight: 600, color: '#f8fafc' }}>
               Artifact Compilation Target: {mockProjectMetadata.projectName}
             </h4>
-            <p style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>
-              Branch: <code>{mockProjectMetadata.branch}</code> • Scanned Files: {mockProjectMetadata.totalFilesScanned} • AST Ruleset v0.8.4
+            <p style={{ fontSize: '12.5px', color: '#94a3b8' }}>
+              Branch: <code style={{ color: '#5eead4', background: 'rgba(255, 255, 255, 0.06)', padding: '2px 6px', borderRadius: '4px' }}>{mockProjectMetadata.branch}</code> • Scanned Files: {mockProjectMetadata.totalFilesScanned} • AST Ruleset v0.8.4
             </p>
           </div>
         </div>
@@ -90,8 +93,9 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
           <span
             style={{
               fontSize: '11.5px',
-              color: 'var(--text-muted)',
-              background: 'rgba(36, 52, 71, 0.05)',
+              color: '#94a3b8',
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
               padding: '5px 10px',
               borderRadius: '6px',
             }}
@@ -122,8 +126,8 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
       </div>
 
       {/* Compliance Standard References */}
-      <div className="glass-panel" style={{ padding: '24px' }}>
-        <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--color-primary)', marginBottom: '12px' }}>
+      <div className="glass-panel" style={{ padding: '24px', backgroundColor: 'rgba(23, 34, 50, 0.75)' }}>
+        <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#f8fafc', marginBottom: '12px' }}>
           Post-Quantum Cryptography Reporting Standards
         </h4>
         <div
@@ -137,14 +141,14 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
             style={{
               padding: '14px',
               borderRadius: '8px',
-              background: 'rgba(255, 255, 255, 0.6)',
+              background: 'rgba(15, 23, 36, 0.65)',
               border: '1px solid var(--border-glass)',
             }}
           >
-            <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--color-primary)', marginBottom: '4px' }}>
+            <div style={{ fontWeight: 600, fontSize: '13px', color: '#5eead4', marginBottom: '4px' }}>
               NIST FIPS 203, 204, 205
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+            <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.45 }}>
               Standardizes Module-Lattice Key Encapsulation Mechanism (ML-KEM) and Digital Signature Algorithms (ML-DSA / SLH-DSA).
             </p>
           </div>
@@ -153,14 +157,14 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
             style={{
               padding: '14px',
               borderRadius: '8px',
-              background: 'rgba(255, 255, 255, 0.6)',
+              background: 'rgba(15, 23, 36, 0.65)',
               border: '1px solid var(--border-glass)',
             }}
           >
-            <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--color-primary)', marginBottom: '4px' }}>
+            <div style={{ fontWeight: 600, fontSize: '13px', color: '#5eead4', marginBottom: '4px' }}>
               CycloneDX Cryptographic BOM (CBOM)
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+            <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.45 }}>
               Standardized format to document cryptographic dependencies, quantum vulnerability ratings, and key lifecycles.
             </p>
           </div>
@@ -169,14 +173,14 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
             style={{
               padding: '14px',
               borderRadius: '8px',
-              background: 'rgba(255, 255, 255, 0.6)',
+              background: 'rgba(15, 23, 36, 0.65)',
               border: '1px solid var(--border-glass)',
             }}
           >
-            <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--color-primary)', marginBottom: '4px' }}>
+            <div style={{ fontWeight: 600, fontSize: '13px', color: '#5eead4', marginBottom: '4px' }}>
               BSI Technical Guideline TR-02102
             </div>
-            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.45 }}>
+            <p style={{ fontSize: '12px', color: '#cbd5e1', lineHeight: 1.45 }}>
               Cryptographic mechanisms recommendation guidance for long-term security and quantum-resistant hybrid transitions.
             </p>
           </div>

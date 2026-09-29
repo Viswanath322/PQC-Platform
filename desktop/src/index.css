@@ -1,44 +1,44 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Three-Color Palette */
-  --color-primary: #243447;        /* Deep Slate: Navigation, headings, strong text */
-  --color-primary-dark: #1a2736;
-  --color-primary-light: #34485e;
-  --color-primary-faded: rgba(36, 52, 71, 0.08);
+  /* Three-Color Palette in Dark Theme */
+  --color-primary: #f1f5f9;        /* Crisp Primary Text */
+  --color-primary-dark: #cbd5e1;
+  --color-primary-light: #ffffff;
+  --color-primary-faded: rgba(255, 255, 255, 0.08);
 
   --color-secondary: #2A9D8F;      /* Teal: Positive status, low-risk, active states */
   --color-secondary-dark: #218276;
-  --color-secondary-light: #e8f5f4;
-  --color-secondary-faded: rgba(42, 157, 143, 0.12);
+  --color-secondary-light: rgba(42, 157, 143, 0.16);
+  --color-secondary-faded: rgba(42, 157, 143, 0.14);
 
   --color-accent: #E9A23B;         /* Muted Amber: Warnings, medium-risk, attention */
-  --color-accent-dark: #cb8523;
-  --color-accent-light: #fef7ec;
+  --color-accent-dark: #f59e0b;
+  --color-accent-light: rgba(233, 162, 59, 0.16);
   --color-accent-faded: rgba(233, 162, 59, 0.14);
 
-  /* Semantic High Risk (Restrained neutral contrast) */
-  --color-risk-high: #c53030;
-  --color-risk-high-light: #fdf2f2;
-  --color-risk-high-faded: rgba(197, 48, 48, 0.12);
+  /* Semantic High Risk (Restrained dark crimson contrast) */
+  --color-risk-high: #f87171;
+  --color-risk-high-light: rgba(239, 68, 68, 0.16);
+  --color-risk-high-faded: rgba(239, 68, 68, 0.12);
 
-  /* Neutrals & Surfaces */
-  --bg-app: #eef2f6;               /* Soft, clean enterprise neutral canvas */
-  --surface-main-glass: rgba(255, 255, 255, 0.65);
-  --surface-glass: rgba(255, 255, 255, 0.75);
-  --surface-glass-solid: rgba(255, 255, 255, 0.95);
-  --surface-glass-subtle: rgba(255, 255, 255, 0.55);
-  --border-glass: rgba(226, 232, 240, 0.85);
-  --border-glass-strong: rgba(203, 213, 225, 0.95);
+  /* Dark Theme Neutrals & Glass Surfaces */
+  --bg-app: #0c131c;               /* Deep Slate Dark Canvas */
+  --surface-main-glass: rgba(18, 27, 40, 0.78);
+  --surface-glass: rgba(24, 35, 52, 0.72);
+  --surface-glass-solid: rgba(28, 41, 60, 0.95);
+  --surface-glass-subtle: rgba(20, 31, 46, 0.6);
+  --border-glass: rgba(255, 255, 255, 0.09);
+  --border-glass-strong: rgba(255, 255, 255, 0.16);
 
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
 
-  --shadow-sm: 0 2px 8px rgba(36, 52, 71, 0.04);
-  --shadow-md: 0 6px 20px rgba(36, 52, 71, 0.06);
-  --shadow-lg: 0 12px 36px rgba(36, 52, 71, 0.08);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.45);
 
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -56,12 +56,12 @@
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--bg-app);
-  /* Soft professional background with extremely subtle tonal variation */
+  /* Deep slate neutral dark background with subtle ambient depth */
   background-image: 
-    radial-gradient(ellipse at 15% 10%, rgba(42, 157, 143, 0.045) 0%, transparent 45%),
-    radial-gradient(ellipse at 85% 20%, rgba(36, 52, 71, 0.04) 0%, transparent 45%),
-    radial-gradient(ellipse at 50% 90%, rgba(233, 162, 59, 0.035) 0%, transparent 50%),
-    linear-gradient(180deg, #f4f7fb 0%, #e9edf3 100%);
+    radial-gradient(ellipse at 15% 10%, rgba(42, 157, 143, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 20%, rgba(36, 52, 71, 0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(233, 162, 59, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #0e1622 0%, #090e16 100%);
   background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
@@ -85,16 +85,16 @@ code, kbd, samp, pre {
 /* Main Application Glass Container */
 .main-glass-container {
   flex: 1;
-  margin-left: 114px;
+  margin-left: 116px;
   margin-right: 24px;
   margin-top: 24px;
   margin-bottom: 24px;
   min-height: calc(100vh - 48px);
   background: var(--surface-main-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: 0 12px 36px rgba(36, 52, 71, 0.08);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid var(--border-glass);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.45);
   border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
@@ -134,48 +134,48 @@ code, kbd, samp, pre {
   border-radius: var(--radius-md);
 }
 
-/* Custom Scrollbars */
+/* Custom Scrollbars in Dark Theme */
 ::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(241, 245, 249, 0.6);
+  background: rgba(15, 23, 36, 0.6);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.55);
+  background: rgba(71, 85, 105, 0.65);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.75);
+  background: rgba(100, 116, 139, 0.85);
 }
 
 /* Typography Hierarchy */
 .title-level-1 {
   font-size: 24px;
   font-weight: 700;
-  color: var(--color-primary);
+  color: #f8fafc;
   letter-spacing: -0.02em;
 }
 
 .title-level-2 {
   font-size: 17px;
   font-weight: 600;
-  color: var(--color-primary);
+  color: #f1f5f9;
   letter-spacing: -0.01em;
 }
 
 .subtitle-muted {
   font-size: 13.5px;
-  color: var(--text-muted);
+  color: #94a3b8;
   margin-top: 2px;
 }
 
-/* Badges & Tags */
+/* Badges & Tags in Dark Theme */
 .badge-dev-mock {
   display: inline-flex;
   align-items: center;
@@ -186,9 +186,9 @@ code, kbd, samp, pre {
   text-transform: uppercase;
   padding: 4px 10px;
   border-radius: var(--radius-full);
-  background: rgba(36, 52, 71, 0.08);
-  color: var(--color-primary);
-  border: 1px solid rgba(36, 52, 71, 0.15);
+  background: rgba(42, 157, 143, 0.14);
+  color: #5eead4;
+  border: 1px solid rgba(42, 157, 143, 0.3);
 }
 
 .badge-risk-high {
@@ -199,9 +199,9 @@ code, kbd, samp, pre {
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 6px;
-  background: var(--color-risk-high-light);
-  color: var(--color-risk-high);
-  border: 1px solid rgba(197, 48, 48, 0.25);
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 .badge-risk-medium {
@@ -212,8 +212,8 @@ code, kbd, samp, pre {
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 6px;
-  background: var(--color-accent-light);
-  color: var(--color-accent-dark);
+  background: rgba(233, 162, 59, 0.16);
+  color: #fcd34d;
   border: 1px solid rgba(233, 162, 59, 0.35);
 }
 
@@ -225,12 +225,12 @@ code, kbd, samp, pre {
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 6px;
-  background: var(--color-secondary-light);
-  color: var(--color-secondary-dark);
-  border: 1px solid rgba(42, 157, 143, 0.3);
+  background: rgba(42, 157, 143, 0.16);
+  color: #5eead4;
+  border: 1px solid rgba(42, 157, 143, 0.35);
 }
 
-/* Buttons */
+/* Buttons in Dark Theme */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -240,18 +240,18 @@ code, kbd, samp, pre {
   font-size: 13.5px;
   font-weight: 600;
   color: #ffffff;
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary-dark);
+  background: #243447;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 2px 6px rgba(36, 52, 71, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .btn-primary:hover {
-  background: var(--color-primary-light);
+  background: #2d425b;
+  border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(36, 52, 71, 0.2);
 }
 
 .btn-secondary {
@@ -262,18 +262,17 @@ code, kbd, samp, pre {
   padding: 8px 16px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--color-primary);
-  background: #ffffff;
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid var(--border-glass-strong);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(36, 52, 71, 0.04);
 }
 
 .btn-secondary:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .btn-teal {
@@ -293,27 +292,27 @@ code, kbd, samp, pre {
 }
 
 .btn-teal:hover {
-  background: #248a7e;
-  box-shadow: 0 4px 12px rgba(42, 157, 143, 0.25);
+  background: #238579;
+  box-shadow: 0 4px 14px rgba(42, 157, 143, 0.35);
 }
 
-/* Toast Notification Overlay */
+/* Toast Notification in Dark Theme */
 .toast-notification {
   position: fixed;
   bottom: 32px;
   right: 36px;
-  background: var(--color-primary);
+  background: #182433;
   color: #ffffff;
   padding: 14px 20px;
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 13.5px;
   z-index: 1000;
   animation: slideUpToast 0.22s ease forwards;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 @keyframes slideUpToast {

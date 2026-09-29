@@ -48,13 +48,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         bottom: '24px',
         height: 'calc(100vh - 48px)',
         width: isHovered ? '240px' : '76px',
-        background: isHovered ? 'rgba(255, 255, 255, 0.75)' : 'rgba(255, 255, 255, 0.55)',
+        background: isHovered ? 'rgba(24, 35, 52, 0.88)' : 'rgba(18, 27, 40, 0.78)',
         backdropFilter: 'blur(22px)',
         WebkitBackdropFilter: 'blur(22px)',
-        border: '1px solid rgba(255, 255, 255, 0.65)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
         boxShadow: isHovered
-          ? '0 20px 48px rgba(36, 52, 71, 0.16)'
-          : '0 16px 40px rgba(36, 52, 71, 0.1)',
+          ? '0 20px 48px rgba(0, 0, 0, 0.5)'
+          : '0 16px 40px rgba(0, 0, 0, 0.35)',
         borderRadius: '24px',
         padding: '20px 10px',
         display: 'flex',
@@ -87,11 +87,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               height: '40px',
               minWidth: '40px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #243447 0%, #1a2736 100%)',
+              background: 'linear-gradient(135deg, #1e2d3e 0%, #15202d 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(36, 52, 71, 0.25)',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.35)',
               flexShrink: 0,
             }}
           >
@@ -113,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               style={{
                 fontSize: '14.5px',
                 fontWeight: 700,
-                color: 'var(--color-primary)',
+                color: '#f8fafc',
                 letterSpacing: '-0.01em',
                 lineHeight: 1.2,
               }}
@@ -124,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               style={{
                 fontSize: '10.5px',
                 fontWeight: 600,
-                color: 'var(--text-muted)',
+                color: '#94a3b8',
                 letterSpacing: '0.04em',
                 textTransform: 'uppercase',
               }}
@@ -138,7 +139,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div
           style={{
             height: '1px',
-            background: 'rgba(36, 52, 71, 0.08)',
+            background: 'rgba(255, 255, 255, 0.08)',
             margin: '0 4px',
           }}
         />
@@ -164,9 +165,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   borderRadius: '12px',
                   border: 'none',
                   background: isActive
-                    ? 'rgba(42, 157, 143, 0.14)'
+                    ? 'rgba(42, 157, 143, 0.2)'
                     : 'transparent',
-                  color: isActive ? 'var(--color-primary)' : 'var(--text-secondary)',
+                  color: isActive ? '#5eead4' : '#94a3b8',
                   cursor: 'pointer',
                   transition: 'background 160ms ease, color 160ms ease',
                   position: 'relative',
@@ -176,12 +177,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(36, 52, 71, 0.06)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                    e.currentTarget.style.color = '#f1f5f9';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#94a3b8';
                   }
                 }}
               >
@@ -209,12 +212,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     justifyContent: 'center',
                     flexShrink: 0,
                     borderRadius: '10px',
-                    background: isActive ? 'rgba(42, 157, 143, 0.18)' : 'transparent',
+                    background: isActive ? 'rgba(42, 157, 143, 0.22)' : 'transparent',
                   }}
                 >
                   <Icon
                     size={20}
-                    color={isActive ? 'var(--color-secondary)' : '#475569'}
+                    color={isActive ? '#5eead4' : '#94a3b8'}
                     strokeWidth={isActive ? 2.2 : 1.9}
                   />
                 </div>
@@ -230,7 +233,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     overflow: 'hidden',
                     fontSize: '13.5px',
                     fontWeight: isActive ? 600 : 500,
-                    color: isActive ? 'var(--color-primary)' : 'var(--text-primary)',
+                    color: isActive ? '#5eead4' : '#e2e8f0',
                     flex: 1,
                   }}
                 >
@@ -264,7 +267,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div
           style={{
             height: '1px',
-            background: 'rgba(36, 52, 71, 0.08)',
+            background: 'rgba(255, 255, 255, 0.08)',
             margin: '0 4px',
           }}
         />
@@ -283,9 +286,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             borderRadius: '12px',
             border: 'none',
             background: currentPage === 'settings'
-              ? 'rgba(42, 157, 143, 0.14)'
+              ? 'rgba(42, 157, 143, 0.2)'
               : 'transparent',
-            color: currentPage === 'settings' ? 'var(--color-primary)' : 'var(--text-secondary)',
+            color: currentPage === 'settings' ? '#5eead4' : '#94a3b8',
             cursor: 'pointer',
             transition: 'background 160ms ease, color 160ms ease',
             position: 'relative',
@@ -295,12 +298,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           }}
           onMouseEnter={(e) => {
             if (currentPage !== 'settings') {
-              e.currentTarget.style.background = 'rgba(36, 52, 71, 0.06)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+              e.currentTarget.style.color = '#f1f5f9';
             }
           }}
           onMouseLeave={(e) => {
             if (currentPage !== 'settings') {
               e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = '#94a3b8';
             }
           }}
         >
@@ -327,12 +332,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
               justifyContent: 'center',
               flexShrink: 0,
               borderRadius: '10px',
-              background: currentPage === 'settings' ? 'rgba(42, 157, 143, 0.18)' : 'transparent',
+              background: currentPage === 'settings' ? 'rgba(42, 157, 143, 0.22)' : 'transparent',
             }}
           >
             <Settings
               size={20}
-              color={currentPage === 'settings' ? 'var(--color-secondary)' : '#64748b'}
+              color={currentPage === 'settings' ? '#5eead4' : '#94a3b8'}
               strokeWidth={1.9}
             />
           </div>
@@ -347,7 +352,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               overflow: 'hidden',
               fontSize: '13.5px',
               fontWeight: currentPage === 'settings' ? 600 : 500,
-              color: 'var(--text-primary)',
+              color: '#e2e8f0',
             }}
           >
             Settings
@@ -359,8 +364,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           style={{
             padding: '8px 10px',
             borderRadius: '10px',
-            background: 'rgba(36, 52, 71, 0.04)',
-            border: '1px solid rgba(36, 52, 71, 0.06)',
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: '1px solid rgba(255, 255, 255, 0.06)',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
@@ -380,7 +385,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               flexShrink: 0,
             }}
           >
-            <Activity size={14} color="var(--color-secondary)" />
+            <Activity size={14} color="#5eead4" />
           </div>
 
           <div
@@ -391,14 +396,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               transition: 'opacity 200ms ease, transform 200ms ease',
               whiteSpace: 'nowrap',
               fontSize: '11px',
-              color: 'var(--text-muted)',
+              color: '#94a3b8',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
             }}
           >
-            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Sentinel Engine</span>
+            <span style={{ fontWeight: 600, color: '#cbd5e1' }}>Sentinel Engine</span>
             <span style={{ fontSize: '10px', opacity: 0.8 }}>v0.8.4</span>
           </div>
         </div>
