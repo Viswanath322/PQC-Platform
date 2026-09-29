@@ -3,7 +3,7 @@
 **Owner:** Vamsi (Database Engineer)  
 **Target Engine:** MySQL 8.0+  
 **Database Name:** `pqc_security`  
-**Git Branch:** `database/vamsi`
+**Git Branch:** `vamsi`
 
 ---
 
@@ -18,15 +18,15 @@ erDiagram
     SCANS ||--o{ FINDINGS : "produces"
 
     ORGANIZATIONS {
-        VARCHAR(36) id PK
+        INT id PK "AUTO_INCREMENT (seed id=1)"
         VARCHAR(255) name
         DATETIME created_at
         DATETIME updated_at
     }
 
     USERS {
-        VARCHAR(36) id PK
-        VARCHAR(36) organization_id FK
+        CHAR(36) id PK "UUID"
+        INT organization_id FK "DEFAULT 1"
         VARCHAR(255) email UK
         VARCHAR(255) password_hash
         VARCHAR(50) role
@@ -35,8 +35,8 @@ erDiagram
     }
 
     PROJECTS {
-        VARCHAR(36) id PK
-        VARCHAR(36) organization_id FK
+        INT id PK "AUTO_INCREMENT"
+        INT organization_id FK "DEFAULT 1"
         VARCHAR(255) name
         TEXT description
         DATETIME created_at
@@ -44,8 +44,8 @@ erDiagram
     }
 
     SCANS {
-        VARCHAR(36) id PK
-        VARCHAR(36) project_id FK
+        CHAR(36) id PK "UUID"
+        INT project_id FK "REFERENCES projects(id)"
         ENUM status "QUEUED, INGESTING, ANALYZING, PROCESSING, AI_ANALYSIS, COMPLETED, FAILED, CANCELLED"
         VARCHAR(1024) repository_path
         DATETIME created_at
@@ -54,8 +54,8 @@ erDiagram
     }
 
     SCAN_FILES {
-        VARCHAR(36) id PK
-        VARCHAR(36) scan_id FK
+        CHAR(36) id PK "UUID"
+        CHAR(36) scan_id FK "REFERENCES scans(id)"
         VARCHAR(1024) file_path
         VARCHAR(100) file_type
         VARCHAR(100) language
@@ -64,8 +64,8 @@ erDiagram
     }
 
     FINDINGS {
-        VARCHAR(36) id PK
-        VARCHAR(36) scan_id FK
+        CHAR(36) id PK "UUID"
+        CHAR(36) scan_id FK "REFERENCES scans(id)"
         ENUM engine "sast, crypto, dependency, configuration"
         VARCHAR(100) category
         ENUM severity "critical, high, medium, low"
@@ -81,30 +81,32 @@ erDiagram
 
 ---
 
-## 2. Table Specifications & Index Strategy
+## 2. Table Specifications & Schema Requirements
 
 ### Table: `organizations`
-* **Purpose:** Multi-tenant / customer organization boundary.
-* **Primary Key:** `id` (`VARCHAR(36)`, default `UUID()`).
+* **Purpose:** Multi-tenant / enterprise organization container.
+* **Primary Key:** `id` (`INT AUTO_INCREMENT`, seed organization `id = 1`).
 
 ### Table: `users`
 * **Purpose:** User identities, authentication records, and authorization roles.
-* **Foreign Keys:** `organization_id` &rarr; `organizations.id` (`ON DELETE SET NULL`).
+* **Foreign Keys:** `organization_id` &rarr; `organizations.id` (`INT NULL DEFAULT 1`, `ON DELETE SET NULL`).
 * **Indexes:**
   * `uq_users_email` (UNIQUE): Fast lookups during login/auth.
   * `idx_users_organization_id`: Lookup all users within an organization.
 
 ### Table: `projects`
 * **Purpose:** Target software repositories / projects being scanned.
-* **Foreign Keys:** `organization_id` &rarr; `organizations.id` (`ON DELETE SET NULL`).
+* **Primary Key:** `id` (`INT AUTO_INCREMENT`).
+* **Foreign Keys:** `organization_id` &rarr; `organizations.id` (`INT NOT NULL DEFAULT 1`, `ON DELETE RESTRICT`).
 * **Indexes:**
   * `idx_projects_organization_id`: Filter projects by organization.
   * `idx_projects_name`: Project listing and search.
 
 ### Table: `scans`
 * **Purpose:** Scan execution lifecycle and repository reference.
+* **Primary Key:** `id` (`CHAR(36)` UUID, `DEFAULT (UUID())`).
+* **Foreign Keys:** `project_id` &rarr; `projects.id` (`INT NOT NULL`, `ON DELETE CASCADE`).
 * **Important Rule:** `repository_path` stores the filesystem location of the ZIP/extracted directory. **Never store ZIP binaries in MySQL**.
-* **Foreign Keys:** `project_id` &rarr; `projects.id` (`ON DELETE CASCADE`).
 * **Indexes:**
   * `idx_scans_project_id`: Retrieve all scan runs for a given project.
   * `idx_scans_status`: Worker polling for `QUEUED` scans.
@@ -113,14 +115,16 @@ erDiagram
 
 ### Table: `scan_files`
 * **Purpose:** File catalog discovered during the ingestion phase.
-* **Foreign Keys:** `scan_id` &rarr; `scans.id` (`ON DELETE CASCADE`).
+* **Primary Key:** `id` (`CHAR(36)` UUID, `DEFAULT (UUID())`).
+* **Foreign Keys:** `scan_id` &rarr; `scans.id` (`CHAR(36)`, `ON DELETE CASCADE`).
 * **Indexes:**
   * `idx_scan_files_scan_id`: Load all files for a scan run.
   * `idx_scan_files_language`: Aggregate code language breakdown.
 
 ### Table: `findings`
 * **Purpose:** Normalized security, cryptographic, and dependency findings.
-* **Foreign Keys:** `scan_id` &rarr; `scans.id` (`ON DELETE CASCADE`).
+* **Primary Key:** `id` (`CHAR(36)` UUID, `DEFAULT (UUID())`).
+* **Foreign Keys:** `scan_id` &rarr; `scans.id` (`CHAR(36)`, `ON DELETE CASCADE`).
 * **Indexes:**
   * `idx_findings_scan_id`: Query findings for a specific scan.
   * `idx_findings_severity`: Filter by severity (`critical`, `high`, `medium`, `low`).
@@ -141,25 +145,11 @@ docker compose up -d mysql
 *Database:* `pqc_security`
 
 ### Step 2: Verify Tables Created
-Using any MySQL client (e.g. CLI, DBeaver):
 ```bash
 docker exec -it pqc_mysql mysql -u pqc -pchange_me_locally -e "USE pqc_security; SHOW TABLES;"
 ```
 
-### Step 3: Run the Python Verification Script
+### Step 3: Run the Verification Script
 ```bash
 python database/verify_db.py
 ```
-
----
-
-## 4. Teammate Integration Hand-off
-
-* **Amrutha (FastAPI Foundation):**
-  * Connection string: `mysql+pymysql://pqc:change_me_locally@localhost:3306/pqc_security`
-  * Pre-built SQLAlchemy models: see `backend/app/models/` or `database/models.py`.
-* **Aakash (Scans API):**
-  * Creating a scan: INSERT into `scans` with `status = 'QUEUED'`.
-  * Status transition lifecycle: `QUEUED` &rarr; `INGESTING` &rarr; `ANALYZING` &rarr; `PROCESSING` &rarr; `AI_ANALYSIS` &rarr; `COMPLETED` / `FAILED`.
-* **Sathwik (Findings API):**
-  * Field names in `findings` table: `id`, `scan_id`, `engine`, `category`, `severity`, `title`, `file_path`, `line_number`, `evidence`, `confidence`, `recommendation`.

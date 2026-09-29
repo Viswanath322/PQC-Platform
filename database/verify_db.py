@@ -2,12 +2,10 @@
 PQC Security Assessment Platform - Database Verification Script (Day 1)
 Author: Vamsi (Database Engineer)
 
-Verifies:
-1. Database connectivity
-2. Schema & table integrity
-3. Project creation
-4. Scan persistence with status = 'QUEUED'
-5. Scan retrieval and relationship validation
+Validates Schema Requirements:
+  - scans.id = CHAR(36) UUID
+  - projects.id = INT AUTO_INCREMENT
+  - projects.organization_id = 1 (seed organization id=1)
 """
 
 import sys
@@ -67,15 +65,15 @@ def run_day1_verification():
 
     session = SessionLocal()
     try:
-        # 2. Insert Organization
-        print("\n[Step 2] Inserting Test Organization...")
+        # 2. Insert Organization with id = 1
+        print("\n[Step 2] Inserting Seed Organization (id = 1)...")
         test_org = Organization(
-            id=str(uuid.uuid4()),
-            name="PQC Test Security Lab"
+            id=1,
+            name="Default Organization"
         )
         session.add(test_org)
         session.commit()
-        print(f"   --> [PASS] Created Organization: id={test_org.id}, name='{test_org.name}'")
+        print(f"   --> [PASS] Seed Organization verified: id={test_org.id} (INT), name='{test_org.name}'")
 
         # 3. Insert User
         print("\n[Step 3] Inserting Test User...")
@@ -88,31 +86,33 @@ def run_day1_verification():
         )
         session.add(test_user)
         session.commit()
-        print(f"   --> [PASS] Created User: id={test_user.id}, email='{test_user.email}'")
+        print(f"   --> [PASS] Created User: id={test_user.id} (UUID), organization_id={test_user.organization_id}")
 
-        # 4. Insert Project
-        print("\n[Step 4] Inserting Test Project (Demo Banking App)...")
+        # 4. Insert Project (id auto-increment, organization_id default 1)
+        print("\n[Step 4] Inserting Test Project (id = INT AUTO_INCREMENT, organization_id = 1)...")
         test_project = Project(
-            id=str(uuid.uuid4()),
-            organization_id=test_org.id,
             name="Demo Banking Application",
             description="Day 1 demo banking application for security analysis"
         )
         session.add(test_project)
         session.commit()
-        print(f"   --> [PASS] Created Project: id={test_project.id}, name='{test_project.name}'")
+        assert isinstance(test_project.id, int), f"Expected projects.id to be INT, got {type(test_project.id)}"
+        assert test_project.organization_id == 1, f"Expected projects.organization_id default 1, got {test_project.organization_id}"
+        print(f"   --> [PASS] Created Project: id={test_project.id} (INT AUTO_INCREMENT), organization_id={test_project.organization_id}")
 
-        # 5. Insert Scan with status 'QUEUED' (Day 1 Success Condition)
-        print("\n[Step 5] Creating Scan with status 'QUEUED'...")
+        # 5. Insert Scan with scans.id = CHAR(36) UUID, project_id = INT
+        scan_uuid = str(uuid.uuid4())
+        print(f"\n[Step 5] Creating Scan with scans.id = CHAR(36) UUID ({scan_uuid}) and status = 'QUEUED'...")
         test_scan = Scan(
-            id=str(uuid.uuid4()),
+            id=scan_uuid,
             project_id=test_project.id,
             status="QUEUED",
-            repository_path="uploads/demo-banking.zip"  # Storing filesystem path, NOT binary!
+            repository_path="uploads/demo-banking.zip"
         )
         session.add(test_scan)
         session.commit()
-        print(f"   --> [PASS] Scan persisted: id={test_scan.id}, status='{test_scan.status}'")
+        assert len(test_scan.id) == 36, f"Expected scans.id CHAR(36), got len={len(test_scan.id)}"
+        print(f"   --> [PASS] Scan persisted: id={test_scan.id} (CHAR(36) UUID), project_id={test_scan.project_id} (INT), status='{test_scan.status}'")
 
         # 6. Retrieve Scan and verify
         print("\n[Step 6] Retrieving Scan from Database...")
@@ -122,7 +122,7 @@ def run_day1_verification():
         assert retrieved_scan.project_id == test_project.id, "Project ID mismatch on scan!"
         print(f"   --> [PASS] Retrieved Scan: id={retrieved_scan.id}")
         print(f"              Status:          {retrieved_scan.status}")
-        print(f"              Repository Path: {retrieved_scan.repository_path}")
+        print(f"              Project ID:      {retrieved_scan.project_id} (INT)")
         print(f"              Project Name:    {retrieved_scan.project.name}")
 
         # 7. Add a finding to verify findings table relationship
@@ -150,14 +150,13 @@ def run_day1_verification():
         print(f"   --> [PASS] Findings count for scan {test_scan.id}: {findings_count}")
 
         print("\n" + "=" * 70)
-        print(" [SUCCESS] DAY 1 DATABASE DEFINITION OF DONE ACHIEVED!")
+        print(" [SUCCESS] DAY 1 DATABASE SCHEMA SPECIFICATION FULLY VALIDATED!")
         print("=" * 70)
-        print(" Summary:")
-        print("  * 6 Tables Created and Validated")
-        print("  * Project and Scan Persistence Tested")
-        print("  * Scan status verified as QUEUED")
-        print("  * Relationships and Foreign Keys working")
-        print("  * File storage isolation respected (no binaries in DB)")
+        print(" Validated:")
+        print("  * scans.id = CHAR(36) UUID")
+        print("  * projects.id = INT AUTO_INCREMENT")
+        print("  * projects.organization_id = INT DEFAULT 1 (seed organization id=1)")
+        print("  * Scan status QUEUED persisted and retrieved")
         print("=" * 70)
 
     except Exception as e:

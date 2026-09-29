@@ -3,6 +3,11 @@
 -- Author: Vamsi (Database Engineer)
 -- Target: MySQL 8.0+
 -- Database: pqc_security
+--
+-- Schema Requirements:
+--   - scans.id = CHAR(36) UUID
+--   - projects.id = INT AUTO_INCREMENT
+--   - projects.organization_id = INT DEFAULT 1 (seed organization id=1)
 -- =============================================================================
 
 CREATE DATABASE IF NOT EXISTS `pqc_security`
@@ -11,7 +16,7 @@ CREATE DATABASE IF NOT EXISTS `pqc_security`
 
 USE `pqc_security`;
 
--- Disable foreign key checks while creating tables
+-- Disable foreign key checks while creating/recreating tables
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- -----------------------------------------------------------------------------
@@ -20,7 +25,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `organizations`;
 CREATE TABLE `organizations` (
-    `id` VARCHAR(36) NOT NULL DEFAULT (UUID()),
+    `id` INT NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(255) NOT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -33,8 +38,8 @@ CREATE TABLE `organizations` (
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
-    `id` VARCHAR(36) NOT NULL DEFAULT (UUID()),
-    `organization_id` VARCHAR(36) NULL,
+    `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+    `organization_id` INT NULL DEFAULT 1,
     `email` VARCHAR(255) NOT NULL,
     `password_hash` VARCHAR(255) NOT NULL,
     `role` VARCHAR(50) NOT NULL DEFAULT 'user',
@@ -51,11 +56,12 @@ CREATE TABLE `users` (
 -- -----------------------------------------------------------------------------
 -- 3. Table: projects
 -- Description: Projects containing uploaded code repositories to be scanned
+-- Requirements: projects.id = INT AUTO_INCREMENT, organization_id DEFAULT 1
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `projects`;
 CREATE TABLE `projects` (
-    `id` VARCHAR(36) NOT NULL DEFAULT (UUID()),
-    `organization_id` VARCHAR(36) NULL,
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `organization_id` INT NOT NULL DEFAULT 1,
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -65,20 +71,19 @@ CREATE TABLE `projects` (
     KEY `idx_projects_name` (`name`),
     CONSTRAINT `fk_projects_organization`
         FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`)
-        ON DELETE SET NULL ON UPDATE CASCADE
+        ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
 -- 4. Table: scans
 -- Description: Security scan jobs initiated for a project
--- Standard Status: QUEUED, INGESTING, ANALYZING, PROCESSING, AI_ANALYSIS,
---                  COMPLETED, FAILED, CANCELLED
+-- Requirements: scans.id = CHAR(36) UUID, project_id = INT (FK -> projects.id)
 -- Note: repository_path stores local filesystem path only; NEVER store ZIP binaries in DB!
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `scans`;
 CREATE TABLE `scans` (
-    `id` VARCHAR(36) NOT NULL DEFAULT (UUID()),
-    `project_id` VARCHAR(36) NOT NULL,
+    `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+    `project_id` INT NOT NULL,
     `status` ENUM(
         'QUEUED',
         'INGESTING',
@@ -109,8 +114,8 @@ CREATE TABLE `scans` (
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `scan_files`;
 CREATE TABLE `scan_files` (
-    `id` VARCHAR(36) NOT NULL DEFAULT (UUID()),
-    `scan_id` VARCHAR(36) NOT NULL,
+    `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+    `scan_id` CHAR(36) NOT NULL,
     `file_path` VARCHAR(1024) NOT NULL,
     `file_type` VARCHAR(100) NULL,
     `language` VARCHAR(100) NULL,
@@ -128,13 +133,11 @@ CREATE TABLE `scan_files` (
 -- -----------------------------------------------------------------------------
 -- 6. Table: findings
 -- Description: Security and Cryptographic findings produced by analysis engines
--- Engines: sast, crypto, dependency, configuration
--- Severities: critical, high, medium, low
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `findings`;
 CREATE TABLE `findings` (
-    `id` VARCHAR(36) NOT NULL DEFAULT (UUID()),
-    `scan_id` VARCHAR(36) NOT NULL,
+    `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+    `scan_id` CHAR(36) NOT NULL,
     `engine` ENUM(
         'sast',
         'crypto',
