@@ -1,6 +1,6 @@
 # QA, Security & Desktop-Security Tests
 
-Owner: Pushpam (QA + Cyber Security + Desktop Security) · branch `qa/pushpam`
+Owner: Pushpam (QA + Cyber Security + Desktop Security) · test code on `qa/pushpam`, audit reports on `audit/pushpam`
 
 The suite exercises the platform **from the outside**: over HTTP (FastAPI), MySQL, Redis
 and the file system. It does not import application code, so it runs unchanged
@@ -18,7 +18,7 @@ against any teammate's branch.
 | `security/` | Secrets, committed artifacts, `.gitignore`, air-gap (no external calls), dependency audit, Tauri hardening |
 | `frontend/` | Desktop UI build/lint smoke tests and the manual desktop smoke checklist |
 | `fixtures/` | Malicious ZIP generator (the vulnerable demo repo lives on the `tests/pushpam` branch) |
-| `reports/` | Daily QA reports and the fix list (only on the `qa/pushpam` branch) |
+| `reports/` | Not here: daily QA reports and the fix list live on the `audit/pushpam` branch |
 
 ## Setup
 
@@ -72,7 +72,7 @@ A FAIL in your own area means something to fix before merging. A BLOCKED result 
 ## Reading results
 
 - **PASS** — behaviour matches the contract.
-- **FAIL** — a real product defect; see `tests/reports/QA+Security_fixes.md` on the `qa/pushpam` branch.
+- **FAIL** — a real product defect; see `tests/reports/QA+Security_fixes.md` on the `audit/pushpam` branch.
 - **SKIPPED with `BLOCKED: …`** — the feature or service isn't delivered yet. Reported as *Blocked*, not as a failure.
 - **XFAIL with `FINDING: …`** — a known, accepted Day 1 gap (e.g. auth not enforced yet) that stays visible until fixed.
 
