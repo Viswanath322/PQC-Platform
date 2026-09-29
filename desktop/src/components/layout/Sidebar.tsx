@@ -164,11 +164,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   borderRadius: '12px',
                   border: 'none',
                   background: isActive
-                    ? 'rgba(42, 157, 143, 0.14)'
+                    ? 'rgba(42, 157, 143, 0.16)'
                     : 'transparent',
-                  color: isActive ? 'var(--color-primary)' : 'var(--text-secondary)',
+                  color: isActive ? '#29384D' : '#687587',
                   cursor: 'pointer',
-                  transition: 'background 160ms ease, color 160ms ease',
+                  transition: 'all 160ms ease',
                   position: 'relative',
                   outline: 'none',
                   textAlign: 'left',
@@ -176,12 +176,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(36, 52, 71, 0.06)';
+                    e.currentTarget.style.background = 'rgba(42, 157, 143, 0.10)';
+                    e.currentTarget.style.color = '#29384D';
+                    const iconEl = e.currentTarget.querySelector('svg');
+                    if (iconEl) iconEl.style.stroke = '#2A9D8F';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#687587';
+                    const iconEl = e.currentTarget.querySelector('svg');
+                    if (iconEl) iconEl.style.stroke = '#687587';
                   }
                 }}
               >
@@ -191,14 +197,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     position: 'absolute',
                     left: '2px',
                     width: '3.5px',
-                    height: isActive ? '22px' : '0px',
+                    height: isActive ? '20px' : '0px',
                     borderRadius: '2px',
-                    background: 'var(--color-secondary)',
-                    transition: 'height 180ms ease',
+                    background: '#2A9D8F',
+                    transition: 'height 160ms ease',
                   }}
                 />
 
-                {/* Icon Container with subtle active pill */}
+                {/* Icon Container */}
                 <div
                   style={{
                     width: '40px',
@@ -210,11 +216,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     flexShrink: 0,
                     borderRadius: '10px',
                     background: isActive ? 'rgba(42, 157, 143, 0.18)' : 'transparent',
+                    transition: 'all 160ms ease',
                   }}
                 >
                   <Icon
                     size={20}
-                    color={isActive ? 'var(--color-secondary)' : '#475569'}
+                    color={isActive ? '#2A9D8F' : '#687587'}
                     strokeWidth={isActive ? 2.2 : 1.9}
                   />
                 </div>

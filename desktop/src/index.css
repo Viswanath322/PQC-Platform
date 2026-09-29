@@ -251,8 +251,32 @@ code, kbd, samp, pre {
   border: 1px solid rgba(42, 157, 143, 0.3);
 }
 
-/* Buttons */
-.btn-primary {
+/* Apple Frosted Glass Cards (Sections 3 & 12) */
+.apple-glass-card {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px) saturate(115%);
+  -webkit-backdrop-filter: blur(24px) saturate(115%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 30px rgba(41, 56, 77, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  box-sizing: border-box;
+}
+
+.apple-glass-card-interactive {
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  cursor: pointer;
+}
+
+.apple-glass-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 34px rgba(41, 56, 77, 0.10);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+/* Primary Button (Section 9) */
+.btn-primary,
+.btn-teal,
+.btn-primary-sage {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -261,21 +285,32 @@ code, kbd, samp, pre {
   font-size: 13.5px;
   font-weight: 600;
   color: #ffffff;
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary-dark);
-  border-radius: var(--radius-md);
+  background: #2A9D8F;
+  border: 1px solid transparent;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 2px 6px rgba(36, 52, 71, 0.15);
+  transition: all 160ms ease;
+  box-shadow: 0 2px 8px rgba(42, 157, 143, 0.15);
 }
 
-.btn-primary:hover {
-  background: var(--color-primary-light);
+.btn-primary:hover,
+.btn-teal:hover,
+.btn-primary-sage:hover {
+  background: #237F74;
+  box-shadow: 0 6px 18px rgba(42, 157, 143, 0.20);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(36, 52, 71, 0.2);
 }
 
-.btn-secondary {
+.btn-primary:active,
+.btn-teal:active,
+.btn-primary-sage:active {
+  background: #1F6F66;
+  transform: translateY(0);
+}
+
+/* Secondary Button (Section 10) */
+.btn-secondary,
+.btn-secondary-glass {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -283,39 +318,26 @@ code, kbd, samp, pre {
   padding: 8px 16px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--color-primary);
-  background: #ffffff;
-  border: 1px solid var(--border-glass-strong);
-  border-radius: var(--radius-md);
+  color: #29384D;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(41, 56, 77, 0.12);
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(36, 52, 71, 0.04);
+  transition: all 160ms ease;
+  box-shadow: 0 1px 3px rgba(41, 56, 77, 0.03);
 }
 
-.btn-secondary:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+.btn-secondary:hover,
+.btn-secondary-glass:hover {
+  background: rgba(42, 157, 143, 0.10);
+  border-color: rgba(42, 157, 143, 0.30);
+  color: #237F74;
+  box-shadow: 0 4px 14px rgba(42, 157, 143, 0.08);
 }
 
-.btn-teal {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 9px 18px;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #ffffff;
-  background: var(--color-secondary);
-  border: 1px solid var(--color-secondary-dark);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-teal:hover {
-  background: #248a7e;
-  box-shadow: 0 4px 12px rgba(42, 157, 143, 0.25);
+.btn-secondary:active,
+.btn-secondary-glass:active {
+  background: rgba(42, 157, 143, 0.16);
 }
 
 /* Toast Notification Overlay */

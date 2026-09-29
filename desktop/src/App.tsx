@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import type { NavPage } from './components/layout/Sidebar';
 import { TopHeader } from './components/layout/TopHeader';
+import { SystemSecurityDashboard } from './pages/SystemSecurityDashboard';
 import { PQC } from './pages/PQC';
 import { CryptoInventory } from './pages/CryptoInventory';
 import { Reports } from './pages/Reports';
 import { mockProjectMetadata } from './data/pqcMockData';
 import {
-  LayoutDashboard,
   FolderGit2,
   Scan,
   Bug,
@@ -17,7 +17,7 @@ import {
 import { MockDataBadge } from './components/pqc/MockDataBadge';
 
 export const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<NavPage>('pqc');
+  const [currentPage, setCurrentPage] = useState<NavPage>('dashboard');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isNavHovered, setIsNavHovered] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -31,15 +31,27 @@ export const App: React.FC = () => {
 
   const handleRefreshScan = () => {
     setIsRefreshing(true);
-    showToast('Initiated cryptographic AST re-scan for current workspace...');
+    showToast('Initiated cryptographic & security AST scan for current workspace...');
     setTimeout(() => {
       setIsRefreshing(false);
-      showToast('Scan complete: 25 cryptographic components analyzed.');
+      showToast('Scan complete: 25 cryptographic components analyzed (Score: 78/100).');
     }, 1200);
   };
 
   const renderContent = () => {
     switch (currentPage) {
+      case 'dashboard':
+        return (
+          <SystemSecurityDashboard
+            onNavigateToPQC={() => setCurrentPage('pqc')}
+            onNavigateToInventory={() => setCurrentPage('inventory')}
+            onNavigateToFindings={() => setCurrentPage('findings')}
+            onNavigateToReports={() => setCurrentPage('reports')}
+            onRefreshScan={handleRefreshScan}
+            onShowToast={showToast}
+            isRefreshing={isRefreshing}
+          />
+        );
       case 'pqc':
         return (
           <PQC
@@ -52,34 +64,6 @@ export const App: React.FC = () => {
         return <CryptoInventory />;
       case 'reports':
         return <Reports onShowToast={showToast} />;
-      case 'dashboard':
-        return (
-          <div className="glass-panel" style={{ padding: '40px', textAlign: 'center' }}>
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '14px',
-                background: 'var(--color-primary-faded)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 16px auto',
-              }}
-            >
-              <LayoutDashboard size={28} color="var(--color-primary)" />
-            </div>
-            <h2 className="title-level-1">System Security Dashboard</h2>
-            <p className="subtitle-muted" style={{ maxWidth: '520px', margin: '8px auto 24px auto' }}>
-              High-level overview of enterprise vulnerability scanning, SAST pipelines, and compliance tracking.
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-              <button onClick={() => setCurrentPage('pqc')} className="btn-teal">
-                Open PQC Security Module →
-              </button>
-            </div>
-          </div>
-        );
       case 'projects':
         return (
           <div className="glass-panel" style={{ padding: '40px', textAlign: 'center' }}>

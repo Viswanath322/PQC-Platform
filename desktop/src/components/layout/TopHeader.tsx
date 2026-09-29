@@ -12,6 +12,7 @@ interface TopHeaderProps {
 
 export const TopHeader: React.FC<TopHeaderProps> = ({
   projectName,
+  branch = 'main',
   lastScanTimestamp,
   onRefreshScan,
   isRefreshing = false,
@@ -48,21 +49,23 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         boxSizing: 'border-box',
       }}
     >
-      {/* Project Selector */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+      {/* Project Selector & Branch Pill */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+        {/* Project Selector: Glass Pill */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'rgba(255, 255, 255, 0.85)',
-            border: '1px solid var(--border-glass-strong)',
-            padding: '6px 12px',
-            borderRadius: 'var(--radius-md)',
-            boxShadow: '0 1px 3px rgba(36, 52, 71, 0.05)',
+            background: 'rgba(255, 255, 255, 0.70)',
+            border: '1px solid rgba(226, 232, 240, 0.9)',
+            padding: '6px 14px',
+            borderRadius: '9999px',
+            boxShadow: '0 1px 3px rgba(41, 56, 77, 0.04)',
+            backdropFilter: 'blur(12px)',
           }}
         >
-          <FolderGit2 size={16} color="var(--color-primary)" />
+          <FolderGit2 size={15} color="#2A9D8F" />
           <select
             value={selectedProject}
             onChange={handleProjectChange}
@@ -71,7 +74,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
               background: 'transparent',
               fontSize: '13px',
               fontWeight: 600,
-              color: 'var(--color-primary)',
+              color: '#29384D',
               cursor: 'pointer',
               outline: 'none',
             }}
@@ -83,27 +86,46 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             ))}
           </select>
         </div>
+
+        {/* Branch: Smaller Glass Pill */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontSize: '11.5px',
+            fontWeight: 500,
+            color: '#687587',
+            background: 'rgba(255, 255, 255, 0.55)',
+            border: '1px solid rgba(226, 232, 240, 0.8)',
+            padding: '4px 10px',
+            borderRadius: '9999px',
+            boxShadow: '0 1px 2px rgba(41, 56, 77, 0.03)',
+          }}
+        >
+          <span style={{ color: '#2A9D8F', fontSize: '12px' }}>⎇</span>
+          <span>{branch || 'main'}</span>
+        </div>
       </div>
 
       {/* Right controls: Last Scan, Refresh, Mock Data Badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
-          <Clock size={13} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#687587' }}>
+          <Clock size={13} color="#687587" />
           <span>Last Scan: </span>
-          <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{lastScanTimestamp}</strong>
+          <strong style={{ color: '#29384D', fontWeight: 600 }}>{lastScanTimestamp}</strong>
         </div>
 
         <button
           onClick={onRefreshScan}
           disabled={isRefreshing}
-          className="btn-secondary"
+          className="btn-secondary-glass"
           style={{
             padding: '6px 13px',
             fontSize: '12px',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            backgroundColor: '#ffffff',
           }}
           title="Trigger fresh workspace re-scan"
         >
@@ -116,7 +138,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           <span>{isRefreshing ? 'Scanning...' : 'Refresh Scan'}</span>
         </button>
 
-        <MockDataBadge />
+        <MockDataBadge size="sm" />
       </div>
 
       <style>{`
