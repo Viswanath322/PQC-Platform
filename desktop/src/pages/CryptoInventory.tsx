@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Lock, Layers, Database, Shield, Binary, Hash } from 'lucide-react';
-import { MockDataBadge } from '../components/pqc/MockDataBadge';
 import { CryptoInventoryTable } from '../components/pqc/CryptoInventoryTable';
 import { CBOMTable } from '../components/pqc/CBOMTable';
 import { mockCryptoInventory, mockCBOM } from '../data/pqcMockData';
@@ -21,12 +20,9 @@ export const CryptoInventory: React.FC = () => {
       {/* Page Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <h1 className="title-level-1">Cryptographic Inventory</h1>
-            <MockDataBadge />
-          </div>
-          <p className="subtitle-muted" style={{ fontSize: '14.5px', marginTop: '4px' }}>
-            Cryptographic components identified during the assessment
+          <h1 className="title-level-1">Cryptographic Inventory & CBOM</h1>
+          <p className="subtitle-muted" style={{ fontSize: '13px', marginTop: '2px' }}>
+            Cryptographic components, ciphers, and algorithms identified during assessment
           </p>
         </div>
 

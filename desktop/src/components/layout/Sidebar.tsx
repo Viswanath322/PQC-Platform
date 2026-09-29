@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -9,405 +10,115 @@ import {
   FileBarChart,
   Settings,
   Cpu,
-  Activity,
 } from 'lucide-react';
+import { BackendStatus } from '../common/BackendStatus';
 
-export type NavPage = 'dashboard' | 'projects' | 'scans' | 'findings' | 'pqc' | 'inventory' | 'reports' | 'settings';
-
-interface SidebarProps {
-  currentPage: NavPage;
-  onNavigate: (page: NavPage) => void;
-  isHovered: boolean;
-  onHoverChange: (hovered: boolean) => void;
-}
-
-export const Sidebar: React.FC<SidebarProps> = ({
-  currentPage,
-  onNavigate,
-  isHovered,
-  onHoverChange,
-}) => {
+export const Sidebar: React.FC = () => {
   const navItems = [
-    { id: 'dashboard' as NavPage, label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'projects' as NavPage, label: 'Projects', icon: FolderGit2 },
-    { id: 'scans' as NavPage, label: 'Scans', icon: Scan },
-    { id: 'findings' as NavPage, label: 'Findings', icon: Bug },
-    { id: 'pqc' as NavPage, label: 'PQC Overview', icon: Atom },
-    { id: 'inventory' as NavPage, label: 'Crypto Inventory', icon: Cpu },
-    { id: 'reports' as NavPage, label: 'Reports', icon: FileBarChart },
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/projects', label: 'Projects', icon: FolderGit2 },
+    { to: '/scans', label: 'Scans', icon: Scan },
+    { to: '/findings', label: 'Findings', icon: Bug },
+    { to: '/pqc', label: 'PQC Assessment', icon: Atom, highlight: 'PQC' },
+    { to: '/crypto-inventory', label: 'Crypto Inventory', icon: Cpu },
+    { to: '/reports', label: 'Reports', icon: FileBarChart },
+    { to: '/settings', label: 'Settings', icon: Settings },
   ];
 
   return (
-    <nav
-      onMouseEnter={() => onHoverChange(true)}
-      onMouseLeave={() => onHoverChange(false)}
-      style={{
-        position: 'fixed',
-        left: '20px',
-        top: '24px',
-        bottom: '24px',
-        height: 'calc(100vh - 48px)',
-        width: isHovered ? '240px' : '76px',
-        background: isHovered ? 'rgba(24, 35, 52, 0.88)' : 'rgba(18, 27, 40, 0.78)',
-        backdropFilter: 'blur(22px)',
-        WebkitBackdropFilter: 'blur(22px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: isHovered
-          ? '0 20px 48px rgba(0, 0, 0, 0.5)'
-          : '0 16px 40px rgba(0, 0, 0, 0.35)',
-        borderRadius: '24px',
-        padding: '20px 10px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        zIndex: 100,
-        transition: 'width 240ms cubic-bezier(0.2, 0, 0, 1), background 240ms ease, box-shadow 240ms ease, backdrop-filter 240ms ease',
-        overflow: 'hidden',
-        boxSizing: 'border-box',
-      }}
-      aria-label="Floating Application Navigation"
-    >
-      {/* Top Header & Navigation Links */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* Brand Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '4px 6px',
-            height: '46px',
-            boxSizing: 'border-box',
-          }}
-        >
-          {/* Logo Icon */}
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              minWidth: '40px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #1e2d3e 0%, #15202d 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.35)',
-              flexShrink: 0,
-            }}
-          >
-            <ShieldCheck size={22} color="#2A9D8F" />
+    <aside className="app-sidebar" aria-label="Main Application Navigation">
+      {/* Top Header & Brand */}
+      <div className="flex flex-col gap-3">
+        {/* Brand */}
+        <div className="flex items-center gap-3 px-2 py-1.5 h-12">
+          <div className="w-9 h-9 rounded-xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 shadow-sm flex-shrink-0">
+            <ShieldCheck className="w-5 h-5" />
           </div>
-
-          {/* Expanded Brand Name */}
-          <div
-            style={{
-              opacity: isHovered ? 1 : 0,
-              visibility: isHovered ? 'visible' : 'hidden',
-              transform: isHovered ? 'translateX(0)' : 'translateX(-8px)',
-              transition: 'opacity 200ms ease, transform 200ms ease',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                fontSize: '14.5px',
-                fontWeight: 700,
-                color: '#f8fafc',
-                letterSpacing: '-0.01em',
-                lineHeight: 1.2,
-              }}
-            >
-              PQC Security
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-bold text-slate-100 tracking-tight leading-tight truncate">
+                PQC Sentinel
+              </span>
+              <span className="text-[9.5px] font-semibold text-teal-400 font-mono bg-teal-950/60 px-1.5 py-0.2 rounded border border-teal-800/40">
+                v0.8.4
+              </span>
             </div>
-            <div
-              style={{
-                fontSize: '10.5px',
-                fontWeight: 600,
-                color: '#94a3b8',
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Assessment
-            </div>
+            <span className="text-[10px] font-medium text-slate-400 tracking-wider uppercase">
+              Security Assessment
+            </span>
           </div>
         </div>
 
         {/* Separator */}
-        <div
-          style={{
-            height: '1px',
-            background: 'rgba(255, 255, 255, 0.08)',
-            margin: '0 4px',
-          }}
-        />
+        <div className="h-px bg-slate-800/80 mx-1 my-1" />
 
-        {/* Navigation Items */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {/* Nav Links */}
+        <nav className="flex flex-col gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentPage === item.id;
 
             return (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                title={!isHovered ? item.label : undefined}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  width: '100%',
-                  height: '44px',
-                  padding: '0 8px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: isActive
-                    ? 'rgba(42, 157, 143, 0.2)'
-                    : 'transparent',
-                  color: isActive ? '#5eead4' : '#94a3b8',
-                  cursor: 'pointer',
-                  transition: 'background 160ms ease, color 160ms ease',
-                  position: 'relative',
-                  outline: 'none',
-                  textAlign: 'left',
-                  boxSizing: 'border-box',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-                    e.currentTarget.style.color = '#f1f5f9';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#94a3b8';
-                  }
-                }}
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 relative group ${
+                    isActive
+                      ? 'bg-teal-500/15 text-teal-300 font-semibold'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                  }`
+                }
               >
-                {/* Active Indicator Strip */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '2px',
-                    width: '3.5px',
-                    height: isActive ? '22px' : '0px',
-                    borderRadius: '2px',
-                    background: 'var(--color-secondary)',
-                    transition: 'height 180ms ease',
-                  }}
-                />
+                {({ isActive }) => (
+                  <>
+                    {/* Active Accent Left Bar */}
+                    <div
+                      className={`absolute left-0 w-1 rounded-r-full bg-teal-400 transition-all duration-200 ${
+                        isActive ? 'h-5' : 'h-0'
+                      }`}
+                    />
 
-                {/* Icon Container with subtle active pill */}
-                <div
-                  style={{
-                    width: '40px',
-                    height: '40px',
-                    minWidth: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    borderRadius: '10px',
-                    background: isActive ? 'rgba(42, 157, 143, 0.22)' : 'transparent',
-                  }}
-                >
-                  <Icon
-                    size={20}
-                    color={isActive ? '#5eead4' : '#94a3b8'}
-                    strokeWidth={isActive ? 2.2 : 1.9}
-                  />
-                </div>
+                    <Icon
+                      className={`w-4 h-4 flex-shrink-0 transition-colors ${
+                        isActive ? 'text-teal-300' : 'text-slate-400 group-hover:text-slate-200'
+                      }`}
+                    />
 
-                {/* Text Label (revealed on hover) */}
-                <div
-                  style={{
-                    opacity: isHovered ? 1 : 0,
-                    visibility: isHovered ? 'visible' : 'hidden',
-                    transform: isHovered ? 'translateX(0)' : 'translateX(-6px)',
-                    transition: 'opacity 200ms ease, transform 200ms ease',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    fontSize: '13.5px',
-                    fontWeight: isActive ? 600 : 500,
-                    color: isActive ? '#5eead4' : '#e2e8f0',
-                    flex: 1,
-                  }}
-                >
-                  {item.label}
-                </div>
+                    <span className="truncate flex-1">{item.label}</span>
 
-                {/* PQC Highlight Badge in expanded state */}
-                {isHovered && item.id === 'pqc' && (
-                  <span
-                    style={{
-                      fontSize: '9.5px',
-                      fontWeight: 700,
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      background: 'var(--color-secondary)',
-                      color: '#ffffff',
-                      marginRight: '4px',
-                    }}
-                  >
-                    PQC
-                  </span>
+                    {item.highlight && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-500/25 text-teal-300">
+                        {item.highlight}
+                      </span>
+                    )}
+                  </>
                 )}
-              </button>
+              </NavLink>
             );
           })}
-        </div>
+        </nav>
       </div>
 
-      {/* Bottom Section: Settings & Status */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div
-          style={{
-            height: '1px',
-            background: 'rgba(255, 255, 255, 0.08)',
-            margin: '0 4px',
-          }}
-        />
+      {/* Bottom Status & Profile Area */}
+      <div className="flex flex-col gap-2 pt-2 border-t border-slate-800/80">
+        {/* Backend Connection Widget */}
+        <BackendStatus variant="sidebar" />
 
-        {/* Settings button */}
-        <button
-          onClick={() => onNavigate('settings')}
-          title={!isHovered ? 'Settings' : undefined}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            width: '100%',
-            height: '44px',
-            padding: '0 8px',
-            borderRadius: '12px',
-            border: 'none',
-            background: currentPage === 'settings'
-              ? 'rgba(42, 157, 143, 0.2)'
-              : 'transparent',
-            color: currentPage === 'settings' ? '#5eead4' : '#94a3b8',
-            cursor: 'pointer',
-            transition: 'background 160ms ease, color 160ms ease',
-            position: 'relative',
-            outline: 'none',
-            textAlign: 'left',
-            boxSizing: 'border-box',
-          }}
-          onMouseEnter={(e) => {
-            if (currentPage !== 'settings') {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
-              e.currentTarget.style.color = '#f1f5f9';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (currentPage !== 'settings') {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = '#94a3b8';
-            }
-          }}
-        >
-          {/* Active Indicator for Settings */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '2px',
-              width: '3.5px',
-              height: currentPage === 'settings' ? '22px' : '0px',
-              borderRadius: '2px',
-              background: 'var(--color-secondary)',
-              transition: 'height 180ms ease',
-            }}
-          />
-
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              minWidth: '40px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              borderRadius: '10px',
-              background: currentPage === 'settings' ? 'rgba(42, 157, 143, 0.22)' : 'transparent',
-            }}
-          >
-            <Settings
-              size={20}
-              color={currentPage === 'settings' ? '#5eead4' : '#94a3b8'}
-              strokeWidth={1.9}
-            />
+        {/* User Profile Card */}
+        <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800/70 flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/80 flex items-center justify-center text-teal-400 font-semibold text-xs flex-shrink-0">
+            SO
           </div>
-
-          <div
-            style={{
-              opacity: isHovered ? 1 : 0,
-              visibility: isHovered ? 'visible' : 'hidden',
-              transform: isHovered ? 'translateX(0)' : 'translateX(-6px)',
-              transition: 'opacity 200ms ease, transform 200ms ease',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              fontSize: '13.5px',
-              fontWeight: currentPage === 'settings' ? 600 : 500,
-              color: '#e2e8f0',
-            }}
-          >
-            Settings
-          </div>
-        </button>
-
-        {/* Engine Status / Micro-Badge */}
-        <div
-          style={{
-            padding: '8px 10px',
-            borderRadius: '10px',
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            overflow: 'hidden',
-            minHeight: '38px',
-            boxSizing: 'border-box',
-          }}
-          title="PQC Sentinel AST Analyzer v0.8.4"
-        >
-          <div
-            style={{
-              width: '18px',
-              height: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Activity size={14} color="#5eead4" />
-          </div>
-
-          <div
-            style={{
-              opacity: isHovered ? 1 : 0,
-              visibility: isHovered ? 'visible' : 'hidden',
-              transform: isHovered ? 'translateX(0)' : 'translateX(-6px)',
-              transition: 'opacity 200ms ease, transform 200ms ease',
-              whiteSpace: 'nowrap',
-              fontSize: '11px',
-              color: '#94a3b8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-            }}
-          >
-            <span style={{ fontWeight: 600, color: '#cbd5e1' }}>Sentinel Engine</span>
-            <span style={{ fontSize: '10px', opacity: 0.8 }}>v0.8.4</span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-xs font-semibold text-slate-200 truncate leading-tight">
+              SecOfficer
+            </span>
+            <span className="text-[10.5px] text-slate-400 truncate leading-tight">
+              Air-Gapped Auditor
+            </span>
           </div>
         </div>
       </div>
-    </nav>
+    </aside>
   );
 };

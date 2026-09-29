@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -39,8 +40,12 @@ export const PQC: React.FC<PQCPageProps> = ({
   onNavigateToReports,
   onShowToast,
 }) => {
+  const navigate = useNavigate();
   const [selectedRiskFilter, setSelectedRiskFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
   const [activeTableTab, setActiveTableTab] = useState<'inventory' | 'cbom'>('inventory');
+
+  const handleNavInventory = onNavigateToInventory || (() => navigate('/crypto-inventory'));
+  const handleNavReports = onNavigateToReports || (() => navigate('/reports'));
 
   const handleRiskFilterChange = (risk: 'ALL' | 'HIGH' | 'MEDIUM' | 'LOW') => {
     setSelectedRiskFilter(risk);
@@ -57,20 +62,17 @@ export const PQC: React.FC<PQCPageProps> = ({
       {/* 1. Page Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <h1 className="title-level-1">PQC Security Overview</h1>
-            <MockDataBadge />
-          </div>
-          <p className="subtitle-muted" style={{ fontSize: '14px', marginTop: '4px' }}>
-            Quantum readiness and cryptographic inventory for your project
+          <h1 className="title-level-1">PQC Security Assessment</h1>
+          <p className="subtitle-muted" style={{ fontSize: '13px', marginTop: '2px' }}>
+            Quantum readiness, Shor/Grover vulnerability evaluation, and NIST FIPS migration candidates
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={onNavigateToInventory} className="btn-secondary">
+          <button onClick={handleNavInventory} className="btn-secondary">
             <Lock size={14} /> Full Inventory
           </button>
-          <button onClick={onNavigateToReports} className="btn-teal">
+          <button onClick={handleNavReports} className="btn-teal">
             <FileSpreadsheet size={14} /> View Reports
           </button>
         </div>

@@ -9,12 +9,14 @@ export interface CryptoComponent {
   usage: string;
   risk: RiskLevel;
   quantumVulnerable: boolean;
+  status?: string;
   purpose?: string;
   curveOrKeySize?: string;
 }
 
 export interface CBOMEntry {
   id: string;
+  component?: string;
   algorithm: string;
   library: string;
   version: string;
@@ -22,6 +24,7 @@ export interface CBOMEntry {
   usage: string;
   risk: RiskLevel;
   quantumVulnerable: boolean;
+  migrationCandidate?: boolean;
   standardReference?: string;
   dependencyType?: 'Direct' | 'Transitive';
   lastDetected?: string;
