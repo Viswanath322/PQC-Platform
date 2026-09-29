@@ -11,7 +11,7 @@ Results: PASS, FAIL (defect), SKIPPED `BLOCKED: ...` (dependency not delivered y
 are non-failing observations (dev placeholders, mock-data URLs, non-critical audit findings).
 
 ## Allowlist
-`tests/fixtures/vulnerable-demo-repo/` is intentionally insecure (fake secrets such as `AKIAIOSFODNN7EXAMPLE`,
+The vulnerable demo repo (`vulnerable-demo-repo/` on the `tests/pushpam` branch, formerly `tests/fixtures/vulnerable-demo-repo/`) is intentionally insecure (fake secrets such as `AKIAIOSFODNN7EXAMPLE`,
 `FAKE-DEMO-PASSWORD-DO-NOT-USE`, weak crypto, an old-pinned requirements.txt). It is excluded from secret scanning,
 committed-artifact rules, the external-call scan and the dependency audit (`sec_helpers.FIXTURE_ALLOWLIST`).
 `tests/security/` itself is excluded from secret scanning because it contains the detection regexes.

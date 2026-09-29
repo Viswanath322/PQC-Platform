@@ -1,6 +1,6 @@
 """Secret scanning over PQC_SCAN_ROOT: detect-secrets + targeted regexes.
 
-Allowlist: tests/fixtures/vulnerable-demo-repo/ (intentional fake secrets) and tests/security/ itself.
+Allowlist: the vulnerable demo repo (tests/pushpam branch; intentional fake secrets) and tests/security/ itself.
 Dev placeholder credentials (change_me_locally, admin123, ...) are reported as warnings, not failures.
 """
 import re
