@@ -45,7 +45,6 @@ Configuration is by environment variable:
 | `PQC_SCAN_ROOT` | repository root (tree scanned by `tests/security`) |
 | `PQC_INGESTION_ROOT` | unset. Checkout containing `ingestion/`, e.g. `.worktrees/hima`. Without it `tests/ingestion` is Blocked |
 | `PQC_ANALYSIS_ROOT` | unset. Checkout containing `analysis-engines/`, e.g. `.worktrees/harshitha`. Without it `tests/analysis` is Blocked |
-
 | `PQC_DEMO_REPO` | unset. The `vulnerable-demo-repo/` folder from the `tests/pushpam` branch. Without it a harmless sample is used and the answer-key checks are Blocked |
 
 Example: `PQC_INGESTION_ROOT=.worktrees/hima PQC_ANALYSIS_ROOT=.worktrees/harshitha pytest tests/ingestion tests/analysis -v -rs`
