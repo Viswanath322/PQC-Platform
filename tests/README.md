@@ -20,8 +20,6 @@ against any teammate's branch.
 | `fixtures/` | Malicious ZIP generator (the vulnerable demo repo lives on the `tests/pushpam` branch) |
 | `reports/` | `QA+Security_fixes.md` (living fix list) and `daily/` (one report per day, with that day's raw results in a folder of the same date) |
 
-The Day 1 acceptance checklist is [DAY1_ACCEPTANCE_CHECKLIST.md](DAY1_ACCEPTANCE_CHECKLIST.md).
-
 ## Setup
 
 ```bash
