@@ -6,7 +6,7 @@ These endpoints are read-only on Day 1. Findings may be empty until an analysis 
 
 ## Finding contract
 
-The API uses lower-case enum values to match the MySQL schema. `finding_id` maps to the database primary key `findings.id`; `scan_id` is included so consumers can associate a finding with its scan. `line_number`, `evidence`, `confidence`, `recommendation`, and `category` may be null.
+The API uses lower-case enum values to match the MySQL schema. `finding_id` maps to the database primary key `findings.id`; `scan_id` is included so consumers can associate a finding with its scan. `line_number`, `evidence`, `explanation`, `confidence`, `recommendation`, and `category` may be null. `explanation` is a distinct, human-readable reason the finding matters; it is not a duplicate of the code evidence, rule/category, or remediation.
 
 ```json
 {
@@ -19,12 +19,21 @@ The API uses lower-case enum values to match the MySQL schema. `finding_id` maps
   "file_path": "src/db.py",
   "line_number": 42,
   "evidence": "query = 'SELECT * FROM users WHERE id=' + user_id",
+  "explanation": "An attacker may alter the query through user-controlled input and access records outside their authorization.",
   "confidence": "medium",
   "recommendation": "Use a parameterized query."
 }
 ```
 
 The example above is illustrative only; it is not a real finding. Hema can use these field names and types for the Findings UI. The engine values are `sast`, `crypto`, `dependency`, and `configuration`; severity values are `critical`, `high`, `medium`, and `low`.
+
+The database schema currently has no `explanation` column. Before serving stored explanations, apply this additive MySQL change and update the finding writer to populate it:
+
+```sql
+ALTER TABLE findings ADD COLUMN explanation TEXT NULL AFTER evidence;
+```
+
+Until that schema change is applied, the API query must not be deployed against the old schema. Day 1 findings can leave `explanation` null; the UI should describe that limitation instead of inferring an explanation from evidence or remediation.
 
 ## Endpoints
 

@@ -28,7 +28,7 @@ def list_findings(
     rows = db.execute(
         text(
             "SELECT id AS finding_id, scan_id, engine, category, severity, title, "
-            "file_path, line_number, evidence, confidence, recommendation "
+            "file_path, line_number, evidence, explanation, confidence, recommendation "
             "FROM findings" + where + " ORDER BY created_at DESC, id"
         ),
         params,
@@ -40,7 +40,7 @@ def get_finding(db: Session, finding_id: str) -> FindingOut | None:
     row = db.execute(
         text(
             "SELECT id AS finding_id, scan_id, engine, category, severity, title, "
-            "file_path, line_number, evidence, confidence, recommendation "
+            "file_path, line_number, evidence, explanation, confidence, recommendation "
             "FROM findings WHERE id = :finding_id"
         ),
         {"finding_id": finding_id},

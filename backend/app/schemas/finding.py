@@ -24,6 +24,10 @@ class FindingOut(BaseModel):
     file_path: str
     line_number: int | None = Field(default=None, ge=1)
     evidence: str | None = None
+    explanation: str | None = Field(
+        default=None,
+        description="Human-readable explanation of why the finding matters",
+    )
     confidence: str | None = None
     recommendation: str | None = None
 
