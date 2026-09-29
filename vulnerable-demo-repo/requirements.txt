@@ -1,0 +1,4 @@
+Flask==0.12.2  # VULN: DEP-001
+requests==2.19.0  # VULN: DEP-002
+PyYAML==3.12  # VULN: DEP-003
+pycryptodome==3.20.0
