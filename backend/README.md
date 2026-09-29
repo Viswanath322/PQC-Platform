@@ -23,9 +23,11 @@ Open `http://127.0.0.1:8000/docs` for Swagger. The health endpoint is `GET http:
 
 ## Authentication endpoints
 
-- `POST /api/v1/auth/register` — JSON body with `email` and a password of at least 12 characters. Returns the created user; passwords are stored as bcrypt hashes.
+- `POST /api/v1/auth/register` — JSON body with `email` and a password of at least 12 characters. Returns the created user; passwords are stored as Argon2 hashes.
 - `POST /api/v1/auth/login` — JSON body with `email` and `password`. Returns a bearer access token.
 - `GET /api/v1/auth/me` — requires `Authorization: Bearer <access_token>`.
+
+The current database schema does not store a display name, so `full_name` in the response is derived from the email address.
 
 These endpoints use the `users` table and expect Vamsi's shared schema to provide `users` and `organizations`. This app does not create or migrate tables; align the model with the agreed SQL schema before database integration.
 
