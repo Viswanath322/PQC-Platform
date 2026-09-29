@@ -17,8 +17,8 @@ against any teammate's branch.
 | `integration/` | Day 1 end-to-end flow: project → upload → scan `QUEUED` → row in MySQL |
 | `security/` | Secrets, committed artifacts, `.gitignore`, air-gap (no external calls), dependency audit, Tauri hardening |
 | `frontend/` | Desktop UI build/lint smoke tests and the manual desktop smoke checklist |
-| `fixtures/` | Intentionally vulnerable demo repo (with answer key) and malicious ZIP generator |
-| `reports/` | Latest retest report, the QA + security fix list, and raw per-area results |
+| `fixtures/` | Malicious ZIP generator (the vulnerable demo repo lives on the `tests/pushpam` branch) |
+| `reports/` | `QA+Security_fixes.md` (living fix list) and `daily/` (one report per day, with that day's raw results in a folder of the same date) |
 
 The Day 1 acceptance checklist is [DAY1_ACCEPTANCE_CHECKLIST.md](DAY1_ACCEPTANCE_CHECKLIST.md).
 
@@ -48,6 +48,8 @@ Configuration is by environment variable:
 | `PQC_INGESTION_ROOT` | unset. Checkout containing `ingestion/`, e.g. `.worktrees/hima`. Without it `tests/ingestion` is Blocked |
 | `PQC_ANALYSIS_ROOT` | unset. Checkout containing `analysis-engines/`, e.g. `.worktrees/harshitha`. Without it `tests/analysis` is Blocked |
 
+| `PQC_DEMO_REPO` | unset. The `vulnerable-demo-repo/` folder from the `tests/pushpam` branch. Without it a harmless sample is used and the answer-key checks are Blocked |
+
 Example: `PQC_INGESTION_ROOT=.worktrees/hima PQC_ANALYSIS_ROOT=.worktrees/harshitha pytest tests/ingestion tests/analysis -v -rs`
 
 ## Reading results
@@ -59,6 +61,6 @@ Example: `PQC_INGESTION_ROOT=.worktrees/hima PQC_ANALYSIS_ROOT=.worktrees/harshi
 
 ## Rules
 
-- `tests/fixtures/vulnerable-demo-repo/` is **intentionally insecure** internal test material. All secrets in it are fake. Never deploy or run it as a service.
+- The intentionally insecure demo repo is kept off this branch, on `tests/pushpam`. All secrets in it are fake. Never deploy it, run it, or merge that branch.
 - Generated ZIPs are built at test time by `fixtures/make_zips.py` and are never committed.
 - Record evidence (command, output, branch, commit) for every result. "Works on my machine" is not a result.
