@@ -99,7 +99,7 @@ code, kbd, samp, pre {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  transition: margin-left 220ms ease;
+  transition: margin-left 240ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .main-workspace-body {

@@ -19,6 +19,7 @@ import { MockDataBadge } from './components/pqc/MockDataBadge';
 export const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<NavPage>('pqc');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isNavHovered, setIsNavHovered] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (message: string) => {
@@ -215,11 +216,21 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-layout">
-      {/* 1. Floating Left Navigation */}
-      <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
+      {/* 1. Long Vertical Floating Navigation */}
+      <Sidebar
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
+        isHovered={isNavHovered}
+        onHoverChange={setIsNavHovered}
+      />
 
-      {/* 2. Main Glass Workspace Container */}
-      <div className="main-glass-container">
+      {/* 2. Main Glass Workspace Container (Synchronized with Nav Hover) */}
+      <div
+        className="main-glass-container"
+        style={{
+          marginLeft: isNavHovered ? '280px' : '116px',
+        }}
+      >
         <TopHeader
           projectName={mockProjectMetadata.projectName}
           branch={mockProjectMetadata.branch}
