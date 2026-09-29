@@ -21,13 +21,13 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
         <div>
           <h3 className="title-level-2">Risk Distribution</h3>
-          <p className="subtitle-muted">Categorization of identified cryptographic assets</p>
+          <p className="subtitle-muted">Categorization of identified cryptographic assets by quantum exposure</p>
         </div>
         <div style={{ textAlign: 'right' }}>
           <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', fontWeight: 600 }}>
             Total Components
           </span>
-          <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--color-graphite)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontSize: '22px', fontWeight: 700, color: '#ffffff', textShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
             {summary.total}
           </div>
         </div>
@@ -36,22 +36,22 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
       {/* Horizontal Stacked Distribution Bar */}
       <div
         style={{
-          height: '20px',
+          height: '24px',
           width: '100%',
-          backgroundColor: 'rgba(41, 40, 36, 0.08)',
-          borderRadius: '10px',
+          backgroundColor: 'rgba(0, 0, 0, 0.25)',
+          borderRadius: '9999px',
           overflow: 'hidden',
           display: 'flex',
           marginBottom: '20px',
-          boxShadow: 'inset 0 1px 2px rgba(41, 40, 36, 0.08)',
-          border: '1px solid rgba(255, 255, 255, 0.6)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.4)',
         }}
         title={`High: ${summary.high} (${highPercent}%), Medium: ${summary.medium} (${mediumPercent}%), Low: ${summary.low} (${lowPercent}%)`}
       >
         <div
           style={{
             width: `${highPercent}%`,
-            backgroundColor: 'var(--color-graphite)',
+            backgroundColor: '#ff6b6b',
             height: '100%',
             transition: 'width 0.4s ease',
             display: 'flex',
@@ -59,7 +59,8 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
             justifyContent: 'center',
             color: '#fff',
             fontSize: '11px',
-            fontWeight: 600,
+            fontWeight: 700,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)',
           }}
         >
           {highPercent > 10 && `${highPercent}%`}
@@ -67,7 +68,7 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
         <div
           style={{
             width: `${mediumPercent}%`,
-            backgroundColor: 'var(--color-risk-medium)',
+            backgroundColor: '#f59e0b',
             height: '100%',
             transition: 'width 0.4s ease',
             display: 'flex',
@@ -75,7 +76,8 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
             justifyContent: 'center',
             color: '#fff',
             fontSize: '11px',
-            fontWeight: 600,
+            fontWeight: 700,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)',
           }}
         >
           {mediumPercent > 10 && `${mediumPercent}%`}
@@ -83,7 +85,7 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
         <div
           style={{
             width: `${lowPercent}%`,
-            backgroundColor: 'var(--color-muted-sage)',
+            backgroundColor: '#2A9D8F',
             height: '100%',
             transition: 'width 0.4s ease',
             display: 'flex',
@@ -91,7 +93,8 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
             justifyContent: 'center',
             color: '#fff',
             fontSize: '11px',
-            fontWeight: 600,
+            fontWeight: 700,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)',
           }}
         >
           {lowPercent > 10 && `${lowPercent}%`}
@@ -106,15 +109,15 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
           gap: '12px',
         }}
       >
-        {/* High Risk Item (Graphite) */}
+        {/* High Risk Item */}
         <div
           onClick={() => onSelectRisk && onSelectRisk(selectedRisk === 'HIGH' ? 'ALL' : 'HIGH')}
           style={{
             padding: '12px 14px',
-            borderRadius: '12px',
-            background: selectedRisk === 'HIGH' ? 'rgba(41, 40, 36, 0.12)' : 'rgba(255, 255, 255, 0.45)',
-            border: selectedRisk === 'HIGH' ? '1px solid var(--color-graphite)' : '1px solid rgba(255, 255, 255, 0.65)',
-            boxShadow: '0 2px 8px rgba(41, 40, 36, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+            borderRadius: '16px',
+            background: selectedRisk === 'HIGH' ? 'rgba(255, 107, 107, 0.22)' : 'rgba(255, 255, 255, 0.06)',
+            border: selectedRisk === 'HIGH' ? '1px solid #ff6b6b' : '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.15)',
             cursor: onSelectRisk ? 'pointer' : 'default',
             display: 'flex',
             flexDirection: 'column',
@@ -123,24 +126,24 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-graphite)' }} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>High</span>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ff6b6b' }} />
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>High Risk</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '2px' }}>
-            <span style={{ fontSize: '19px', fontWeight: 700, color: 'var(--color-graphite)' }}>{summary.high}</span>
+            <span style={{ fontSize: '19px', fontWeight: 700, color: '#fca5a5' }}>{summary.high}</span>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{highPercent}%</span>
           </div>
         </div>
 
-        {/* Medium Risk Item (Muted Amber) */}
+        {/* Medium Risk Item */}
         <div
           onClick={() => onSelectRisk && onSelectRisk(selectedRisk === 'MEDIUM' ? 'ALL' : 'MEDIUM')}
           style={{
             padding: '12px 14px',
-            borderRadius: '12px',
-            background: selectedRisk === 'MEDIUM' ? 'rgba(140, 106, 56, 0.14)' : 'rgba(255, 255, 255, 0.45)',
-            border: selectedRisk === 'MEDIUM' ? '1px solid var(--color-risk-medium)' : '1px solid rgba(255, 255, 255, 0.65)',
-            boxShadow: '0 2px 8px rgba(41, 40, 36, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+            borderRadius: '16px',
+            background: selectedRisk === 'MEDIUM' ? 'rgba(233, 162, 59, 0.22)' : 'rgba(255, 255, 255, 0.06)',
+            border: selectedRisk === 'MEDIUM' ? '1px solid var(--color-accent)' : '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.15)',
             cursor: onSelectRisk ? 'pointer' : 'default',
             display: 'flex',
             flexDirection: 'column',
@@ -149,24 +152,24 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-risk-medium)' }} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Medium</span>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--color-accent)' }} />
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Medium Risk</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '2px' }}>
-            <span style={{ fontSize: '19px', fontWeight: 700, color: 'var(--color-risk-medium)' }}>{summary.medium}</span>
+            <span style={{ fontSize: '19px', fontWeight: 700, color: '#fcd34d' }}>{summary.medium}</span>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{mediumPercent}%</span>
           </div>
         </div>
 
-        {/* Low Risk Item (Muted Sage) */}
+        {/* Low Risk Item */}
         <div
           onClick={() => onSelectRisk && onSelectRisk(selectedRisk === 'LOW' ? 'ALL' : 'LOW')}
           style={{
             padding: '12px 14px',
-            borderRadius: '12px',
-            background: selectedRisk === 'LOW' ? 'rgba(120, 135, 119, 0.18)' : 'rgba(255, 255, 255, 0.45)',
-            border: selectedRisk === 'LOW' ? '1px solid var(--color-muted-sage)' : '1px solid rgba(255, 255, 255, 0.65)',
-            boxShadow: '0 2px 8px rgba(41, 40, 36, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+            borderRadius: '16px',
+            background: selectedRisk === 'LOW' ? 'rgba(42, 157, 143, 0.22)' : 'rgba(255, 255, 255, 0.06)',
+            border: selectedRisk === 'LOW' ? '1px solid var(--color-secondary)' : '1px solid rgba(255, 255, 255, 0.12)',
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.15)',
             cursor: onSelectRisk ? 'pointer' : 'default',
             display: 'flex',
             flexDirection: 'column',
@@ -175,11 +178,11 @@ export const RiskDistribution: React.FC<RiskDistributionProps> = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-muted-sage)' }} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Low</span>
+            <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--color-secondary)' }} />
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Low Risk</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '2px' }}>
-            <span style={{ fontSize: '19px', fontWeight: 700, color: 'var(--color-muted-sage)' }}>{summary.low}</span>
+            <span style={{ fontSize: '19px', fontWeight: 700, color: '#6ee7b7' }}>{summary.low}</span>
             <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{lowPercent}%</span>
           </div>
         </div>

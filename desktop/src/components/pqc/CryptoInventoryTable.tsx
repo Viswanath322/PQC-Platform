@@ -72,21 +72,21 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
       case 'HIGH':
         return (
           <span className="badge-risk-high" title="Vulnerable to Shor's algorithm">
-            <ShieldAlert size={12} color="var(--color-graphite)" />
+            <ShieldAlert size={12} />
             High
           </span>
         );
       case 'MEDIUM':
         return (
           <span className="badge-risk-medium" title="Requires review or transitional mitigation">
-            <AlertTriangle size={12} color="var(--color-risk-medium)" />
+            <AlertTriangle size={12} />
             Medium
           </span>
         );
       case 'LOW':
         return (
           <span className="badge-risk-low" title="Symmetric / Quantum-resistant with appropriate key length">
-            <ShieldCheck size={12} color="var(--color-muted-sage)" />
+            <ShieldCheck size={12} />
             Low
           </span>
         );
@@ -98,9 +98,9 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
       {showFiltersHeader && (
         <div
           style={{
-            padding: '16px 24px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.6)',
-            backgroundColor: 'rgba(255, 255, 255, 0.4)',
+            padding: '16px 22px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+            backgroundColor: 'rgba(0, 0, 0, 0.18)',
             display: 'flex',
             flexWrap: 'wrap',
             gap: '12px',
@@ -108,23 +108,24 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
             justifyContent: 'space-between',
           }}
         >
-          {/* Search Box */}
+          {/* Search Box with Apple pill styling */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              background: 'rgba(255, 255, 255, 0.75)',
-              border: '1px solid rgba(255, 255, 255, 0.85)',
-              borderRadius: 'var(--radius-md)',
-              padding: '7px 12px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.25)',
+              borderRadius: '9999px',
+              padding: '7px 14px',
               minWidth: '260px',
               flex: '1 1 260px',
-              maxWidth: '360px',
-              boxShadow: '0 2px 6px rgba(41, 40, 36, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+              maxWidth: '380px',
             }}
           >
-            <Search size={14} color="var(--text-muted)" />
+            <Search size={15} color="rgba(255, 255, 255, 0.6)" />
             <input
               type="text"
               placeholder="Search algorithm, file, library..."
@@ -135,9 +136,8 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                 outline: 'none',
                 width: '100%',
                 fontSize: '13px',
-                color: 'var(--color-graphite)',
+                color: '#ffffff',
                 background: 'transparent',
-                fontFamily: 'inherit',
               }}
             />
             {searchQuery && (
@@ -146,7 +146,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: 'var(--text-muted)',
+                  color: 'rgba(255, 255, 255, 0.6)',
                   cursor: 'pointer',
                   fontSize: '12px',
                   padding: '2px',
@@ -160,8 +160,8 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
           {/* Filter Dropdowns */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Filter size={13} color="var(--text-muted)" />
-              <span style={{ fontSize: '12.5px', fontWeight: 500, color: 'var(--text-secondary)' }}>Filters:</span>
+              <Filter size={13} color="rgba(255, 255, 255, 0.65)" />
+              <span style={{ fontSize: '12.5px', fontWeight: 500, color: 'rgba(255, 255, 255, 0.85)' }}>Filters:</span>
             </div>
 
             {/* Risk Selector */}
@@ -170,21 +170,21 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
               onChange={(e) => setSelectedRisk(e.target.value)}
               style={{
                 fontSize: '12.5px',
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid rgba(255, 255, 255, 0.75)',
-                background: 'rgba(255, 255, 255, 0.75)',
-                color: 'var(--color-graphite)',
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                border: '1px solid rgba(255, 255, 255, 0.22)',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(16px)',
+                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.25)',
+                color: '#ffffff',
                 fontWeight: 500,
                 cursor: 'pointer',
-                fontFamily: 'inherit',
-                boxShadow: '0 1px 4px rgba(41, 40, 36, 0.03)',
               }}
             >
-              <option value="ALL">All Risk Levels</option>
-              <option value="HIGH">High Risk ({data.filter((d) => d.risk === 'HIGH').length})</option>
-              <option value="MEDIUM">Medium Risk ({data.filter((d) => d.risk === 'MEDIUM').length})</option>
-              <option value="LOW">Low Risk ({data.filter((d) => d.risk === 'LOW').length})</option>
+              <option value="ALL" style={{ background: '#1c2533', color: '#fff' }}>All Risk Levels</option>
+              <option value="HIGH" style={{ background: '#1c2533', color: '#fff' }}>High Risk ({data.filter((d) => d.risk === 'HIGH').length})</option>
+              <option value="MEDIUM" style={{ background: '#1c2533', color: '#fff' }}>Medium Risk ({data.filter((d) => d.risk === 'MEDIUM').length})</option>
+              <option value="LOW" style={{ background: '#1c2533', color: '#fff' }}>Low Risk ({data.filter((d) => d.risk === 'LOW').length})</option>
             </select>
 
             {/* Algorithm Family Selector */}
@@ -193,20 +193,20 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
               onChange={(e) => setSelectedAlgoGroup(e.target.value)}
               style={{
                 fontSize: '12.5px',
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid rgba(255, 255, 255, 0.75)',
-                background: 'rgba(255, 255, 255, 0.75)',
-                color: 'var(--color-graphite)',
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                border: '1px solid rgba(255, 255, 255, 0.22)',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(16px)',
+                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.25)',
+                color: '#ffffff',
                 fontWeight: 500,
                 cursor: 'pointer',
-                fontFamily: 'inherit',
-                boxShadow: '0 1px 4px rgba(41, 40, 36, 0.03)',
               }}
             >
-              <option value="ALL">All Algorithms</option>
+              <option value="ALL" style={{ background: '#1c2533', color: '#fff' }}>All Algorithms</option>
               {algorithmFamilies.map((family) => (
-                <option key={family} value={family}>
+                <option key={family} value={family} style={{ background: '#1c2533', color: '#fff' }}>
                   {family}
                 </option>
               ))}
@@ -218,20 +218,20 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
               onChange={(e) => setSelectedLibrary(e.target.value)}
               style={{
                 fontSize: '12.5px',
-                padding: '6px 12px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid rgba(255, 255, 255, 0.75)',
-                background: 'rgba(255, 255, 255, 0.75)',
-                color: 'var(--color-graphite)',
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                border: '1px solid rgba(255, 255, 255, 0.22)',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(16px)',
+                boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.25)',
+                color: '#ffffff',
                 fontWeight: 500,
                 cursor: 'pointer',
-                fontFamily: 'inherit',
-                boxShadow: '0 1px 4px rgba(41, 40, 36, 0.03)',
               }}
             >
-              <option value="ALL">All Libraries</option>
+              <option value="ALL" style={{ background: '#1c2533', color: '#fff' }}>All Libraries</option>
               {libraries.map((lib) => (
-                <option key={lib} value={lib}>
+                <option key={lib} value={lib} style={{ background: '#1c2533', color: '#fff' }}>
                   {lib}
                 </option>
               ))}
@@ -246,7 +246,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                   setSearchQuery('');
                 }}
                 className="btn-secondary"
-                style={{ padding: '5px 10px', fontSize: '11.5px', height: '30px' }}
+                style={{ padding: '5px 12px', fontSize: '11.5px', height: '30px' }}
               >
                 Reset
               </button>
@@ -268,9 +268,9 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
           <thead>
             <tr
               style={{
-                background: 'rgba(241, 237, 228, 0.65)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.6)',
-                color: 'var(--text-secondary)',
+                background: 'rgba(0, 0, 0, 0.28)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+                color: 'rgba(255, 255, 255, 0.65)',
                 fontWeight: 600,
                 fontSize: '11.5px',
                 letterSpacing: '0.04em',
@@ -288,7 +288,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
           <tbody>
             {filteredData.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <td colSpan={6} style={{ padding: '40px 20px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.5)' }}>
                   No cryptographic components found matching the selected filter criteria.
                 </td>
               </tr>
@@ -298,23 +298,23 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                   key={item.id}
                   onClick={() => onItemSelect && onItemSelect(item)}
                   style={{
-                    borderBottom: '1px solid rgba(41, 40, 36, 0.05)',
-                    backgroundColor: idx % 2 === 0 ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.55)',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                    backgroundColor: idx % 2 === 0 ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)',
                     cursor: onItemSelect ? 'pointer' : 'default',
                     transition: 'background-color 0.15s ease',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.85)')}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.12)')}
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor =
-                      idx % 2 === 0 ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.55)')
+                      idx % 2 === 0 ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)')
                   }
                 >
                   {/* Algorithm */}
-                  <td style={{ padding: '14px 20px', fontWeight: 600, color: 'var(--color-graphite)' }}>
+                  <td style={{ padding: '14px 20px', fontWeight: 600, color: '#ffffff' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span>{item.algorithm}</span>
                       {item.curveOrKeySize && (
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 400 }}>
+                        <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 400 }}>
                           {item.curveOrKeySize}
                         </span>
                       )}
@@ -322,7 +322,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                   </td>
 
                   {/* Library */}
-                  <td style={{ padding: '14px 16px', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                  <td style={{ padding: '14px 16px', color: 'rgba(255, 255, 255, 0.88)', fontWeight: 500 }}>
                     {item.library}
                   </td>
 
@@ -332,11 +332,11 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                       style={{
                         fontFamily: 'monospace',
                         fontSize: '11.5px',
-                        padding: '2px 6px',
-                        background: 'rgba(41, 40, 36, 0.05)',
-                        border: '1px solid rgba(41, 40, 36, 0.08)',
-                        borderRadius: '4px',
-                        color: 'var(--color-graphite)',
+                        padding: '2px 8px',
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        borderRadius: '6px',
+                        color: 'rgba(255, 255, 255, 0.75)',
                       }}
                     >
                       {item.version}
@@ -349,10 +349,11 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                       <code
                         style={{
                           fontSize: '12px',
-                          color: 'var(--color-graphite)',
-                          background: 'rgba(41, 40, 36, 0.05)',
-                          padding: '3px 7px',
-                          borderRadius: '4px',
+                          color: '#6ee7b7',
+                          background: 'rgba(42, 157, 143, 0.15)',
+                          border: '1px solid rgba(42, 157, 143, 0.3)',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
                           wordBreak: 'break-all',
                         }}
                       >
@@ -365,7 +366,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                           background: 'transparent',
                           border: 'none',
                           cursor: 'pointer',
-                          color: copiedId === item.id ? 'var(--color-muted-sage)' : 'var(--text-light)',
+                          color: copiedId === item.id ? '#6ee7b7' : 'rgba(255, 255, 255, 0.45)',
                           padding: '3px',
                           display: 'flex',
                           alignItems: 'center',
@@ -378,11 +379,11 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                   </td>
 
                   {/* Usage */}
-                  <td style={{ padding: '14px 18px', color: 'var(--text-secondary)' }}>
+                  <td style={{ padding: '14px 18px', color: 'rgba(255, 255, 255, 0.85)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <span style={{ fontWeight: 500 }}>{item.usage}</span>
                       {item.purpose && (
-                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.purpose}</span>
+                        <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.55)' }}>{item.purpose}</span>
                       )}
                     </div>
                   </td>
@@ -400,19 +401,19 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
       <div
         style={{
           padding: '12px 24px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.6)',
-          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          backgroundColor: 'rgba(0, 0, 0, 0.15)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           fontSize: '12px',
-          color: 'var(--text-muted)',
+          color: 'rgba(255, 255, 255, 0.6)',
         }}
       >
         <span>
           Showing <strong>{filteredData.length}</strong> of <strong>{data.length}</strong> cryptographic components
         </span>
-        <span>Standard cryptographic AST inspection</span>
+        <span>Apple Silicon / PQC Cryptographic Telemetry</span>
       </div>
     </div>
   );

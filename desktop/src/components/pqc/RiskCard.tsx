@@ -26,35 +26,29 @@ export const RiskCard: React.FC<RiskCardProps> = ({
       case 'HIGH':
         return {
           title: 'HIGH QUANTUM RISK',
-          color: 'var(--color-graphite)',
-          bgColor: isActive ? 'rgba(41, 40, 36, 0.08)' : 'rgba(255, 255, 255, 0.52)',
-          borderColor: isActive ? 'var(--color-graphite)' : 'rgba(41, 40, 36, 0.18)',
-          indicatorBg: 'rgba(41, 40, 36, 0.09)',
-          icon: <ShieldAlert size={20} color="var(--color-graphite)" strokeWidth={2} />,
-          badgeBg: 'rgba(41, 40, 36, 0.08)',
-          badgeColor: 'var(--color-graphite)',
+          color: '#ff8585',
+          bgColor: 'rgba(255, 107, 107, 0.12)',
+          borderColor: isActive ? '#ff6b6b' : 'rgba(255, 107, 107, 0.3)',
+          indicatorBg: 'rgba(255, 107, 107, 0.22)',
+          icon: <ShieldAlert size={22} color="#ff8585" />,
         };
       case 'MEDIUM':
         return {
           title: 'MEDIUM QUANTUM RISK',
-          color: 'var(--color-risk-medium)',
-          bgColor: isActive ? 'rgba(140, 106, 56, 0.10)' : 'rgba(255, 255, 255, 0.52)',
-          borderColor: isActive ? 'var(--color-risk-medium)' : 'rgba(140, 106, 56, 0.22)',
-          indicatorBg: 'rgba(140, 106, 56, 0.10)',
-          icon: <AlertTriangle size={20} color="var(--color-risk-medium)" strokeWidth={2} />,
-          badgeBg: 'rgba(140, 106, 56, 0.10)',
-          badgeColor: 'var(--color-risk-medium)',
+          color: '#fcd34d',
+          bgColor: 'rgba(233, 162, 59, 0.12)',
+          borderColor: isActive ? 'var(--color-accent)' : 'rgba(233, 162, 59, 0.3)',
+          indicatorBg: 'rgba(233, 162, 59, 0.22)',
+          icon: <AlertTriangle size={22} color="#fcd34d" />,
         };
       case 'LOW':
         return {
           title: 'LOW QUANTUM RISK',
-          color: 'var(--color-muted-sage)',
-          bgColor: isActive ? 'rgba(120, 135, 119, 0.14)' : 'rgba(255, 255, 255, 0.52)',
-          borderColor: isActive ? 'var(--color-muted-sage)' : 'rgba(120, 135, 119, 0.25)',
-          indicatorBg: 'rgba(120, 135, 119, 0.12)',
-          icon: <ShieldCheck size={20} color="var(--color-muted-sage)" strokeWidth={2} />,
-          badgeBg: 'rgba(120, 135, 119, 0.12)',
-          badgeColor: 'var(--color-muted-sage)',
+          color: '#6ee7b7',
+          bgColor: 'rgba(42, 157, 143, 0.12)',
+          borderColor: isActive ? 'var(--color-secondary)' : 'rgba(42, 157, 143, 0.3)',
+          indicatorBg: 'rgba(42, 157, 143, 0.22)',
+          icon: <ShieldCheck size={22} color="#6ee7b7" />,
         };
     }
   };
@@ -66,17 +60,20 @@ export const RiskCard: React.FC<RiskCardProps> = ({
       onClick={onClick}
       className="glass-panel"
       style={{
-        padding: '22px 24px',
+        padding: '20px 24px',
         cursor: onClick ? 'pointer' : 'default',
         borderColor: theme.borderColor,
-        borderWidth: isActive ? '1.5px' : '1px',
-        backgroundColor: theme.bgColor,
+        borderWidth: isActive ? '2px' : '1px',
+        backgroundColor: isActive ? theme.bgColor : undefined,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        minHeight: '144px',
+        minHeight: '140px',
         position: 'relative',
         overflow: 'hidden',
+        boxShadow: isActive
+          ? 'inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 12px 32px rgba(0, 0, 0, 0.35)'
+          : undefined,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -102,7 +99,7 @@ export const RiskCard: React.FC<RiskCardProps> = ({
                 color: theme.color,
                 lineHeight: 1.1,
                 fontFeatureSettings: '"tnum"',
-                letterSpacing: '-0.03em',
+                textShadow: '0 2px 8px rgba(0, 0, 0, 0.35)',
               }}
             >
               {count}
@@ -115,17 +112,20 @@ export const RiskCard: React.FC<RiskCardProps> = ({
           </div>
         </div>
 
+        {/* Circular Apple Quick Action Icon */}
         <div
           style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '12px',
+            width: '44px',
+            height: '44px',
+            borderRadius: '9999px',
             background: theme.indicatorBg,
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.28)',
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
-            border: '1px solid rgba(255, 255, 255, 0.45)',
           }}
         >
           {theme.icon}
@@ -137,7 +137,7 @@ export const RiskCard: React.FC<RiskCardProps> = ({
           {subtext}
         </span>
         {onClick && (
-          <span style={{ fontSize: '12px', color: 'var(--color-muted-sage)', fontWeight: 600 }}>
+          <span style={{ fontSize: '11.5px', color: '#6ee7b7', fontWeight: 600 }}>
             Filter →
           </span>
         )}

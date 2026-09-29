@@ -19,6 +19,7 @@ import { MockDataBadge } from './components/pqc/MockDataBadge';
 export const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<NavPage>('pqc');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isNavHovered, setIsNavHovered] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (message: string) => {
@@ -59,21 +60,21 @@ export const App: React.FC = () => {
                 width: '56px',
                 height: '56px',
                 borderRadius: '14px',
-                background: 'rgba(120, 135, 119, 0.12)',
+                background: 'var(--color-primary-faded)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 16px auto',
               }}
             >
-              <LayoutDashboard size={28} color="var(--color-graphite)" />
+              <LayoutDashboard size={28} color="var(--color-primary)" />
             </div>
             <h2 className="title-level-1">System Security Dashboard</h2>
             <p className="subtitle-muted" style={{ maxWidth: '520px', margin: '8px auto 24px auto' }}>
               High-level overview of enterprise vulnerability scanning, SAST pipelines, and compliance tracking.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-              <button onClick={() => setCurrentPage('pqc')} className="btn-primary">
+              <button onClick={() => setCurrentPage('pqc')} className="btn-teal">
                 Open PQC Security Module →
               </button>
             </div>
@@ -157,7 +158,7 @@ export const App: React.FC = () => {
               Triage and track remediation across general software vulnerabilities and cryptographic risks.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-              <button onClick={() => setCurrentPage('pqc')} className="btn-sage">
+              <button onClick={() => setCurrentPage('pqc')} className="btn-teal">
                 Jump to Quantum Risk Findings
               </button>
             </div>
@@ -215,14 +216,21 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-layout">
-      {/* 1. Floating Glass Navigation (Fixed Overlay) */}
+      {/* 1. Long Vertical Floating Navigation */}
       <Sidebar
         currentPage={currentPage}
         onNavigate={setCurrentPage}
+        isHovered={isNavHovered}
+        onHoverChange={setIsNavHovered}
       />
 
-      {/* 2. Main Floating Glass Workspace Container */}
-      <div className="main-glass-workspace">
+      {/* 2. Main Glass Workspace Container (Synchronized with Nav Hover) */}
+      <div
+        className="main-glass-container"
+        style={{
+          marginLeft: isNavHovered ? '280px' : '116px',
+        }}
+      >
         <TopHeader
           projectName={mockProjectMetadata.projectName}
           branch={mockProjectMetadata.branch}

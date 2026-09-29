@@ -1,46 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Three Brand Colors (Apple Frosted Glass Aesthetic) */
-  --color-graphite: #292824;          /* Primary: Typography, headings, navigation, icons */
-  --color-warm-ivory: #F1EDE4;        /* Secondary: Background, glass highlights, surfaces */
-  --color-muted-sage: #788777;        /* Accent: Active nav, positive states, low-risk, controls */
-  --color-muted-sage-light: rgba(120, 135, 119, 0.16);
-  --color-muted-sage-faded: rgba(120, 135, 119, 0.10);
+  /* Apple Glassmorphic Palette */
+  --color-primary: #ffffff;
+  --color-primary-dark: #e2e8f0;
+  --color-primary-light: #ffffff;
+  --color-primary-faded: rgba(255, 255, 255, 0.12);
 
-  /* Semantic Restrained Treatments (Graphite / Muted Amber-neutral / Sage) */
-  --color-risk-high: #3d3b36;
-  --color-risk-high-text: #292824;
-  --color-risk-high-bg: rgba(41, 40, 36, 0.08);
-  --color-risk-high-border: rgba(41, 40, 36, 0.22);
+  --color-secondary: #2A9D8F;          /* Apple Teal / Mint Accent */
+  --color-secondary-dark: #1f776d;
+  --color-secondary-light: rgba(42, 157, 143, 0.22);
+  --color-secondary-faded: rgba(42, 157, 143, 0.16);
 
-  --color-risk-medium: #8c6a38;
-  --color-risk-medium-bg: rgba(140, 106, 56, 0.10);
-  --color-risk-medium-border: rgba(140, 106, 56, 0.25);
+  --color-accent: #E9A23B;             /* Muted Amber */
+  --color-accent-dark: #f59e0b;
+  --color-accent-light: rgba(233, 162, 59, 0.22);
+  --color-accent-faded: rgba(233, 162, 59, 0.16);
 
-  --color-risk-low: #788777;
-  --color-risk-low-bg: rgba(120, 135, 119, 0.14);
-  --color-risk-low-border: rgba(120, 135, 119, 0.30);
+  /* High Risk */
+  --color-risk-high: #ff6b6b;
+  --color-risk-high-light: rgba(255, 107, 107, 0.2);
+  --color-risk-high-faded: rgba(255, 107, 107, 0.14);
 
-  /* Glass Surface Tokens (Apple iOS Translucent Material) */
-  --glass-bg: rgba(255, 255, 255, 0.48);
-  --glass-bg-hover: rgba(255, 255, 255, 0.62);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.35);
-  --glass-border: rgba(255, 255, 255, 0.55);
-  --glass-border-subtle: rgba(255, 255, 255, 0.40);
-  --glass-shadow: 0 12px 40px rgba(41, 40, 36, 0.08);
-  --glass-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  /* Apple Liquid Glass Surfaces */
+  --surface-nav-glass: rgba(18, 26, 36, 0.48);
+  --surface-main-glass: rgba(15, 22, 32, 0.52);
+  --surface-glass: rgba(255, 255, 255, 0.08);
+  --surface-glass-solid: rgba(255, 255, 255, 0.14);
+  --surface-glass-subtle: rgba(255, 255, 255, 0.05);
 
-  /* Typography */
-  --text-primary: #292824;
-  --text-secondary: #57554e;
-  --text-muted: #828078;
-  --text-light: #a8a69e;
+  --border-glass-specular: 1px solid rgba(255, 255, 255, 0.22);
+  --border-glass: rgba(255, 255, 255, 0.16);
+  --border-glass-strong: rgba(255, 255, 255, 0.26);
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.85);
+  --text-muted: rgba(255, 255, 255, 0.62);
+  --text-light: rgba(255, 255, 255, 0.42);
+
+  --shadow-apple-glass: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.32),
+    0 16px 40px rgba(0, 0, 0, 0.38);
+  --shadow-apple-card:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.24),
+    0 8px 24px rgba(0, 0, 0, 0.28);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
   --radius-lg: 20px;
-  --radius-xl: 24px;
+  --radius-xl: 28px;
   --radius-full: 9999px;
 }
 
@@ -51,16 +59,16 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', sans-serif;
-  background-color: var(--color-warm-ivory);
-  /* Sophisticated neutral Apple-inspired background with soft ambient shapes */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #0d141e;
+  /* Atmospheric Coastal Ocean Wallpaper Background with subtle dark overlay */
   background-image: 
-    radial-gradient(circle at 10% 20%, rgba(120, 135, 119, 0.12) 0%, transparent 40%),
-    radial-gradient(circle at 85% 15%, rgba(195, 185, 170, 0.35) 0%, transparent 45%),
-    radial-gradient(circle at 50% 80%, rgba(120, 135, 119, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 20% 85%, rgba(205, 195, 180, 0.25) 0%, transparent 45%),
-    linear-gradient(180deg, #F5F1E8 0%, #EDE7DD 100%);
+    linear-gradient(rgba(10, 16, 24, 0.48), rgba(6, 10, 16, 0.72)),
+    url('/apple-wallpaper.jpg');
+  background-size: cover;
+  background-position: center center;
   background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -70,34 +78,7 @@ body {
 }
 
 code, kbd, samp, pre {
-  font-family: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-/* Background Ambient Blur Shapes */
-.ambient-shape-1 {
-  position: fixed;
-  top: -100px;
-  left: 200px;
-  width: 550px;
-  height: 550px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(120, 135, 119, 0.14) 0%, rgba(241, 237, 228, 0) 70%);
-  filter: blur(80px);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.ambient-shape-2 {
-  position: fixed;
-  bottom: -150px;
-  right: 100px;
-  width: 650px;
-  height: 650px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(185, 175, 160, 0.28) 0%, rgba(241, 237, 228, 0) 70%);
-  filter: blur(90px);
-  pointer-events: none;
-  z-index: 0;
+  font-family: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, Monaco, monospace;
 }
 
 /* Application Layout */
@@ -107,60 +88,61 @@ code, kbd, samp, pre {
   display: flex;
 }
 
-/* Main Application Glass Workspace (Separate Large Floating Glass Panel) */
-.main-glass-workspace {
+/* Main Application Glass Container (Apple Frosted Workspace) */
+.main-glass-container {
   flex: 1;
-  margin-left: 110px;
+  margin-left: 116px;
   margin-right: 24px;
   margin-top: 24px;
   margin-bottom: 24px;
   min-height: calc(100vh - 48px);
-  background: rgba(255, 255, 255, 0.52);
-  backdrop-filter: blur(26px) saturate(120%);
-  -webkit-backdrop-filter: blur(26px) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: var(--surface-main-glass);
+  backdrop-filter: blur(34px) saturate(180%);
+  -webkit-backdrop-filter: blur(34px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 
-    0 14px 45px rgba(41, 40, 36, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.28),
+    0 24px 64px rgba(0, 0, 0, 0.45);
   border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   min-width: 0;
-  position: relative;
-  z-index: 10;
+  transition: margin-left 240ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .main-workspace-body {
   flex: 1;
-  padding: 30px 36px 52px 36px;
+  padding: 28px 34px 48px 34px;
   max-width: 1440px;
   width: 100%;
   margin: 0 auto;
 }
 
-/* Apple-Style Glassmorphic Reusable Panel */
+/* Apple Frosted Glass Panel (Notification Pill Style) */
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px) saturate(120%);
-  -webkit-backdrop-filter: blur(24px) saturate(120%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow), var(--glass-inset-highlight);
+  background: var(--surface-glass);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-apple-card);
   border-radius: var(--radius-lg);
-  transition: transform 0.2s cubic-bezier(.22,1,.36,1), box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .glass-panel:hover {
-  border-color: rgba(255, 255, 255, 0.75);
-  box-shadow: 0 16px 48px rgba(41, 40, 36, 0.11), var(--glass-inset-highlight);
+  border-color: var(--border-glass-strong);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.32),
+    0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
 .glass-panel-subtle {
-  background: var(--glass-bg-subtle);
-  backdrop-filter: blur(16px) saturate(115%);
-  -webkit-backdrop-filter: blur(16px) saturate(115%);
-  border: 1px solid var(--glass-border-subtle);
+  background: var(--surface-glass-subtle);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 16px rgba(41, 40, 36, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 /* Custom Scrollbars */
@@ -170,56 +152,59 @@ code, kbd, samp, pre {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(241, 237, 228, 0.5);
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(120, 135, 119, 0.35);
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 4px;
+  backdrop-filter: blur(8px);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(120, 135, 119, 0.55);
+  background: rgba(255, 255, 255, 0.45);
 }
 
 /* Typography Hierarchy */
 .title-level-1 {
-  font-size: 24px;
+  font-size: 25px;
   font-weight: 700;
-  color: var(--color-graphite);
+  color: #ffffff;
   letter-spacing: -0.025em;
-  line-height: 1.25;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .title-level-2 {
-  font-size: 16.5px;
+  font-size: 17.5px;
   font-weight: 600;
-  color: var(--color-graphite);
+  color: #ffffff;
   letter-spacing: -0.015em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
 .subtitle-muted {
   font-size: 13.5px;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.68);
   margin-top: 2px;
 }
 
-/* Badges & Tags */
+/* Badges & Tags (Apple Pill Badges) */
 .badge-dev-mock {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: var(--radius-full);
-  background: rgba(120, 135, 119, 0.14);
-  color: var(--color-graphite);
-  border: 1px solid rgba(120, 135, 119, 0.28);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: rgba(42, 157, 143, 0.2);
+  color: #6ee7b7;
+  border: 1px solid rgba(42, 157, 143, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
 }
 
 .badge-risk-high {
@@ -228,11 +213,12 @@ code, kbd, samp, pre {
   gap: 5px;
   font-size: 11.5px;
   font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 6px;
-  background: var(--color-risk-high-bg);
-  color: var(--color-risk-high-text);
-  border: 1px solid var(--color-risk-high-border);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 107, 107, 0.22);
+  color: #fca5a5;
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .badge-risk-medium {
@@ -241,11 +227,12 @@ code, kbd, samp, pre {
   gap: 5px;
   font-size: 11.5px;
   font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 6px;
-  background: var(--color-risk-medium-bg);
-  color: var(--color-risk-medium);
-  border: 1px solid var(--color-risk-medium-border);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(233, 162, 59, 0.22);
+  color: #fcd34d;
+  border: 1px solid rgba(233, 162, 59, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .badge-risk-low {
@@ -254,35 +241,43 @@ code, kbd, samp, pre {
   gap: 5px;
   font-size: 11.5px;
   font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 6px;
-  background: var(--color-risk-low-bg);
-  color: var(--color-muted-sage);
-  border: 1px solid var(--color-risk-low-border);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(42, 157, 143, 0.22);
+  color: #6ee7b7;
+  border: 1px solid rgba(42, 157, 143, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* Buttons (Graphite / Muted Sage / Glass) */
+/* Apple Frosted Glass Buttons */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 9px 18px;
-  font-size: 13px;
+  padding: 8px 18px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #ffffff;
-  background: var(--color-graphite);
-  border: 1px solid rgba(41, 40, 36, 0.8);
-  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-full);
   cursor: pointer;
-  transition: all 0.16s ease;
-  box-shadow: 0 2px 8px rgba(41, 40, 36, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .btn-primary:hover {
-  background: #3a3934;
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.45);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(41, 40, 36, 0.2);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 6px 18px rgba(0, 0, 0, 0.32);
 }
 
 .btn-secondary {
@@ -293,65 +288,72 @@ code, kbd, samp, pre {
   padding: 8px 16px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--color-graphite);
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: var(--radius-md);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-full);
   cursor: pointer;
-  transition: all 0.16s ease;
-  box-shadow: 0 2px 6px rgba(41, 40, 36, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(255, 255, 255, 0.9);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
-.btn-sage {
+.btn-teal {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 9px 18px;
-  font-size: 13px;
+  padding: 8px 18px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #ffffff;
-  background: var(--color-muted-sage);
-  border: 1px solid #667565;
-  border-radius: var(--radius-md);
+  background: rgba(42, 157, 143, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(42, 157, 143, 0.9);
+  border-radius: var(--radius-full);
   cursor: pointer;
-  transition: all 0.16s ease;
-  box-shadow: 0 2px 8px rgba(120, 135, 119, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 6px 18px rgba(42, 157, 143, 0.35);
 }
 
-.btn-sage:hover {
-  background: #687767;
+.btn-teal:hover {
+  background: rgba(42, 157, 143, 0.88);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(120, 135, 119, 0.35);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 8px 24px rgba(42, 157, 143, 0.45);
 }
 
-/* Toast Notification (Apple-like Frosted Pill) */
+/* Toast Notification (Apple Notification Pill) */
 .toast-notification {
   position: fixed;
   bottom: 32px;
   right: 36px;
-  background: rgba(41, 40, 36, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(20, 28, 40, 0.65);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
   color: #ffffff;
-  padding: 13px 20px;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 16px 40px rgba(41, 40, 36, 0.24);
+  padding: 14px 22px;
+  border-radius: 20px;
+  box-shadow: 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
+    0 16px 40px rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 13.5px;
   z-index: 1000;
-  animation: slideUpToast 0.22s cubic-bezier(.22,1,.36,1) forwards;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  animation: slideUpToast 0.22s ease forwards;
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 @keyframes slideUpToast {

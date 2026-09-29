@@ -8,6 +8,7 @@ import { mockCryptoInventory, mockCBOM } from '../data/pqcMockData';
 export const CryptoInventory: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'inventory' | 'cbom'>('inventory');
 
+  // Quick stats
   const total = mockCryptoInventory.length;
   const asymmetricCount = mockCryptoInventory.filter(
     (c) => c.algorithm.includes('RSA') || c.algorithm.includes('ECD') || c.algorithm.includes('Ed25519') || c.algorithm.includes('Diffie')
@@ -24,13 +25,13 @@ export const CryptoInventory: React.FC = () => {
             <h1 className="title-level-1">Cryptographic Inventory</h1>
             <MockDataBadge />
           </div>
-          <p className="subtitle-muted" style={{ fontSize: '14px', marginTop: '4px' }}>
+          <p className="subtitle-muted" style={{ fontSize: '14.5px', marginTop: '4px' }}>
             Cryptographic components identified during the assessment
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div style={{ display: 'flex', background: 'rgba(241, 237, 228, 0.8)', padding: '3px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.6)' }}>
+        <div style={{ display: 'flex', background: 'rgba(15, 23, 36, 0.75)', padding: '3px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
           <button
             onClick={() => setActiveTab('inventory')}
             style={{
@@ -41,16 +42,15 @@ export const CryptoInventory: React.FC = () => {
               fontSize: '13px',
               fontWeight: 600,
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '6px',
               cursor: 'pointer',
-              background: activeTab === 'inventory' ? '#ffffff' : 'transparent',
-              color: 'var(--color-graphite)',
-              boxShadow: activeTab === 'inventory' ? '0 2px 6px rgba(41,40,36,0.08)' : 'none',
+              background: activeTab === 'inventory' ? 'rgba(42, 157, 143, 0.28)' : 'transparent',
+              color: activeTab === 'inventory' ? '#5eead4' : '#94a3b8',
+              boxShadow: activeTab === 'inventory' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
               transition: 'all 0.15s ease',
-              fontFamily: 'inherit',
             }}
           >
-            <Lock size={14} color="var(--color-graphite)" />
+            <Lock size={14} />
             Cryptographic Inventory
           </button>
           <button
@@ -63,16 +63,15 @@ export const CryptoInventory: React.FC = () => {
               fontSize: '13px',
               fontWeight: 600,
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '6px',
               cursor: 'pointer',
-              background: activeTab === 'cbom' ? '#ffffff' : 'transparent',
-              color: 'var(--color-graphite)',
-              boxShadow: activeTab === 'cbom' ? '0 2px 6px rgba(41,40,36,0.08)' : 'none',
+              background: activeTab === 'cbom' ? 'rgba(42, 157, 143, 0.28)' : 'transparent',
+              color: activeTab === 'cbom' ? '#5eead4' : '#94a3b8',
+              boxShadow: activeTab === 'cbom' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
               transition: 'all 0.15s ease',
-              fontFamily: 'inherit',
             }}
           >
-            <Layers size={14} color="var(--color-graphite)" />
+            <Layers size={14} />
             CBOM (Bill of Materials)
           </button>
         </div>
@@ -91,21 +90,21 @@ export const CryptoInventory: React.FC = () => {
             style={{
               width: '40px',
               height: '40px',
-              borderRadius: '10px',
-              background: 'rgba(41, 40, 36, 0.08)',
+              borderRadius: '8px',
+              background: 'rgba(255, 255, 255, 0.08)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid rgba(255, 255, 255, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
-            <Database size={18} color="var(--color-graphite)" />
+            <Database size={18} color="#5eead4" />
           </div>
           <div>
             <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
               Total Identified
             </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-graphite)', letterSpacing: '-0.02em' }}>{total} primitives</div>
+            <div style={{ fontSize: '20px', fontWeight: 700, color: '#f8fafc' }}>{total} primitives</div>
           </div>
         </div>
 
@@ -114,21 +113,21 @@ export const CryptoInventory: React.FC = () => {
             style={{
               width: '40px',
               height: '40px',
-              borderRadius: '10px',
-              background: 'rgba(41, 40, 36, 0.08)',
+              borderRadius: '8px',
+              background: 'rgba(239, 68, 68, 0.15)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid rgba(41, 40, 36, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.25)',
             }}
           >
-            <Shield size={18} color="var(--color-graphite)" />
+            <Shield size={18} color="#fca5a5" />
           </div>
           <div>
             <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
               Asymmetric / PQC At Risk
             </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-graphite)', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '20px', fontWeight: 700, color: '#fca5a5' }}>
               {asymmetricCount} items
             </div>
           </div>
@@ -139,21 +138,21 @@ export const CryptoInventory: React.FC = () => {
             style={{
               width: '40px',
               height: '40px',
-              borderRadius: '10px',
-              background: 'rgba(120, 135, 119, 0.14)',
+              borderRadius: '8px',
+              background: 'rgba(42, 157, 143, 0.15)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid rgba(120, 135, 119, 0.25)',
+              border: '1px solid rgba(42, 157, 143, 0.25)',
             }}
           >
-            <Binary size={18} color="var(--color-muted-sage)" />
+            <Binary size={18} color="#5eead4" />
           </div>
           <div>
             <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
               Symmetric Ciphers
             </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-muted-sage)', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '20px', fontWeight: 700, color: '#5eead4' }}>
               {symmetricCount} items
             </div>
           </div>
@@ -164,21 +163,21 @@ export const CryptoInventory: React.FC = () => {
             style={{
               width: '40px',
               height: '40px',
-              borderRadius: '10px',
-              background: 'rgba(140, 106, 56, 0.10)',
+              borderRadius: '8px',
+              background: 'rgba(233, 162, 59, 0.15)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid rgba(140, 106, 56, 0.22)',
+              border: '1px solid rgba(233, 162, 59, 0.25)',
             }}
           >
-            <Hash size={18} color="#8c6a38" />
+            <Hash size={18} color="#fcd34d" />
           </div>
           <div>
             <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
               Hashing & KDFs
             </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: '#8c6a38', letterSpacing: '-0.02em' }}>
+            <div style={{ fontSize: '20px', fontWeight: 700, color: '#fcd34d' }}>
               {hashCount} items
             </div>
           </div>
