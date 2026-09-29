@@ -16,7 +16,7 @@ export function Topbar({
   isRefreshing?: boolean;
 }) {
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-white/70 bg-white/60 px-4 backdrop-blur-xl backdrop-saturate-150 lg:px-8">
+    <header className="flex h-14 shrink-0 items-center gap-4 border-b border-white/70 bg-white/40 px-4 backdrop-blur-md lg:px-6">
       <nav className="flex min-w-0 items-center gap-2 text-[13px]">
         <span className="font-semibold text-slate-900">{page}</span>
         <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />

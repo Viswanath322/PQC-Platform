@@ -20,9 +20,12 @@ export function AppShell({
   isRefreshing?: boolean;
 }) {
   return (
-    <div className="grid min-h-screen grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[248px_minmax(0,1fr)]">
+    <div className="h-screen w-screen p-3 md:p-3.5 lg:p-4 flex gap-3 lg:gap-3.5 overflow-hidden box-border">
+      {/* Container 1: Independent Floating Navigation Sidebar */}
       <Sidebar />
-      <div className="flex min-w-0 flex-col">
+
+      {/* Container 2: Separate Workspace Container Beside It */}
+      <div className="flex flex-1 min-w-0 h-full flex-col rounded-2xl border border-white/80 bg-white/55 shadow-[0_8px_32px_rgba(41,56,77,0.06)] backdrop-blur-xl overflow-hidden">
         <Topbar
           page={page}
           project={project}
@@ -31,7 +34,9 @@ export function AppShell({
           onRefresh={onRefresh}
           isRefreshing={isRefreshing}
         />
-        <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 lg:px-8 lg:py-8 min-w-0">{children}</main>
+        <main className="flex-1 min-w-0 overflow-y-auto px-4 py-6 lg:px-8 lg:py-7">
+          <div className="mx-auto w-full max-w-[1440px] min-w-0">{children}</div>
+        </main>
       </div>
     </div>
   );
