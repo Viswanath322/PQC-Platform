@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
+import { UserProvider } from './context/UserContext';
 import { Dashboard } from './pages/Dashboard';
 import { Projects } from './pages/Projects';
 import { Scans } from './pages/Scans';
@@ -9,6 +10,7 @@ import { PQC } from './pages/PQC';
 import { CryptoInventory } from './pages/CryptoInventory';
 import { Reports } from './pages/Reports';
 import { Settings } from './pages/Settings';
+import { Profile } from './pages/Profile';
 import { mockProjectMetadata } from './data/pqcMockData';
 import { api } from './services/api';
 import { Info, X } from 'lucide-react';
@@ -60,6 +62,7 @@ const AppLayout: React.FC = () => {
   // Derive current page title from route
   const getPageTitle = () => {
     const path = location.pathname.toLowerCase();
+    if (path.includes('/profile')) return 'Auditor Profile';
     if (path.includes('/projects')) return 'Projects';
     if (path.includes('/scans')) return 'Scans';
     if (path.includes('/findings')) return 'Findings';
@@ -92,6 +95,7 @@ const AppLayout: React.FC = () => {
         <Route path="/crypto-inventory" element={<CryptoInventory />} />
         <Route path="/reports" element={<Reports onShowToast={showToast} />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/profile" element={<Profile onShowToast={showToast} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
@@ -116,7 +120,9 @@ const AppLayout: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <HashRouter>
-      <AppLayout />
+      <UserProvider>
+        <AppLayout />
+      </UserProvider>
     </HashRouter>
   );
 };

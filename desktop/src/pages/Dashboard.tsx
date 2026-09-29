@@ -133,10 +133,10 @@ export function Dashboard() {
             icon={Info}
           />
         </div>
-        <div className="card min-w-0 border-primary/25 bg-gradient-to-br from-primary/15 via-white/60 to-sky-200/30 p-5">
+        <div className="card min-w-0 border-purple-200/80 bg-gradient-to-br from-purple-100/50 via-white/70 to-sky-100/40 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-2">
-            <span className="eyebrow text-primary">Active assessment</span>
-            <span className="rounded-full bg-medium/10 px-2 py-0.5 text-[11px] font-medium text-medium ring-1 ring-medium/25">
+            <span className="eyebrow text-purple-700 font-semibold">Active assessment</span>
+            <span className="rounded-full bg-purple-100/70 border border-purple-200/70 px-2 py-0.5 text-[11px] font-medium text-purple-700">
               {currentScan ? currentScan.status : "Queued"}
             </span>
           </div>
@@ -150,7 +150,7 @@ export function Dashboard() {
             <span className="text-slate-500">Queue position #1</span>
             <button
               onClick={() => navigate("/scans")}
-              className="cursor-pointer font-medium text-primary hover:underline bg-transparent border-0 p-0"
+              className="cursor-pointer font-medium text-purple-700 hover:text-purple-900 hover:underline bg-transparent border-0 p-0"
             >
               View all →
             </button>

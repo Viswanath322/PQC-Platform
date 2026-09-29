@@ -1,3 +1,16 @@
+/* Local Air-Gapped Font Bundling */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/600.css";
+
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
 @import "tailwindcss";
 @config "../tailwind.config.ts";
 
@@ -23,6 +36,10 @@
   --success: 152 62% 33%;
 
   --radius: 0.75rem;
+
+  /* Font variables */
+  --font-sans: "Inter", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono Variable", ui-monospace, monospace;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -49,8 +66,8 @@
    THEME (Tailwind v4)
    ═══════════════════════════════════════════════════════ */
 @theme {
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --font-sans: "Inter", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono Variable", ui-monospace, monospace;
 
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -84,6 +101,11 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Technical font bindings for air-gapped security platform */
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+}
+
 /* ═══════════════════════════════════════════════════════
    AURORA BACKGROUND
    Fixed gradient blobs give glass surfaces something
@@ -95,14 +117,15 @@ body {
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
-  overflow-x: hidden;
+  overflow: hidden;
 
-  /* Light aurora — required so glass reads correctly */
+  /* Light aurora — soft ambient gradient glow with light purple / lavender & teal */
   background-image:
-    radial-gradient(720px 480px at 8% -5%, hsl(172 80% 70% / 0.35), transparent 65%),
-    radial-gradient(640px 460px at 92% 0%,  hsl(262 85% 78% / 0.28), transparent 65%),
-    radial-gradient(720px 520px at 85% 100%, hsl(201 95% 75% / 0.28), transparent 65%),
-    radial-gradient(600px 420px at 0% 100%, hsl(24 95% 80% / 0.25), transparent 65%);
+    radial-gradient(850px 580px at 88% -5%, hsl(268 85% 82% / 0.42), transparent 70%),
+    radial-gradient(750px 520px at 55% 10%, hsl(272 80% 86% / 0.28), transparent 68%),
+    radial-gradient(680px 460px at 6% -5%, hsl(172 72% 66% / 0.20), transparent 65%),
+    radial-gradient(660px 480px at 85% 100%, hsl(201 90% 75% / 0.18), transparent 65%),
+    radial-gradient(560px 380px at 0% 100%, hsl(24 90% 80% / 0.14), transparent 65%);
   background-attachment: fixed;
 }
 
@@ -254,20 +277,27 @@ body {
   gap: 8px;
   border-radius: 8px;
   border: 1px solid hsl(0 0% 100% / 0.80);
-  background-color: hsl(0 0% 100% / 0.70);
+  background-color: hsl(0 0% 100% / 0.65);
   padding: 0 14px;
   font-size: 13px;
   font-weight: 500;
   color: hsl(var(--foreground));
   cursor: pointer;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 1px 0 0 hsl(0 0% 100% / 1) inset, 0 1px 3px hsl(222 47% 20% / 0.08);
-  transition: background-color 150ms ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.95) inset, 0 1px 3px hsl(222 47% 20% / 0.06);
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn:hover {
-  background-color: hsl(0 0% 100% / 1);
+  background-color: hsl(0 0% 100% / 0.90);
+  border-color: hsl(0 0% 100% / 1);
+  box-shadow: 0 1px 1px 0 hsl(0 0% 100% / 1) inset, 0 4px 12px -2px hsl(222 47% 20% / 0.10);
+  transform: translateY(-0.5px);
+}
+
+.btn:active {
+  transform: translateY(0.5px) scale(0.99);
 }
 
 .btn-primary {
