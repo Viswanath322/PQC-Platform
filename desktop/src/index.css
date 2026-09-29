@@ -1,46 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Apple-Inspired Palette */
-  --color-graphite: #2B2B28;       /* Primary controls, headings, strong text */
-  --color-graphite-hover: #3D3D38;
-  --color-sage: #718071;           /* Active navigation, success, low-risk, selected controls */
-  --color-sage-light: rgba(113, 128, 113, 0.12);
-  --color-sage-hover: #5d6b5d;
-  --color-amber: #C89B55;          /* Medium risk, warnings, attention */
-  --color-amber-light: rgba(200, 155, 85, 0.12);
+  /* Three-Color Palette */
+  --color-primary: #243447;        /* Deep Slate: Navigation, headings, strong text */
+  --color-primary-dark: #1a2736;
+  --color-primary-light: #34485e;
+  --color-primary-faded: rgba(36, 52, 71, 0.08);
 
-  /* High Risk - Restrained Warm/Dark Treatment */
-  --color-risk-high-text: #3D3535;
-  --color-risk-high-bg: rgba(61, 53, 53, 0.08);
-  --color-risk-high-border: rgba(61, 53, 53, 0.2);
+  --color-secondary: #2A9D8F;      /* Teal: Positive status, low-risk, active states */
+  --color-secondary-dark: #218276;
+  --color-secondary-light: #e8f5f4;
+  --color-secondary-faded: rgba(42, 157, 143, 0.12);
 
-  /* Text Colors */
-  --text-primary: #252522;         /* Primary Body & Headings */
-  --text-secondary: #666762;       /* Supporting Labels */
-  --text-muted: #8B8C86;           /* Metadata, Timestamps, Placeholders */
+  --color-accent: #E9A23B;         /* Muted Amber: Warnings, medium-risk, attention */
+  --color-accent-dark: #cb8523;
+  --color-accent-light: #fef7ec;
+  --color-accent-faded: rgba(233, 162, 59, 0.14);
 
-  /* Light Canvas & Frosted Glass Surfaces */
-  --bg-app: #F5F6F4;
-  --surface-main-glass: rgba(255, 255, 255, 0.48);
-  --surface-glass: rgba(255, 255, 255, 0.58);
-  --surface-glass-solid: rgba(255, 255, 255, 0.85);
-  --surface-glass-subtle: rgba(255, 255, 255, 0.42);
-  --surface-navbar: rgba(255, 255, 255, 0.52);
+  /* Semantic High Risk (Restrained neutral contrast) */
+  --color-risk-high: #c53030;
+  --color-risk-high-light: #fdf2f2;
+  --color-risk-high-faded: rgba(197, 48, 48, 0.12);
 
-  /* Glass Borders & Highlights */
-  --border-glass: rgba(255, 255, 255, 0.72);
-  --border-glass-strong: rgba(255, 255, 255, 0.9);
-  --border-subtle: rgba(0, 0, 0, 0.06);
+  /* Neutrals & Surfaces */
+  --bg-app: #eef2f6;               /* Soft, clean enterprise neutral canvas */
+  --surface-main-glass: rgba(255, 255, 255, 0.65);
+  --surface-glass: rgba(255, 255, 255, 0.75);
+  --surface-glass-solid: rgba(255, 255, 255, 0.95);
+  --surface-glass-subtle: rgba(255, 255, 255, 0.55);
+  --border-glass: rgba(226, 232, 240, 0.85);
+  --border-glass-strong: rgba(203, 213, 225, 0.95);
 
-  /* Apple-grade Soft Shadows with Inset White Highlights */
-  --shadow-glass: 0 10px 35px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  --shadow-navbar: 0 12px 40px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  --shadow-card: 0 8px 28px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+
+  --shadow-sm: 0 2px 8px rgba(36, 52, 71, 0.04);
+  --shadow-md: 0 6px 20px rgba(36, 52, 71, 0.06);
+  --shadow-lg: 0 12px 36px rgba(36, 52, 71, 0.08);
 
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
   --radius-xl: 24px;
   --radius-full: 9999px;
 }
@@ -52,14 +54,14 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--bg-app);
-  /* Very light background with extremely subtle ambient blurred warm & sage glows */
+  /* Soft professional background with extremely subtle tonal variation */
   background-image: 
-    radial-gradient(circle at 10% 8%, rgba(255, 255, 255, 0.9) 0%, transparent 40%),
-    radial-gradient(circle at 85% 15%, rgba(113, 128, 113, 0.045) 0%, transparent 45%),
-    radial-gradient(circle at 50% 90%, rgba(200, 155, 85, 0.035) 0%, transparent 50%),
-    linear-gradient(180deg, #F8F9F7 0%, #EFF0ED 100%);
+    radial-gradient(ellipse at 15% 10%, rgba(42, 157, 143, 0.045) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 20%, rgba(36, 52, 71, 0.04) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 90%, rgba(233, 162, 59, 0.035) 0%, transparent 50%),
+    linear-gradient(180deg, #f4f7fb 0%, #e9edf3 100%);
   background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
@@ -70,7 +72,7 @@ body {
 }
 
 code, kbd, samp, pre {
-  font-family: 'JetBrains Mono', 'SF Mono', Consolas, Monaco, monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
 }
 
 /* Application Overall Layout */
@@ -80,96 +82,96 @@ code, kbd, samp, pre {
   display: flex;
 }
 
-/* Level 2: Main Application Glass Container */
+/* Main Application Glass Container */
 .main-glass-container {
   flex: 1;
-  margin-left: 112px;
+  margin-left: 116px;
   margin-right: 24px;
   margin-top: 24px;
   margin-bottom: 24px;
   min-height: calc(100vh - 48px);
   background: var(--surface-main-glass);
-  backdrop-filter: blur(28px) saturate(120%);
-  -webkit-backdrop-filter: blur(28px) saturate(120%);
-  border: 1px solid var(--border-glass);
-  box-shadow: var(--shadow-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 12px 36px rgba(36, 52, 71, 0.08);
   border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   min-width: 0;
+  transition: margin-left 240ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .main-workspace-body {
   flex: 1;
-  padding: 32px 36px 48px 36px;
+  padding: 28px 34px 48px 34px;
   max-width: 1440px;
   width: 100%;
   margin: 0 auto;
 }
 
-/* Level 3: Frosted Glass Panel */
+/* Glassmorphic Panel Element */
 .glass-panel {
   background: var(--surface-glass);
-  backdrop-filter: blur(28px) saturate(120%);
-  -webkit-backdrop-filter: blur(28px) saturate(120%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-glass);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-md);
   border-radius: var(--radius-lg);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .glass-panel:hover {
   border-color: var(--border-glass-strong);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1);
+  box-shadow: var(--shadow-lg);
 }
 
 .glass-panel-subtle {
   background: var(--surface-glass-subtle);
-  backdrop-filter: blur(20px) saturate(115%);
-  -webkit-backdrop-filter: blur(20px) saturate(115%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.02);
+  background: rgba(241, 245, 249, 0.6);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(148, 163, 184, 0.55);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.22);
+  background: rgba(100, 116, 139, 0.75);
 }
 
 /* Typography Hierarchy */
 .title-level-1 {
   font-size: 24px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--color-primary);
   letter-spacing: -0.02em;
 }
 
 .title-level-2 {
   font-size: 17px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--color-primary);
   letter-spacing: -0.01em;
 }
 
 .subtitle-muted {
   font-size: 13.5px;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   margin-top: 2px;
 }
 
@@ -184,10 +186,9 @@ code, kbd, samp, pre {
   text-transform: uppercase;
   padding: 4px 10px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.7);
-  color: var(--color-sage);
-  border: 1px solid rgba(113, 128, 113, 0.25);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  background: rgba(36, 52, 71, 0.08);
+  color: var(--color-primary);
+  border: 1px solid rgba(36, 52, 71, 0.15);
 }
 
 .badge-risk-high {
@@ -198,9 +199,9 @@ code, kbd, samp, pre {
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 6px;
-  background: var(--color-risk-high-bg);
-  color: var(--color-risk-high-text);
-  border: 1px solid var(--color-risk-high-border);
+  background: var(--color-risk-high-light);
+  color: var(--color-risk-high);
+  border: 1px solid rgba(197, 48, 48, 0.25);
 }
 
 .badge-risk-medium {
@@ -211,9 +212,9 @@ code, kbd, samp, pre {
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 6px;
-  background: var(--color-amber-light);
-  color: var(--color-amber);
-  border: 1px solid rgba(200, 155, 85, 0.28);
+  background: var(--color-accent-light);
+  color: var(--color-accent-dark);
+  border: 1px solid rgba(233, 162, 59, 0.35);
 }
 
 .badge-risk-low {
@@ -224,33 +225,33 @@ code, kbd, samp, pre {
   font-weight: 600;
   padding: 3px 9px;
   border-radius: 6px;
-  background: var(--color-sage-light);
-  color: var(--color-sage);
-  border: 1px solid rgba(113, 128, 113, 0.28);
+  background: var(--color-secondary-light);
+  color: var(--color-secondary-dark);
+  border: 1px solid rgba(42, 157, 143, 0.3);
 }
 
-/* Apple-style Buttons */
+/* Buttons */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 18px;
-  font-size: 13px;
+  padding: 9px 18px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #ffffff;
-  background: var(--color-graphite);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary-dark);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.16s ease;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(36, 52, 71, 0.15);
 }
 
 .btn-primary:hover {
-  background: var(--color-graphite-hover);
+  background: var(--color-primary-light);
   transform: translateY(-1px);
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 4px 10px rgba(36, 52, 71, 0.2);
 }
 
 .btn-secondary {
@@ -261,18 +262,18 @@ code, kbd, samp, pre {
   padding: 8px 16px;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--color-primary);
+  background: #ffffff;
+  border: 1px solid var(--border-glass-strong);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.16s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(36, 52, 71, 0.04);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(0, 0, 0, 0.14);
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .btn-teal {
@@ -280,38 +281,36 @@ code, kbd, samp, pre {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 18px;
-  font-size: 13px;
+  padding: 9px 18px;
+  font-size: 13.5px;
   font-weight: 600;
   color: #ffffff;
-  background: var(--color-graphite);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--color-secondary);
+  border: 1px solid var(--color-secondary-dark);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.16s ease;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  transition: all 0.15s ease;
 }
 
 .btn-teal:hover {
-  background: var(--color-graphite-hover);
+  background: #248a7e;
+  box-shadow: 0 4px 12px rgba(42, 157, 143, 0.25);
 }
 
-/* Toast Notification */
+/* Toast Notification Overlay */
 .toast-notification {
   position: fixed;
-  bottom: 28px;
-  right: 32px;
-  background: rgba(43, 43, 40, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  bottom: 32px;
+  right: 36px;
+  background: var(--color-primary);
   color: #ffffff;
-  padding: 12px 18px;
+  padding: 14px 20px;
   border-radius: var(--radius-md);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 13px;
+  gap: 12px;
+  font-size: 13.5px;
   z-index: 1000;
   animation: slideUpToast 0.22s ease forwards;
   border: 1px solid rgba(255, 255, 255, 0.15);

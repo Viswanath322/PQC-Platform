@@ -38,14 +38,14 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   return (
     <header
       style={{
-        height: '66px',
-        background: 'rgba(255, 255, 255, 0.35)',
-        backdropFilter: 'blur(20px) saturate(120%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(120%)',
-        borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
-        borderTopLeftRadius: '24px',
-        borderTopRightRadius: '24px',
-        padding: '0 36px',
+        height: '68px',
+        background: 'rgba(255, 255, 255, 0.65)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+        borderTopLeftRadius: '22px',
+        borderTopRightRadius: '22px',
+        padding: '0 32px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -55,21 +55,21 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         boxSizing: 'border-box',
       }}
     >
-      {/* Project Selector & Branch */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+      {/* Project Selector */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'rgba(255, 255, 255, 0.65)',
-            border: '1px solid rgba(255, 255, 255, 0.9)',
-            padding: '6px 14px',
-            borderRadius: 'var(--radius-full)',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03), inset 0 1px 0 #ffffff',
+            background: 'rgba(255, 255, 255, 0.85)',
+            border: '1px solid var(--border-glass-strong)',
+            padding: '6px 12px',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: '0 1px 3px rgba(36, 52, 71, 0.05)',
           }}
         >
-          <FolderGit2 size={15} color="#718071" />
+          <FolderGit2 size={16} color="var(--color-primary)" />
           <select
             value={selectedProject}
             onChange={handleProjectChange}
@@ -78,13 +78,13 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
               background: 'transparent',
               fontSize: '13px',
               fontWeight: 600,
-              color: '#252522',
+              color: 'var(--color-primary)',
               cursor: 'pointer',
               outline: 'none',
             }}
           >
             {projects.map((p) => (
-              <option key={p.name} value={p.name} style={{ background: '#ffffff', color: '#252522' }}>
+              <option key={p.name} value={p.name}>
                 {p.name}
               </option>
             ))}
@@ -97,26 +97,24 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             alignItems: 'center',
             gap: '5px',
             fontSize: '12px',
-            fontWeight: 500,
-            color: '#666762',
-            background: 'rgba(255, 255, 255, 0.55)',
-            padding: '5px 12px',
-            borderRadius: 'var(--radius-full)',
-            border: '1px solid rgba(255, 255, 255, 0.8)',
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
+            color: 'var(--text-muted)',
+            background: 'rgba(255, 255, 255, 0.6)',
+            padding: '5px 10px',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--border-glass)',
           }}
         >
-          <GitBranch size={13} color="#8B8C86" />
+          <GitBranch size={13} />
           <span>{currentBranch}</span>
         </div>
       </div>
 
       {/* Right controls: Last Scan, Refresh, Mock Data Badge */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#8B8C86' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
           <Clock size={13} />
           <span>Last Scan: </span>
-          <span style={{ color: '#666762', fontWeight: 500 }}>{lastScanTimestamp}</span>
+          <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{lastScanTimestamp}</strong>
         </div>
 
         <button
@@ -124,23 +122,22 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           disabled={isRefreshing}
           className="btn-secondary"
           style={{
-            padding: '6px 14px',
+            padding: '6px 13px',
             fontSize: '12px',
-            borderRadius: 'var(--radius-full)',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
+            backgroundColor: '#ffffff',
           }}
           title="Trigger fresh workspace re-scan"
         >
           <RefreshCw
-            size={12}
-            color="#252522"
+            size={13}
             style={{
               animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
             }}
           />
-          <span style={{ fontWeight: 500 }}>{isRefreshing ? 'Scanning...' : 'Refresh'}</span>
+          <span>{isRefreshing ? 'Scanning...' : 'Refresh Scan'}</span>
         </button>
 
         <MockDataBadge />

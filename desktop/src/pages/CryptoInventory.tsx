@@ -30,27 +30,27 @@ export const CryptoInventory: React.FC = () => {
           </p>
         </div>
 
-        {/* Tab Switcher - Apple Glass Segmented Control */}
-        <div style={{ display: 'flex', background: 'rgba(0, 0, 0, 0.04)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(0, 0, 0, 0.06)' }}>
+        {/* Tab Switcher */}
+        <div style={{ display: 'flex', background: '#e2e8f0', padding: '3px', borderRadius: '8px' }}>
           <button
             onClick={() => setActiveTab('inventory')}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '8px 18px',
+              padding: '8px 16px',
               fontSize: '13px',
               fontWeight: 600,
               border: 'none',
-              borderRadius: '9px',
+              borderRadius: '6px',
               cursor: 'pointer',
               background: activeTab === 'inventory' ? '#ffffff' : 'transparent',
-              color: activeTab === 'inventory' ? 'var(--color-graphite)' : 'var(--text-secondary)',
-              boxShadow: activeTab === 'inventory' ? '0 2px 10px rgba(0, 0, 0, 0.06)' : 'none',
-              transition: 'all 0.18s cubic-bezier(0.22, 1, 0.36, 1)',
+              color: activeTab === 'inventory' ? 'var(--color-primary)' : 'var(--text-secondary)',
+              boxShadow: activeTab === 'inventory' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
-            <Lock size={14} color={activeTab === 'inventory' ? 'var(--color-graphite)' : 'var(--text-muted)'} />
+            <Lock size={14} />
             Cryptographic Inventory
           </button>
           <button
@@ -59,125 +59,121 @@ export const CryptoInventory: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '8px 18px',
+              padding: '8px 16px',
               fontSize: '13px',
               fontWeight: 600,
               border: 'none',
-              borderRadius: '9px',
+              borderRadius: '6px',
               cursor: 'pointer',
               background: activeTab === 'cbom' ? '#ffffff' : 'transparent',
-              color: activeTab === 'cbom' ? 'var(--color-graphite)' : 'var(--text-secondary)',
-              boxShadow: activeTab === 'cbom' ? '0 2px 10px rgba(0, 0, 0, 0.06)' : 'none',
-              transition: 'all 0.18s cubic-bezier(0.22, 1, 0.36, 1)',
+              color: activeTab === 'cbom' ? 'var(--color-primary)' : 'var(--text-secondary)',
+              boxShadow: activeTab === 'cbom' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
-            <Layers size={14} color={activeTab === 'cbom' ? 'var(--color-graphite)' : 'var(--text-muted)'} />
+            <Layers size={14} />
             CBOM (Bill of Materials)
           </button>
         </div>
       </div>
 
-      {/* Summary Stats Strip - Frosted Glass Cards */}
+      {/* Summary Stats Strip */}
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
+          gap: '14px',
         }}
       >
-        <div className="glass-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div
             style={{
               width: '40px',
               height: '40px',
-              borderRadius: '10px',
-              background: 'rgba(43, 43, 40, 0.06)',
+              borderRadius: '8px',
+              background: 'var(--color-primary-faded)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid rgba(43, 43, 40, 0.1)',
             }}
           >
-            <Database size={18} color="var(--color-graphite)" />
+            <Database size={18} color="var(--color-primary)" />
           </div>
           <div>
-            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
               Total Identified
             </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)' }}>{total} primitives</div>
+            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-primary)' }}>{total} primitives</div>
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div
             style={{
               width: '40px',
               height: '40px',
-              borderRadius: '10px',
-              background: 'rgba(61, 53, 53, 0.08)',
+              borderRadius: '8px',
+              background: 'rgba(239, 68, 68, 0.12)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid rgba(61, 53, 53, 0.14)',
             }}
           >
-            <Shield size={18} color="#3D3535" />
+            <Shield size={18} color="var(--color-risk-high)" />
           </div>
           <div>
-            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
               Asymmetric / PQC At Risk
             </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: '#3D3535' }}>
+            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-risk-high)' }}>
               {asymmetricCount} items
             </div>
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div
             style={{
               width: '40px',
               height: '40px',
-              borderRadius: '10px',
-              background: 'rgba(113, 128, 113, 0.12)',
+              borderRadius: '8px',
+              background: 'var(--color-secondary-faded)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid rgba(113, 128, 113, 0.2)',
             }}
           >
-            <Binary size={18} color="var(--color-sage)" />
+            <Binary size={18} color="var(--color-secondary-dark)" />
           </div>
           <div>
-            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
               Symmetric Ciphers
             </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-sage)' }}>
+            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-secondary-dark)' }}>
               {symmetricCount} items
             </div>
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div
             style={{
               width: '40px',
               height: '40px',
-              borderRadius: '10px',
-              background: 'rgba(200, 155, 85, 0.12)',
+              borderRadius: '8px',
+              background: 'var(--color-accent-faded)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid rgba(200, 155, 85, 0.22)',
             }}
           >
-            <Hash size={18} color="var(--color-warm-amber)" />
+            <Hash size={18} color="var(--color-accent-dark)" />
           </div>
           <div>
-            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
               Hashing & KDFs
             </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-warm-amber)' }}>
+            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-accent-dark)' }}>
               {hashCount} items
             </div>
           </div>
