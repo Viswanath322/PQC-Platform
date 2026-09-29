@@ -10,6 +10,7 @@ import {
   Ban,
 } from 'lucide-react';
 import type { ScanStatus } from '../../types';
+import { cn } from '@/lib/utils';
 
 interface ScanStatusBadgeProps {
   status: ScanStatus | string;
@@ -26,108 +27,82 @@ export const ScanStatusBadge: React.FC<ScanStatusBadgeProps> = ({
     ScanStatus,
     {
       label: string;
-      bg: string;
-      border: string;
-      text: string;
+      styles: string;
       icon: React.ElementType;
-      iconColor: string;
       spin?: boolean;
     }
   > = {
     QUEUED: {
-      label: 'QUEUED',
-      bg: 'rgba(234, 179, 8, 0.14)',
-      border: 'rgba(234, 179, 8, 0.35)',
-      text: '#fde047',
+      label: 'Queued',
+      styles: 'bg-medium/10 text-medium ring-medium/25',
       icon: Clock,
-      iconColor: '#facc15',
     },
     INGESTING: {
-      label: 'INGESTING',
-      bg: 'rgba(56, 189, 248, 0.14)',
-      border: 'rgba(56, 189, 248, 0.35)',
-      text: '#7dd3fc',
+      label: 'Ingesting',
+      styles: 'bg-sky-500/10 text-sky-700 ring-sky-500/25',
       icon: Download,
-      iconColor: '#38bdf8',
       spin: true,
     },
     ANALYZING: {
-      label: 'ANALYZING',
-      bg: 'rgba(168, 85, 247, 0.15)',
-      border: 'rgba(168, 85, 247, 0.35)',
-      text: '#d8b4fe',
+      label: 'Analyzing',
+      styles: 'bg-violet-500/10 text-violet-700 ring-violet-500/25',
       icon: Loader2,
-      iconColor: '#c084fc',
       spin: true,
     },
     PROCESSING: {
-      label: 'PROCESSING',
-      bg: 'rgba(59, 130, 246, 0.15)',
-      border: 'rgba(59, 130, 246, 0.35)',
-      text: '#93c5fd',
+      label: 'Processing',
+      styles: 'bg-indigo-500/10 text-indigo-700 ring-indigo-500/25',
       icon: Cpu,
-      iconColor: '#60a5fa',
       spin: true,
     },
     AI_ANALYSIS: {
-      label: 'AI ANALYSIS',
-      bg: 'rgba(236, 72, 153, 0.15)',
-      border: 'rgba(236, 72, 153, 0.35)',
-      text: '#f472b6',
+      label: 'AI Verification',
+      styles: 'bg-primary/10 text-primary ring-primary/25',
       icon: Sparkles,
-      iconColor: '#f472b6',
       spin: true,
     },
     COMPLETED: {
-      label: 'COMPLETED',
-      bg: 'rgba(34, 197, 94, 0.14)',
-      border: 'rgba(34, 197, 94, 0.35)',
-      text: '#4ade80',
+      label: 'Completed',
+      styles: 'bg-success/10 text-success ring-success/25',
       icon: CheckCircle2,
-      iconColor: '#22c55e',
     },
     FAILED: {
-      label: 'FAILED',
-      bg: 'rgba(239, 68, 68, 0.14)',
-      border: 'rgba(239, 68, 68, 0.35)',
-      text: '#f87171',
+      label: 'Failed',
+      styles: 'bg-critical/10 text-critical ring-critical/25',
       icon: XCircle,
-      iconColor: '#ef4444',
     },
     CANCELLED: {
-      label: 'CANCELLED',
-      bg: 'rgba(148, 163, 184, 0.14)',
-      border: 'rgba(148, 163, 184, 0.3)',
-      text: '#cbd5e1',
+      label: 'Cancelled',
+      styles: 'bg-slate-100 text-slate-500 ring-slate-300/50',
       icon: Ban,
-      iconColor: '#94a3b8',
     },
   };
 
-  const current = config[norm] || config.QUEUED;
-  const Icon = current.icon;
+  const item = config[norm] || config.QUEUED;
+  const Icon = item.icon;
 
   const sizeClasses = {
-    sm: 'text-[10.5px] px-1.5 py-0.5 gap-1',
-    md: 'text-xs px-2 py-0.5 gap-1.5',
-    lg: 'text-xs px-3 py-1 gap-2 font-semibold',
+    sm: 'text-[11px] px-2 py-0.5 gap-1',
+    md: 'text-[12px] px-2.5 py-1 gap-1.5',
+    lg: 'text-[13px] px-3 py-1.5 gap-2 font-medium',
+  }[size];
+
+  const iconSizes = {
+    sm: 'w-3 h-3',
+    md: 'w-3.5 h-3.5',
+    lg: 'w-4 h-4',
   }[size];
 
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-full tracking-wide ${sizeClasses}`}
-      style={{
-        background: current.bg,
-        border: `1px solid ${current.border}`,
-        color: current.text,
-      }}
+      className={cn(
+        'inline-flex items-center rounded-full font-medium ring-1',
+        item.styles,
+        sizeClasses
+      )}
     >
-      <Icon
-        size={size === 'sm' ? 11 : 13}
-        color={current.iconColor}
-        className={current.spin ? 'animate-spin' : ''}
-      />
-      <span>{current.label}</span>
+      <Icon className={cn(iconSizes, item.spin && 'animate-spin')} />
+      <span>{item.label}</span>
     </span>
   );
 };

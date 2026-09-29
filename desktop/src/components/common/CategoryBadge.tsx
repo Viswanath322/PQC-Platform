@@ -1,6 +1,7 @@
 import React from 'react';
 import { Code, KeyRound, Package, Sliders } from 'lucide-react';
 import type { FindingCategory } from '../../types';
+import { cn } from '@/lib/utils';
 
 interface CategoryBadgeProps {
   category: FindingCategory | string;
@@ -17,58 +18,41 @@ export const CategoryBadge: React.FC<CategoryBadgeProps> = ({
     SAST: {
       label: 'SAST Code',
       icon: Code,
-      bg: 'rgba(59, 130, 246, 0.14)',
-      border: 'rgba(59, 130, 246, 0.3)',
-      text: '#93c5fd',
-      iconColor: '#60a5fa',
+      styles: 'bg-sky-500/10 text-sky-700 ring-sky-500/25',
     },
     CRYPTO: {
       label: 'Cryptographic',
       icon: KeyRound,
-      bg: 'rgba(168, 85, 247, 0.14)',
-      border: 'rgba(168, 85, 247, 0.3)',
-      text: '#d8b4fe',
-      iconColor: '#c084fc',
+      styles: 'bg-violet-500/10 text-violet-700 ring-violet-500/25',
     },
     DEPENDENCY: {
       label: 'Dependency',
       icon: Package,
-      bg: 'rgba(14, 165, 233, 0.14)',
-      border: 'rgba(14, 165, 233, 0.3)',
-      text: '#7dd3fc',
-      iconColor: '#38bdf8',
+      styles: 'bg-cyan-500/10 text-cyan-700 ring-cyan-500/25',
     },
     CONFIGURATION: {
       label: 'Configuration',
       icon: Sliders,
-      bg: 'rgba(234, 179, 8, 0.14)',
-      border: 'rgba(234, 179, 8, 0.3)',
-      text: '#fde047',
-      iconColor: '#facc15',
+      styles: 'bg-amber-500/10 text-amber-700 ring-amber-500/25',
     },
   }[norm] || {
     label: category,
     icon: Code,
-    bg: 'rgba(148, 163, 184, 0.14)',
-    border: 'rgba(148, 163, 184, 0.3)',
-    text: '#cbd5e1',
-    iconColor: '#94a3b8',
+    styles: 'bg-slate-100 text-slate-600 ring-slate-300/50',
   };
 
   const Icon = config.icon;
+  const isSm = size === 'sm';
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-medium rounded-md ${
-        size === 'sm' ? 'text-[11px] px-1.5 py-0.5' : 'text-xs px-2 py-0.5'
-      }`}
-      style={{
-        background: config.bg,
-        border: `1px solid ${config.border}`,
-        color: config.text,
-      }}
+      className={cn(
+        'inline-flex items-center rounded-full font-medium ring-1',
+        config.styles,
+        isSm ? 'text-[11px] px-2 py-0.5 gap-1' : 'text-[12px] px-2.5 py-0.5 gap-1.5'
+      )}
     >
-      <Icon size={size === 'sm' ? 12 : 13} color={config.iconColor} />
+      <Icon className={isSm ? 'w-3 h-3' : 'w-3.5 h-3.5'} aria-hidden />
       <span>{config.label}</span>
     </span>
   );

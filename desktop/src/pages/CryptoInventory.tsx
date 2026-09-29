@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Lock, Layers, Database, Shield, Binary, Hash } from 'lucide-react';
-import { CryptoInventoryTable } from '../components/pqc/CryptoInventoryTable';
-import { CBOMTable } from '../components/pqc/CBOMTable';
-import { mockCryptoInventory, mockCBOM } from '../data/pqcMockData';
+import { Lock, Layers, Binary, Hash, Shield } from 'lucide-react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { CryptoInventoryTable } from '@/components/pqc/CryptoInventoryTable';
+import { CBOMTable } from '@/components/pqc/CBOMTable';
+import { mockCryptoInventory, mockCBOM } from '@/data/pqcMockData';
 
 export const CryptoInventory: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'inventory' | 'cbom'>('inventory');
@@ -10,178 +11,126 @@ export const CryptoInventory: React.FC = () => {
   // Quick stats
   const total = mockCryptoInventory.length;
   const asymmetricCount = mockCryptoInventory.filter(
-    (c) => c.algorithm.includes('RSA') || c.algorithm.includes('ECD') || c.algorithm.includes('Ed25519') || c.algorithm.includes('Diffie')
+    (c) =>
+      c.algorithm.includes('RSA') ||
+      c.algorithm.includes('ECD') ||
+      c.algorithm.includes('Ed25519') ||
+      c.algorithm.includes('Diffie')
   ).length;
-  const symmetricCount = mockCryptoInventory.filter((c) => c.algorithm.includes('AES') || c.algorithm.includes('ChaCha') || c.algorithm.includes('Blowfish')).length;
+  const symmetricCount = mockCryptoInventory.filter(
+    (c) =>
+      c.algorithm.includes('AES') ||
+      c.algorithm.includes('ChaCha') ||
+      c.algorithm.includes('Blowfish')
+  ).length;
   const hashCount = total - asymmetricCount - symmetricCount;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Page Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
-        <div>
-          <h1 className="title-level-1">Cryptographic Inventory & CBOM</h1>
-          <p className="subtitle-muted" style={{ fontSize: '13px', marginTop: '2px' }}>
-            Cryptographic components, ciphers, and algorithms identified during assessment
-          </p>
+    <>
+      <PageHeader
+        title="Cryptographic inventory & CBOM"
+        description="Cryptographic primitives, algorithms, key sizes, and library bindings discovered during assessment."
+        actions={
+          <div className="flex rounded-lg border border-border bg-surface p-1">
+            <button
+              onClick={() => setActiveTab('inventory')}
+              className={`flex items-center gap-2 rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                activeTab === 'inventory'
+                  ? 'bg-surface-2 text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Lock className="h-3.5 w-3.5" />
+              <span>Inventory</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('cbom')}
+              className={`flex items-center gap-2 rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
+                activeTab === 'cbom'
+                  ? 'bg-surface-2 text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span>CycloneDX CBOM</span>
+            </button>
+          </div>
+        }
+      />
+
+      <div className="flex flex-col gap-6">
+        {/* KPI Row */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="card p-5">
+            <div className="flex items-center justify-between">
+              <span className="eyebrow">Total Cryptographic Assets</span>
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 ring-1 ring-primary/25">
+                <Shield className="h-4 w-4 text-primary" />
+              </span>
+            </div>
+            <div className="mt-3 tabular text-[36px] font-semibold tracking-tight text-foreground leading-none">
+              {total}
+            </div>
+            <p className="mt-3 truncate text-[13px] text-muted-foreground">
+              Unique primitives detected
+            </p>
+          </div>
+
+          <div className="card p-5">
+            <div className="flex items-center justify-between">
+              <span className="eyebrow">Asymmetric Cryptography</span>
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-critical/10 ring-1 ring-critical/25">
+                <Binary className="h-4 w-4 text-critical" />
+              </span>
+            </div>
+            <div className="mt-3 tabular text-[36px] font-semibold tracking-tight text-critical leading-none">
+              {asymmetricCount}
+            </div>
+            <p className="mt-3 truncate text-[13px] text-muted-foreground">
+              Shor-vulnerable (RSA, ECC, DH)
+            </p>
+          </div>
+
+          <div className="card p-5">
+            <div className="flex items-center justify-between">
+              <span className="eyebrow">Symmetric Ciphers</span>
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-low/10 ring-1 ring-low/25">
+                <Lock className="h-4 w-4 text-low" />
+              </span>
+            </div>
+            <div className="mt-3 tabular text-[36px] font-semibold tracking-tight text-low leading-none">
+              {symmetricCount}
+            </div>
+            <p className="mt-3 truncate text-[13px] text-muted-foreground">
+              AES-256 / ChaCha20 primitives
+            </p>
+          </div>
+
+          <div className="card p-5">
+            <div className="flex items-center justify-between">
+              <span className="eyebrow">Hashes & Digests</span>
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-medium/10 ring-1 ring-medium/25">
+                <Hash className="h-4 w-4 text-medium" />
+              </span>
+            </div>
+            <div className="mt-3 tabular text-[36px] font-semibold tracking-tight text-medium leading-none">
+              {hashCount}
+            </div>
+            <p className="mt-3 truncate text-[13px] text-muted-foreground">
+              SHA-2, SHA-3, MAC functions
+            </p>
+          </div>
         </div>
 
-        {/* Tab Switcher */}
-        <div style={{ display: 'flex', background: '#e2e8f0', padding: '3px', borderRadius: '8px' }}>
-          <button
-            onClick={() => setActiveTab('inventory')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              fontSize: '13px',
-              fontWeight: 600,
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              background: activeTab === 'inventory' ? '#ffffff' : 'transparent',
-              color: activeTab === 'inventory' ? 'var(--color-primary)' : 'var(--text-secondary)',
-              boxShadow: activeTab === 'inventory' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <Lock size={14} />
-            Cryptographic Inventory
-          </button>
-          <button
-            onClick={() => setActiveTab('cbom')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              fontSize: '13px',
-              fontWeight: 600,
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              background: activeTab === 'cbom' ? '#ffffff' : 'transparent',
-              color: activeTab === 'cbom' ? 'var(--color-primary)' : 'var(--text-secondary)',
-              boxShadow: activeTab === 'cbom' ? '0 2px 5px rgba(0,0,0,0.08)' : 'none',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <Layers size={14} />
-            CBOM (Bill of Materials)
-          </button>
-        </div>
+        {/* Tab Content */}
+        {activeTab === 'inventory' ? (
+          <CryptoInventoryTable data={mockCryptoInventory} showFiltersHeader={true} />
+        ) : (
+          <CBOMTable data={mockCBOM} />
+        )}
       </div>
-
-      {/* Summary Stats Strip */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '14px',
-        }}
-      >
-        <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '8px',
-              background: 'var(--color-primary-faded)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Database size={18} color="var(--color-primary)" />
-          </div>
-          <div>
-            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-              Total Identified
-            </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-primary)' }}>{total} primitives</div>
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '8px',
-              background: 'rgba(239, 68, 68, 0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Shield size={18} color="var(--color-risk-high)" />
-          </div>
-          <div>
-            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-              Asymmetric / PQC At Risk
-            </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-risk-high)' }}>
-              {asymmetricCount} items
-            </div>
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '8px',
-              background: 'var(--color-secondary-faded)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Binary size={18} color="var(--color-secondary-dark)" />
-          </div>
-          <div>
-            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-              Symmetric Ciphers
-            </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-secondary-dark)' }}>
-              {symmetricCount} items
-            </div>
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '8px',
-              background: 'var(--color-accent-faded)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Hash size={18} color="var(--color-accent-dark)" />
-          </div>
-          <div>
-            <span style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
-              Hashing & KDFs
-            </span>
-            <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-accent-dark)' }}>
-              {hashCount} items
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Table View */}
-      {activeTab === 'inventory' ? (
-        <CryptoInventoryTable data={mockCryptoInventory} />
-      ) : (
-        <CBOMTable data={mockCBOM} />
-      )}
-    </div>
+    </>
   );
 };
+
+export default CryptoInventory;

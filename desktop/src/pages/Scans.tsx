@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Scan as ScanIcon, RefreshCw, Filter, Search } from 'lucide-react';
-import { PageContainer } from '../components/layout/PageContainer';
-import { ScanTable } from '../components/scans/ScanTable';
-import { NewScanModal } from '../components/scans/NewScanModal';
-import { LoadingState } from '../components/common/LoadingState';
-import { EmptyState } from '../components/common/EmptyState';
-import { api } from '../services/api';
-import type { Scan, Project } from '../types';
+import { Plus, Scan as ScanIcon, RefreshCw, Filter, Search, X } from 'lucide-react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { ScanTable } from '@/components/scans/ScanTable';
+import { NewScanModal } from '@/components/scans/NewScanModal';
+import { api } from '@/services/api';
+import type { Scan, Project } from '@/types';
 
 export const Scans: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -21,10 +19,6 @@ export const Scans: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedScanForDetails, setSelectedScanForDetails] = useState<Scan | null>(null);
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -41,6 +35,10 @@ export const Scans: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -85,53 +83,55 @@ export const Scans: React.FC = () => {
   });
 
   return (
-    <PageContainer
-      title="Cryptographic Scans & History"
-      subtitle="Track ongoing and historical AST inspection runs, post-quantum classifications, and pipeline execution logs."
-      actions={
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5 rounded-lg"
-            title="Refresh scans status"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-teal-400' : ''}`} />
-            <span>Refresh</span>
-          </button>
+    <>
+      <PageHeader
+        title="Cryptographic scans"
+        description="Track ongoing and historical AST inspection runs, post-quantum classifications, and pipeline execution logs."
+        actions={
+          <>
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="btn"
+              title="Refresh scans status"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />
+              <span>Refresh</span>
+            </button>
 
-          <button
-            onClick={() => setIsNewScanOpen(true)}
-            className="btn-teal px-3.5 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-sm"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Initiate Scan</span>
-          </button>
-        </div>
-      }
-    >
+            <button
+              onClick={() => setIsNewScanOpen(true)}
+              className="btn-primary"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New scan</span>
+            </button>
+          </>
+        }
+      />
+
       <div className="flex flex-col gap-5">
         {/* Filters Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+        <div className="card flex flex-wrap items-center justify-between gap-4 p-4">
           <div className="relative flex-1 min-w-[240px] max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by Scan ID (e.g. SCAN-001), repository, project..."
-              className="w-full pl-9 pr-4 py-2 rounded-lg bg-slate-800/80 border border-slate-700 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-teal-400 transition-colors"
+              placeholder="Search by Scan ID (e.g. SCAN-001), repository, project…"
+              className="h-9 w-full rounded-lg border bg-surface pl-9 pr-4 text-[13px] outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
             />
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <Filter className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+              <Filter className="h-3.5 w-3.5" />
               <span>Status:</span>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs text-slate-200 focus:outline-none focus:border-teal-400"
+                className="h-8 rounded-lg border bg-surface px-2.5 text-[12px] text-foreground outline-none focus:border-primary/60"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="QUEUED">QUEUED</option>
@@ -145,28 +145,39 @@ export const Scans: React.FC = () => {
               </select>
             </div>
 
-            <div className="text-xs text-slate-400 pl-3 border-l border-slate-800">
-              Showing <strong className="text-slate-200">{filteredScans.length}</strong> of{' '}
-              <strong className="text-slate-200">{scans.length}</strong>
+            <div className="text-[12px] text-muted-foreground pl-3 border-l border-border">
+              Showing <span className="tabular font-medium text-foreground">{filteredScans.length}</span> of{' '}
+              <span className="tabular font-medium text-foreground">{scans.length}</span>
             </div>
           </div>
         </div>
 
         {/* Content Area */}
         {isLoading ? (
-          <LoadingState message="Fetching cryptographic scans..." />
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="card h-16 skeleton" />
+            ))}
+          </div>
         ) : filteredScans.length === 0 ? (
-          <EmptyState
-            icon={ScanIcon}
-            title="No scans found"
-            description={
-              searchQuery || statusFilter !== 'ALL'
-                ? 'No scans match your current filter parameters.'
-                : 'No cryptographic scans have been executed yet. Initiate a scan to assess your code against post-quantum baselines.'
-            }
-            actionText="Initiate Scan"
-            onAction={() => setIsNewScanOpen(true)}
-          />
+          <div className="card flex flex-col items-center justify-center p-12 text-center">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-surface-2 text-muted-foreground">
+              <ScanIcon className="h-6 w-6" />
+            </div>
+            <h3 className="mt-4 text-[16px] font-semibold">No cryptographic scans found</h3>
+            <p className="mt-1 text-[13px] text-muted-foreground max-w-sm">
+              {searchQuery || statusFilter !== 'ALL'
+                ? 'Try adjusting your search criteria or active status filter.'
+                : 'Upload an air-gapped repository archive to trigger your first scan.'}
+            </p>
+            <button
+              onClick={() => setIsNewScanOpen(true)}
+              className="btn-primary mt-5"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Start First Scan</span>
+            </button>
+          </div>
         ) : (
           <ScanTable
             scans={filteredScans}
@@ -176,73 +187,79 @@ export const Scans: React.FC = () => {
         )}
       </div>
 
+      {/* Details Flyout Modal */}
+      {selectedScanForDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="card w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-border">
+              <div>
+                <span className="eyebrow">Scan Telemetry</span>
+                <h3 className="font-mono text-[20px] font-semibold text-primary mt-0.5">
+                  {selectedScanForDetails.id}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedScanForDetails(null)}
+                className="grid h-8 w-8 place-items-center rounded-lg border bg-surface hover:bg-surface-2"
+                aria-label="Close scan details"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4 text-[13px]">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg bg-surface-2/60 p-3.5 border border-border">
+                  <span className="text-[11px] text-muted-foreground uppercase">Target Project</span>
+                  <div className="font-medium text-foreground mt-1">
+                    {selectedScanForDetails.project_name}
+                  </div>
+                  <div className="font-mono text-[11px] text-muted-foreground mt-0.5">
+                    Branch: {selectedScanForDetails.branch}
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-surface-2/60 p-3.5 border border-border">
+                  <span className="text-[11px] text-muted-foreground uppercase">Execution Status</span>
+                  <div className="font-semibold text-primary mt-1">
+                    {selectedScanForDetails.status}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5 tabular">
+                    Total Findings: {selectedScanForDetails.total_findings}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-lg bg-surface-2/60 p-4 border border-border">
+                <span className="text-[11px] text-muted-foreground uppercase">AST Ruleset & Execution Engine</span>
+                <p className="text-[13px] text-muted-foreground mt-1 leading-relaxed">
+                  Scanned repository file <code className="font-mono text-primary text-[12px]">{selectedScanForDetails.repository_name}</code> using local AST static analyzer and NIST FIPS 203 / 204 detection heuristics.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3">
+                <button
+                  onClick={() => setSelectedScanForDetails(null)}
+                  className="btn"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* New Scan Modal */}
       <NewScanModal
         isOpen={isNewScanOpen}
         onClose={() => setIsNewScanOpen(false)}
         projects={projects}
+        defaultProjectId={projectFilter || undefined}
         onScanCreated={handleScanCreated}
       />
-
-      {/* Scan Quick Details Modal */}
-      {selectedScanForDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-6 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-              <div className="flex items-center gap-2.5">
-                <span className="font-mono text-base font-bold text-teal-300">
-                  {selectedScanForDetails.id}
-                </span>
-                <span className="text-xs text-slate-400">
-                  ({selectedScanForDetails.project_name})
-                </span>
-              </div>
-              <button
-                onClick={() => setSelectedScanForDetails(null)}
-                className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3.5 text-xs text-slate-300">
-              <div className="flex justify-between py-1 border-b border-slate-850">
-                <span className="text-slate-500">Repository Archive:</span>
-                <span className="font-mono text-slate-200">{selectedScanForDetails.repository_name}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-850">
-                <span className="text-slate-500">Branch:</span>
-                <span className="font-mono text-slate-200">{selectedScanForDetails.branch}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-850">
-                <span className="text-slate-500">Status:</span>
-                <span className="font-semibold text-teal-400">{selectedScanForDetails.status}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-850">
-                <span className="text-slate-500">PQC Readiness Score:</span>
-                <span className="font-mono font-bold text-teal-400">{selectedScanForDetails.pqc_readiness_score}%</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-850">
-                <span className="text-slate-500">Total Findings:</span>
-                <span className="font-semibold text-slate-100">{selectedScanForDetails.total_findings}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-850">
-                <span className="text-slate-500">Created:</span>
-                <span className="font-mono text-slate-400">{selectedScanForDetails.created_at}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-slate-800">
-              <button
-                onClick={() => setSelectedScanForDetails(null)}
-                className="btn-secondary px-4 py-2 text-xs font-medium rounded-lg"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </PageContainer>
+    </>
   );
 };
+
+export default Scans;

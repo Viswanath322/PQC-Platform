@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Layers, FileCode2, Copy, Check, ShieldAlert, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Search, Copy, Check, ShieldAlert, AlertTriangle, ShieldCheck, X } from 'lucide-react';
 import type { CBOMEntry, RiskLevel } from '../../types/pqc';
 
 interface CBOMTableProps {
@@ -42,257 +42,167 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
     switch (risk) {
       case 'HIGH':
         return (
-          <span className="badge-risk-high">
-            <ShieldAlert size={12} /> High
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-critical/10 text-critical ring-1 ring-critical/25">
+            <ShieldAlert className="h-3 w-3" />
+            <span>High</span>
           </span>
         );
       case 'MEDIUM':
         return (
-          <span className="badge-risk-medium">
-            <AlertTriangle size={12} /> Medium
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-medium/10 text-medium ring-1 ring-medium/25">
+            <AlertTriangle className="h-3 w-3" />
+            <span>Medium</span>
           </span>
         );
       case 'LOW':
         return (
-          <span className="badge-risk-low">
-            <ShieldCheck size={12} /> Low
+          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-low/10 text-low ring-1 ring-low/25">
+            <ShieldCheck className="h-3 w-3" />
+            <span>Low</span>
           </span>
         );
     }
   };
 
   return (
-    <div className="glass-panel" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      {/* CBOM Controls Header */}
-      <div
-        style={{
-          padding: '18px 24px',
-          borderBottom: '1px solid var(--border-glass)',
-          backgroundColor: 'rgba(255, 255, 255, 0.4)',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '14px',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              padding: '6px 10px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--color-primary-faded)',
-              color: 'var(--color-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontWeight: 600,
-              fontSize: '12.5px',
-            }}
-          >
-            <Layers size={14} />
-            CycloneDX / CBOM Standard Spec v1.6
-          </div>
+    <div className="card w-full overflow-hidden flex flex-col">
+      {/* Header filter bar */}
+      <div className="p-4 border-b border-border bg-surface-2/40 flex flex-wrap gap-3 items-center justify-between">
+        <div className="relative min-w-[240px] max-w-sm flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search CBOM by algorithm, library, BOM-ref…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-9 w-full rounded-lg border bg-surface pl-9 pr-8 text-[13px] outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-          {/* Search */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: '#ffffff',
-              border: '1px solid var(--border-glass-strong)',
-              borderRadius: 'var(--radius-md)',
-              padding: '6px 12px',
-              minWidth: '240px',
-            }}
+        <div className="flex items-center gap-2 text-[13px]">
+          <span className="text-muted-foreground">Dependency:</span>
+          <select
+            value={dependencyFilter}
+            onChange={(e) => setDependencyFilter(e.target.value as 'ALL' | 'Direct' | 'Transitive')}
+            className="h-8 rounded-lg border bg-surface px-2.5 text-[12px] text-foreground outline-none focus:border-primary/60"
           >
-            <Search size={14} color="var(--text-muted)" />
-            <input
-              type="text"
-              placeholder="Search CBOM entries..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                border: 'none',
-                outline: 'none',
-                width: '100%',
-                fontSize: '12.5px',
-                color: 'var(--text-primary)',
-                background: 'transparent',
-              }}
-            />
-          </div>
-
-          {/* Dependency Filter */}
-          <div style={{ display: 'flex', background: '#e2e8f0', padding: '3px', borderRadius: '8px' }}>
-            {(['ALL', 'Direct', 'Transitive'] as const).map((type) => (
-              <button
-                key={type}
-                onClick={() => setDependencyFilter(type)}
-                style={{
-                  padding: '4px 10px',
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  background: dependencyFilter === type ? '#ffffff' : 'transparent',
-                  color: dependencyFilter === type ? 'var(--color-primary)' : 'var(--text-secondary)',
-                  boxShadow: dependencyFilter === type ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {type === 'ALL' ? 'All Types' : `${type} Deps`}
-              </button>
-            ))}
-          </div>
+            <option value="ALL">All Dependencies</option>
+            <option value="Direct">Direct Only</option>
+            <option value="Transitive">Transitive Only</option>
+          </select>
         </div>
       </div>
 
       {/* Table */}
-      <div style={{ overflowX: 'auto', width: '100%' }}>
-        <table
-          style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            textAlign: 'left',
-            fontSize: '13px',
-          }}
-        >
+      <div className="overflow-x-auto w-full">
+        <table className="w-full border-collapse text-left text-[13px]">
           <thead>
-            <tr
-              style={{
-                background: 'rgba(241, 245, 249, 0.75)',
-                borderBottom: '1px solid var(--border-glass)',
-                color: 'var(--text-secondary)',
-                fontWeight: 600,
-                fontSize: '11.5px',
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-              }}
-            >
-              <th style={{ padding: '12px 20px', width: '120px' }}>CBOM Asset ID</th>
-              <th style={{ padding: '12px 18px', width: '170px' }}>Algorithm Spec</th>
-              <th style={{ padding: '12px 16px', width: '150px' }}>Library & Version</th>
-              <th style={{ padding: '12px 18px', minWidth: '220px' }}>Call Site / AST Location</th>
-              <th style={{ padding: '12px 16px', width: '150px' }}>Standard Ref</th>
-              <th style={{ padding: '12px 18px', width: '110px' }}>Quantum Risk</th>
+            <tr className="border-b border-border bg-surface-2/50 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+              <th className="py-3 px-4 w-32">BOM Ref</th>
+              <th className="py-3 px-4 w-40">Algorithm</th>
+              <th className="py-3 px-4 w-36">Library</th>
+              <th className="py-3 px-4 w-28">Type</th>
+              <th className="py-3 px-4 min-w-[200px]">Asset Location</th>
+              <th className="py-3 px-4 w-32">PQC Status</th>
+              <th className="py-3 px-4 w-24">Risk</th>
             </tr>
           </thead>
-          <tbody>
-            {filteredData.map((entry, idx) => (
-              <tr
-                key={entry.id}
-                style={{
-                  borderBottom: '1px solid rgba(226, 232, 240, 0.6)',
-                  backgroundColor: idx % 2 === 0 ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.8)',
-                }}
-              >
-                {/* Asset ID */}
-                <td style={{ padding: '14px 20px', fontWeight: 600 }}>
-                  <span
-                    style={{
-                      fontFamily: 'monospace',
-                      fontSize: '12px',
-                      color: 'var(--color-primary)',
-                      background: 'rgba(36, 52, 71, 0.05)',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    {entry.id}
-                  </span>
+          <tbody className="divide-y divide-border text-foreground">
+            {filteredData.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-12 text-center text-muted-foreground">
+                  No CBOM entries matched your filter query.
                 </td>
-
-                {/* Algorithm Spec */}
-                <td style={{ padding: '14px 18px' }}>
-                  <div style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{entry.algorithm}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{entry.usage}</div>
-                </td>
-
-                {/* Library & Version */}
-                <td style={{ padding: '14px 16px' }}>
-                  <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{entry.library}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>v{entry.version}</span>
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        padding: '1px 5px',
-                        borderRadius: '3px',
-                        background: entry.dependencyType === 'Direct' ? 'var(--color-secondary-light)' : '#f1f5f9',
-                        color: entry.dependencyType === 'Direct' ? 'var(--color-secondary-dark)' : 'var(--text-muted)',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {entry.dependencyType}
-                    </span>
-                  </div>
-                </td>
-
-                {/* Location */}
-                <td style={{ padding: '14px 18px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FileCode2 size={13} color="var(--text-muted)" />
-                    <code
-                      style={{
-                        fontSize: '12px',
-                        color: 'var(--color-primary)',
-                        background: 'rgba(36, 52, 71, 0.04)',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      {entry.location}
-                    </code>
-                    <button
-                      onClick={(e) => handleCopy(e, entry.id, entry.location)}
-                      title="Copy path"
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: copiedId === entry.id ? 'var(--color-secondary-dark)' : 'var(--text-light)',
-                        padding: '2px',
-                      }}
-                    >
-                      {copiedId === entry.id ? <Check size={12} /> : <Copy size={12} />}
-                    </button>
-                  </div>
-                </td>
-
-                {/* Standard Reference */}
-                <td style={{ padding: '14px 16px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
-                  {entry.standardReference || 'Standard Reference'}
-                </td>
-
-                {/* Risk */}
-                <td style={{ padding: '14px 18px' }}>{renderRiskBadge(entry.risk)}</td>
               </tr>
-            ))}
+            ) : (
+              filteredData.map((item) => (
+                <tr key={item.id} className="hover:bg-surface-2/40 transition-colors">
+                  {/* BOM Ref */}
+                  <td className="py-3 px-4 font-mono text-[11.5px] text-primary">
+                    {item.id}
+                  </td>
+
+                  {/* Algorithm */}
+                  <td className="py-3 px-4 font-mono font-medium text-foreground text-[12.5px]">
+                    {item.algorithm}
+                  </td>
+
+                  {/* Library & Version */}
+                  <td className="py-3 px-4 text-muted-foreground text-[12px]">
+                    <span className="font-medium text-foreground">{item.library}</span>
+                    <span className="font-mono text-[11px] ml-1.5 opacity-80">v{item.version}</span>
+                  </td>
+
+                  {/* Dependency Type */}
+                  <td className="py-3 px-4">
+                    <span
+                      className={`inline-flex rounded px-2 py-0.5 text-[11px] font-medium font-mono ${
+                        item.dependencyType === 'Direct'
+                          ? 'bg-primary/10 text-primary ring-1 ring-primary/25'
+                          : 'bg-surface-2 text-muted-foreground'
+                      }`}
+                    >
+                      {item.dependencyType}
+                    </span>
+                  </td>
+
+                  {/* Location */}
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-1.5">
+                      <code className="font-mono text-[11.5px] text-muted-foreground bg-surface-2 px-1.5 py-0.5 rounded break-all max-w-[280px] truncate">
+                        {item.location}
+                      </code>
+                      <button
+                        onClick={(e) => handleCopy(e, item.id, item.location)}
+                        title="Copy file path"
+                        className="text-muted-foreground hover:text-foreground p-1 rounded"
+                        aria-label="Copy file path"
+                      >
+                        {copiedId === item.id ? (
+                          <Check className="h-3.5 w-3.5 text-success" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </td>
+
+                  {/* PQC Status */}
+                  <td className="py-3 px-4">
+                    <span
+                      className={`text-[12px] font-medium ${
+                        item.quantumVulnerable ? 'text-critical' : 'text-primary'
+                      }`}
+                    >
+                      {item.quantumVulnerable ? 'Shor Vulnerable' : 'Quantum Safe'}
+                    </span>
+                  </td>
+
+                  {/* Risk */}
+                  <td className="py-3 px-4">{renderRiskBadge(item.risk)}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      <div
-        style={{
-          padding: '12px 24px',
-          borderTop: '1px solid var(--border-glass)',
-          backgroundColor: 'rgba(255, 255, 255, 0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          fontSize: '12px',
-          color: 'var(--text-muted)',
-        }}
-      >
+      {/* Footer Info */}
+      <div className="p-3 px-4 border-t border-border bg-surface-2/30 flex items-center justify-between text-[12px] text-muted-foreground">
         <span>
-          Showing <strong>{filteredData.length}</strong> CBOM items
+          Showing <strong className="text-foreground tabular">{filteredData.length}</strong> of{' '}
+          <strong className="text-foreground tabular">{data.length}</strong> components
         </span>
-        <span>Cryptographic Bill of Materials specification compliance view</span>
+        <span className="font-mono text-[11px]">CycloneDX 1.6 CBOM Schema</span>
       </div>
     </div>
   );

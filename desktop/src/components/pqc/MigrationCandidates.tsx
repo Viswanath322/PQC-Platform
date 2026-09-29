@@ -1,7 +1,6 @@
 import React from 'react';
-import { ArrowRight, ShieldAlert, Cpu, GitBranch, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, Cpu, GitBranch } from 'lucide-react';
 import type { MigrationCandidate } from '../../types/pqc';
-import { MockDataBadge } from './MockDataBadge';
 
 interface MigrationCandidatesProps {
   candidates: MigrationCandidate[];
@@ -13,180 +12,88 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
   onAssessCandidate,
 }) => {
   return (
-    <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="card flex flex-col gap-5 p-6">
       {/* Section Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h3 className="title-level-2">PQC Migration Candidates</h3>
-            <MockDataBadge size="sm" />
+          <div className="flex items-center gap-2.5">
+            <h3 className="section-title">PQC migration candidates</h3>
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary ring-1 ring-primary/25">
+              NIST FIPS 203 / 204
+            </span>
           </div>
-          <p className="subtitle-muted">
+          <p className="section-sub mt-0.5">
             High-priority quantum-vulnerable primitives and recommended post-quantum replacements
           </p>
         </div>
-        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-          Showing <strong>{candidates.length}</strong> prioritized candidates
+        <div className="text-[12px] text-muted-foreground">
+          Showing <span className="tabular font-medium text-foreground">{candidates.length}</span> prioritized candidates
         </div>
       </div>
 
       {/* Candidate Cards Grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '16px',
-        }}
-      >
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {candidates.map((item) => (
           <div
             key={item.id}
-            className="glass-panel-subtle"
-            style={{
-              padding: '18px 20px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              gap: '14px',
-              borderLeft: '4px solid var(--color-risk-high)',
-              backgroundColor: 'rgba(255, 255, 255, 0.7)',
-              transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-            }}
+            className="card card-hover flex flex-col justify-between border-l-2 border-l-critical bg-surface-2/40 p-4"
           >
             {/* Header info */}
             <div>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <div>
-                  <span
-                    style={{
-                      fontSize: '16px',
-                      fontWeight: 700,
-                      color: 'var(--color-primary)',
-                      display: 'block',
-                    }}
-                  >
-                    {item.algorithm}
-                  </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
-                    <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Location:</span>
-                    <code
-                      style={{
-                        fontSize: '11.5px',
-                        color: 'var(--color-primary)',
-                        background: 'rgba(36, 52, 71, 0.05)',
-                        padding: '1px 5px',
-                        borderRadius: '3px',
-                      }}
-                    >
-                      {item.location}
-                    </code>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <span className="font-mono text-[11px] text-muted-foreground">{item.id}</span>
+                <span className="rounded-full bg-critical/10 px-2 py-0.5 text-[10px] font-medium text-critical ring-1 ring-critical/25 uppercase">
+                  {item.risk} Risk
+                </span>
+              </div>
+
+              {/* Current vs Target Algorithm */}
+              <div className="rounded-lg bg-surface p-3 border border-border">
+                <div className="flex items-center justify-between text-[12px]">
+                  <div>
+                    <span className="text-[10px] uppercase text-muted-foreground">Classical Primitive</span>
+                    <div className="font-mono font-semibold text-critical text-[13px] mt-0.5">
+                      {item.algorithm}
+                    </div>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-primary shrink-0 mx-2" />
+                  <div className="text-right">
+                    <span className="text-[10px] uppercase text-muted-foreground">Target Standard</span>
+                    <div className="font-mono font-semibold text-primary text-[12px] mt-0.5">
+                      {item.nistStandard || 'FIPS 203'}
+                    </div>
                   </div>
                 </div>
-
-                <span className="badge-risk-high" style={{ fontSize: '11px', padding: '2px 8px' }}>
-                  <ShieldAlert size={11} />
-                  {item.risk}
-                </span>
               </div>
 
-              {/* Rationale if available */}
-              {item.rationale && (
-                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: 1.45 }}>
-                  {item.rationale}
-                </p>
-              )}
-            </div>
-
-            {/* Recommendation Box */}
-            <div
-              style={{
-                padding: '12px 14px',
-                borderRadius: '8px',
-                background: 'rgba(42, 157, 143, 0.08)',
-                border: '1px solid rgba(42, 157, 143, 0.25)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                <Cpu size={13} color="var(--color-secondary-dark)" />
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                    color: 'var(--color-secondary-dark)',
-                  }}
-                >
-                  Recommended Migration:
-                </span>
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-primary)' }}>
-                {item.recommendation}
-              </div>
-
-              {item.nistStandard && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '6px' }}>
-                  <CheckCircle2 size={11} color="var(--color-secondary-dark)" />
-                  <span style={{ fontSize: '11.5px', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                    Standard: {item.nistStandard}
-                  </span>
+              {/* Context metadata */}
+              <div className="mt-3 space-y-1 text-[12px] text-muted-foreground">
+                <div className="flex items-center gap-1.5 font-mono text-[11.5px] truncate">
+                  <GitBranch className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{item.location}</span>
                 </div>
-              )}
+                <div className="flex items-center gap-1.5 text-[12px]">
+                  <Cpu className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                  <span>Recommendation: <strong className="text-foreground">{item.recommendation}</strong></span>
+                </div>
+              </div>
             </div>
 
-            {/* Protocols / Footer */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingTop: '6px',
-                borderTop: '1px solid rgba(226, 232, 240, 0.7)',
-                fontSize: '11.5px',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}>
-                <GitBranch size={12} />
-                <span>Impact: {item.estimatedEffort || 'Medium'} effort</span>
-              </div>
-
+            {/* Action bar */}
+            <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+              <span className="text-[11px] text-muted-foreground">
+                Effort: <strong className="text-foreground capitalize">{item.estimatedEffort || 'Medium'}</strong>
+              </span>
               <button
-                onClick={() => onAssessCandidate && onAssessCandidate(item)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--color-secondary-dark)',
-                  fontWeight: 600,
-                  fontSize: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  cursor: 'pointer',
-                  padding: '2px 4px',
-                }}
+                onClick={() => onAssessCandidate?.(item)}
+                className="btn h-7 px-2.5 text-[12px]"
               >
-                Plan Migration <ArrowRight size={12} />
+                <span>Migration Blueprint</span>
+                <ArrowRight className="h-3 w-3" />
               </button>
             </div>
           </div>
         ))}
-      </div>
-
-      {/* Development Notice */}
-      <div
-        style={{
-          fontSize: '11.5px',
-          color: 'var(--text-muted)',
-          backgroundColor: 'rgba(36, 52, 71, 0.03)',
-          padding: '8px 14px',
-          borderRadius: '6px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}
-      >
-        <span style={{ fontWeight: 600 }}>Note:</span>
-        These migration recommendations reflect development mock references based on NIST FIPS 203/204/205 standards.
       </div>
     </div>
   );

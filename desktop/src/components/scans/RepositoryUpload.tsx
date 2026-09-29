@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, FileArchive, CheckCircle2, AlertCircle, Shield, X } from 'lucide-react';
+import { Upload, FileArchive, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { api } from '../../services/api';
 
 interface RepositoryUploadProps {
@@ -111,7 +111,7 @@ export const RepositoryUpload: React.FC<RepositoryUploadProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 w-full">
+    <div className="flex flex-col gap-3 w-full text-[13px]">
       <input
         ref={fileInputRef}
         type="file"
@@ -127,24 +127,24 @@ export const RepositoryUpload: React.FC<RepositoryUploadProps> = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => !selectedFile && fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-xl p-6 transition-all duration-200 text-center ${
+        className={`border border-dashed rounded-xl p-6 transition-all duration-150 text-center ${
           isDragOver
-            ? 'border-teal-400 bg-teal-500/10'
+            ? 'border-primary bg-primary/10'
             : selectedFile
-            ? 'border-slate-700 bg-slate-800/40 cursor-default'
-            : 'border-slate-700 hover:border-slate-500 bg-slate-900/40 hover:bg-slate-800/30 cursor-pointer'
+            ? 'border-slate-200/60 bg-white/60 cursor-default'
+            : 'border-slate-300 hover:border-primary/50 bg-white/50 hover:bg-white/70 cursor-pointer'
         }`}
       >
         {!selectedFile ? (
           <div className="flex flex-col items-center justify-center gap-2">
-            <div className="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 mb-1">
-              <Upload className="w-6 h-6" />
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 ring-1 ring-primary/25 text-primary mb-1">
+              <Upload className="h-5 w-5" />
             </div>
-            <div className="text-sm font-semibold text-slate-200">
-              Drag & Drop your repository archive here
+            <div className="text-[14px] font-semibold text-slate-900">
+              Drag &amp; drop your repository archive here
             </div>
-            <div className="text-xs text-slate-400">
-              Supports <span className="font-mono text-teal-300">.zip</span> archives up to 200 MB
+            <div className="text-[12px] text-slate-500">
+              Supports <span className="font-mono text-primary">.zip</span> archives up to 200 MB
             </div>
             <div className="mt-2">
               <button
@@ -153,110 +153,84 @@ export const RepositoryUpload: React.FC<RepositoryUploadProps> = ({
                   e.stopPropagation();
                   fileInputRef.current?.click();
                 }}
-                className="btn-secondary px-4 py-2 text-xs font-semibold rounded-lg shadow-sm"
+                className="btn text-[12px] h-8"
               >
-                [ Select Repository ]
+                Browse local files
               </button>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/80 border border-slate-700/60">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 flex-shrink-0">
-                  <FileArchive className="w-5 h-5" />
+          <div className="flex items-center justify-between gap-4 text-left">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary shrink-0">
+                <FileArchive className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="font-semibold text-slate-900 truncate max-w-sm font-mono text-[13px]">
+                  {selectedFile.name}
                 </div>
-                <div className="text-left">
-                  <div className="text-sm font-medium text-slate-200 truncate max-w-xs md:max-w-md">
-                    {selectedFile.name}
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    {formatFileSize(selectedFile.size)} • Ready for ingestion
-                  </div>
+                <div className="text-[12px] text-slate-500 tabular">
+                  {formatFileSize(selectedFile.size)} · Ready to ingest
                 </div>
               </div>
-
-              {!isUploading && !parentIsUploading && (
-                <button
-                  type="button"
-                  onClick={handleRemoveFile}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
-                  title="Remove file"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
             </div>
 
-            {/* Progress Bar during upload */}
-            {(isUploading || uploadProgress > 0) && (
-              <div className="w-full flex flex-col gap-1.5">
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>Uploading to ingestion pipeline...</span>
-                  <span className="font-mono">{uploadProgress}%</span>
-                </div>
-                <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                  <div
-                    className="h-full bg-teal-400 transition-all duration-300 ease-out rounded-full"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Actions & Status */}
-            {uploadStatus === 'idle' && (
-              <div className="flex justify-end gap-2 mt-1">
-                <button
-                  type="button"
-                  onClick={handleRemoveFile}
-                  className="btn-secondary px-3 py-1.5 text-xs font-medium rounded-lg"
-                >
-                  Change File
-                </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {uploadStatus === 'idle' && (
                 <button
                   type="button"
                   onClick={handleUpload}
                   disabled={isUploading || parentIsUploading}
-                  className="btn-teal px-4 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5"
+                  className="btn-primary h-8 px-3 text-[12px]"
                 >
-                  <Upload className="w-3.5 h-3.5" />
-                  <span>Upload & Ingest</span>
+                  Confirm &amp; Ingest
                 </button>
-              </div>
-            )}
-
-            {uploadStatus === 'success' && (
-              <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-950/20 border border-emerald-500/30 px-3 py-2 rounded-lg">
-                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                <span>Archive uploaded successfully. Staged for security scan.</span>
-              </div>
-            )}
-
-            {uploadStatus === 'error' && (
-              <div className="flex items-center gap-2 text-xs text-rose-400 bg-rose-950/20 border border-rose-500/30 px-3 py-2 rounded-lg text-left">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{errorMessage || 'Failed to upload repository.'}</span>
-              </div>
-            )}
+              )}
+              {uploadStatus !== 'uploading' && (
+                <button
+                  type="button"
+                  onClick={handleRemoveFile}
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-white/80 bg-white/70 text-slate-500 hover:text-slate-900"
+                  aria-label="Remove selected archive"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      {errorMessage && uploadStatus !== 'error' && (
-        <div className="flex items-center gap-2 text-xs text-rose-400 px-1">
-          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-          <span>{errorMessage}</span>
+      {/* Progress Bar */}
+      {uploadStatus === 'uploading' && (
+        <div className="space-y-1">
+          <div className="flex justify-between text-[11px] text-slate-500 tabular">
+            <span>Ingesting archive to local sandbox…</span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-slate-200/70 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-200"
+              style={{ width: `${uploadProgress}%` }}
+            />
+          </div>
         </div>
       )}
 
-      {/* Air-gapped / Safe extraction security disclosure */}
-      <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-slate-900/30 border border-slate-800 text-[11px] text-slate-400">
-        <Shield className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
-        <span>
-          <strong>Air-Gapped Ingestion Notice:</strong> Archives are never unzipped client-side in the browser. Extraction, path traversal validation, and AST parsing are conducted securely within isolated backend container workers.
-        </span>
-      </div>
+      {/* Status Messages */}
+      {uploadStatus === 'success' && (
+        <div className="p-3 rounded-lg border border-success/30 bg-success/10 text-success text-[12px] flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span>Archive verified and cached in local air-gapped memory sandbox.</span>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="p-3 rounded-lg border border-critical/30 bg-critical/10 text-critical text-[12px] flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
     </div>
   );
 };

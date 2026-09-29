@@ -1,5 +1,6 @@
 import React from 'react';
 export { ScanStatusBadge } from '../scans/ScanStatusBadge';
+import { cn } from '@/lib/utils';
 
 interface StatusBadgeProps {
   status: 'healthy' | 'offline' | 'active' | 'inactive' | 'warning' | string;
@@ -14,38 +15,42 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
 }) => {
   const norm = status.toLowerCase();
 
-  const getColors = () => {
+  const getClasses = (): string => {
     switch (norm) {
       case 'healthy':
       case 'active':
       case 'completed':
-        return { bg: 'rgba(34, 197, 94, 0.14)', border: 'rgba(34, 197, 94, 0.3)', text: '#4ade80', dot: '#22c55e' };
+        return 'bg-success/10 text-success ring-1 ring-success/25';
       case 'offline':
       case 'failed':
       case 'error':
-        return { bg: 'rgba(239, 68, 68, 0.14)', border: 'rgba(239, 68, 68, 0.3)', text: '#f87171', dot: '#ef4444' };
+        return 'bg-critical/10 text-critical ring-1 ring-critical/25';
       case 'warning':
       case 'queued':
-        return { bg: 'rgba(234, 179, 8, 0.14)', border: 'rgba(234, 179, 8, 0.3)', text: '#fde047', dot: '#eab308' };
+        return 'bg-medium/10 text-medium ring-1 ring-medium/25';
       default:
-        return { bg: 'rgba(148, 163, 184, 0.14)', border: 'rgba(148, 163, 184, 0.3)', text: '#cbd5e1', dot: '#94a3b8' };
+        return 'bg-slate-100 text-slate-600 ring-1 ring-slate-300/50';
     }
   };
 
-  const colors = getColors();
+  const getDotClass = (): string => {
+    switch (norm) {
+      case 'healthy': case 'active': case 'completed': return 'bg-success';
+      case 'offline': case 'failed': case 'error': return 'bg-critical';
+      case 'warning': case 'queued': return 'bg-medium';
+      default: return 'bg-slate-400';
+    }
+  };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-medium rounded-full ${
-        size === 'sm' ? 'text-[11px] px-2 py-0.5' : 'text-xs px-2.5 py-0.5'
-      }`}
-      style={{
-        background: colors.bg,
-        border: `1px solid ${colors.border}`,
-        color: colors.text,
-      }}
+      className={cn(
+        'inline-flex items-center gap-1.5 font-medium rounded-full',
+        size === 'sm' ? 'text-[11px] px-2 py-0.5' : 'text-xs px-2.5 py-0.5',
+        getClasses()
+      )}
     >
-      <span className="w-1.5 h-1.5 rounded-full" style={{ background: colors.dot }} />
+      <span className={cn('w-1.5 h-1.5 rounded-full', getDotClass())} />
       <span>{label || status}</span>
     </span>
   );

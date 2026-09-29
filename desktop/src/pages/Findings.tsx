@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Bug, RefreshCw } from 'lucide-react';
-import { PageContainer } from '../components/layout/PageContainer';
-import { FindingsTable } from '../components/findings/FindingsTable';
-import { FindingFilters } from '../components/findings/FindingFilters';
-import { FindingDetails } from '../components/findings/FindingDetails';
-import { LoadingState } from '../components/common/LoadingState';
-import { EmptyState } from '../components/common/EmptyState';
-import { api } from '../services/api';
-import type { Finding } from '../types';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { FindingsTable } from '@/components/findings/FindingsTable';
+import { FindingFilters } from '@/components/findings/FindingFilters';
+import { FindingDetails } from '@/components/findings/FindingDetails';
+import { api } from '@/services/api';
+import type { Finding } from '@/types';
 
 export const Findings: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -22,10 +20,6 @@ export const Findings: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
 
-  useEffect(() => {
-    loadFindings();
-  }, []);
-
   const loadFindings = async () => {
     setIsLoading(true);
     try {
@@ -37,6 +31,10 @@ export const Findings: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadFindings();
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -68,34 +66,33 @@ export const Findings: React.FC = () => {
       return (
         f.id.toLowerCase().includes(q) ||
         f.title.toLowerCase().includes(q) ||
-        f.file.toLowerCase().includes(q) ||
         f.explanation.toLowerCase().includes(q) ||
-        (f.cwe_id && f.cwe_id.toLowerCase().includes(q))
+        f.file.toLowerCase().includes(q)
       );
     }
     return true;
   });
 
   return (
-    <PageContainer
-      title="Security & PQC Findings Explorer"
-      subtitle="Inspect source-level AST vulnerabilities, post-quantum risks, weak ciphers, and hardcoded secrets."
-      actions={
-        <div className="flex items-center gap-2.5">
+    <>
+      <PageHeader
+        title="Security findings"
+        description="Inspect code-level vulnerabilities, cryptographic weaknesses, and quantum exposure detected by static AST inspection."
+        actions={
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5 rounded-lg"
+            className="btn"
             title="Refresh findings list"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-teal-400' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />
             <span>Refresh</span>
           </button>
-        </div>
-      }
-    >
+        }
+      />
+
       <div className="flex flex-col gap-5">
-        {/* Filters Header */}
+        {/* Filters */}
         <FindingFilters
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -110,15 +107,27 @@ export const Findings: React.FC = () => {
 
         {/* Content Area */}
         {isLoading ? (
-          <LoadingState message="Loading security findings..." />
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="card h-16 skeleton" />
+            ))}
+          </div>
         ) : filteredFindings.length === 0 ? (
-          <EmptyState
-            icon={Bug}
-            title="No findings match filter"
-            description="No vulnerability findings matched your search or severity criteria. Try resetting filters."
-            actionText="Reset All Filters"
-            onAction={handleResetFilters}
-          />
+          <div className="card flex flex-col items-center justify-center p-12 text-center">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-surface-2 text-muted-foreground">
+              <Bug className="h-6 w-6" />
+            </div>
+            <h3 className="mt-4 text-[16px] font-semibold">No findings matched your criteria</h3>
+            <p className="mt-1 text-[13px] text-muted-foreground max-w-sm">
+              Try adjusting your active severity and category filters or clearing the search query.
+            </p>
+            <button
+              onClick={handleResetFilters}
+              className="btn mt-5"
+            >
+              Reset Filters
+            </button>
+          </div>
         ) : (
           <FindingsTable
             findings={filteredFindings}
@@ -128,11 +137,13 @@ export const Findings: React.FC = () => {
         )}
       </div>
 
-      {/* Flyout Finding Details Panel */}
+      {/* Flyout Details Drawer */}
       <FindingDetails
         finding={selectedFinding}
         onClose={() => setSelectedFinding(null)}
       />
-    </PageContainer>
+    </>
   );
 };
+
+export default Findings;

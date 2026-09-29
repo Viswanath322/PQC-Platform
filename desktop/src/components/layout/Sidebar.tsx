@@ -1,124 +1,65 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import {
-  ShieldCheck,
-  LayoutDashboard,
-  FolderGit2,
-  Scan,
-  Bug,
-  Atom,
-  FileBarChart,
-  Settings,
-  Cpu,
-} from 'lucide-react';
-import { BackendStatus } from '../common/BackendStatus';
+import { LayoutDashboard, FolderGit2, ScanLine, Bug, ShieldCheck, KeyRound, FileText, Settings, Shield } from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
-export const Sidebar: React.FC = () => {
-  const navItems = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/projects', label: 'Projects', icon: FolderGit2 },
-    { to: '/scans', label: 'Scans', icon: Scan },
-    { to: '/findings', label: 'Findings', icon: Bug },
-    { to: '/pqc', label: 'PQC Assessment', icon: Atom, highlight: 'PQC' },
-    { to: '/crypto-inventory', label: 'Crypto Inventory', icon: Cpu },
-    { to: '/reports', label: 'Reports', icon: FileBarChart },
-    { to: '/settings', label: 'Settings', icon: Settings },
-  ];
+const nav = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/projects", label: "Projects", icon: FolderGit2 },
+  { to: "/scans", label: "Scans", icon: ScanLine },
+  { to: "/findings", label: "Findings", icon: Bug },
+  { to: "/pqc", label: "PQC Assessment", icon: ShieldCheck, badge: "PQC" },
+  { to: "/inventory", label: "Crypto Inventory", icon: KeyRound },
+  { to: "/reports", label: "Reports", icon: FileText },
+  { to: "/settings", label: "Settings", icon: Settings },
+];
 
+export function Sidebar() {
   return (
-    <aside className="app-sidebar" aria-label="Main Application Navigation">
-      {/* Top Header & Brand */}
-      <div className="flex flex-col gap-3">
-        {/* Brand */}
-        <div className="flex items-center gap-3 px-2 py-1.5 h-12">
-          <div className="w-9 h-9 rounded-xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 shadow-sm flex-shrink-0">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-slate-100 tracking-tight leading-tight truncate">
-                PQC Sentinel
-              </span>
-              <span className="text-[9.5px] font-semibold text-teal-400 font-mono bg-teal-950/60 px-1.5 py-0.2 rounded border border-teal-800/40">
-                v0.8.4
-              </span>
-            </div>
-            <span className="text-[10px] font-medium text-slate-400 tracking-wider uppercase">
-              Security Assessment
-            </span>
-          </div>
+    <aside className="sticky top-0 flex h-screen flex-col border-r border-white/70 bg-white/50 px-2 py-4 backdrop-blur-2xl backdrop-saturate-150 lg:px-3">
+      <div className="mb-6 flex items-center gap-3 px-1.5 lg:px-2">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/25">
+          <Shield className="h-5 w-5 text-primary" />
         </div>
-
-        {/* Separator */}
-        <div className="h-px bg-slate-800/80 mx-1 my-1" />
-
-        {/* Nav Links */}
-        <nav className="flex flex-col gap-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 relative group ${
-                    isActive
-                      ? 'bg-teal-500/15 text-teal-300 font-semibold'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    {/* Active Accent Left Bar */}
-                    <div
-                      className={`absolute left-0 w-1 rounded-r-full bg-teal-400 transition-all duration-200 ${
-                        isActive ? 'h-5' : 'h-0'
-                      }`}
-                    />
-
-                    <Icon
-                      className={`w-4 h-4 flex-shrink-0 transition-colors ${
-                        isActive ? 'text-teal-300' : 'text-slate-400 group-hover:text-slate-200'
-                      }`}
-                    />
-
-                    <span className="truncate flex-1">{item.label}</span>
-
-                    {item.highlight && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-500/25 text-teal-300">
-                        {item.highlight}
-                      </span>
-                    )}
-                  </>
-                )}
-              </NavLink>
-            );
-          })}
-        </nav>
+        <div className="hidden leading-tight lg:block">
+          <div className="text-[15px] font-semibold tracking-tight text-slate-900">PQC Sentinel</div>
+          <div className="text-[11px] text-slate-500">Security Assessment · v0.8.4</div>
+        </div>
       </div>
 
-      {/* Bottom Status & Profile Area */}
-      <div className="flex flex-col gap-2 pt-2 border-t border-slate-800/80">
-        {/* Backend Connection Widget */}
-        <BackendStatus variant="sidebar" />
+      <nav className="flex flex-1 flex-col gap-0.5">
+        {nav.map(({ to, label, icon: Icon, badge }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={to === "/"}
+            aria-label={label}
+            className={({ isActive }) =>
+              cn(
+                "relative flex h-9 items-center justify-center gap-3 rounded-lg text-[13.5px] transition-colors hover:bg-white/70 hover:text-slate-900 lg:justify-start lg:px-3",
+                isActive
+                  ? "bg-white/80 text-slate-900 shadow-[0_1px_0_#fff_inset,0_4px_14px_-6px_hsl(var(--primary)/0.35)] before:absolute before:left-0 before:top-2 before:h-5 before:w-0.5 before:rounded-full before:bg-primary"
+                  : "text-slate-600"
+              )
+            }
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="hidden flex-1 lg:block">{label}</span>
+            {badge && (
+              <span className="hidden rounded bg-primary/10 px-1.5 text-[10px] font-semibold text-primary ring-1 ring-primary/20 lg:block">
+                {badge}
+              </span>
+            )}
+          </NavLink>
+        ))}
+      </nav>
 
-        {/* User Profile Card */}
-        <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800/70 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/80 flex items-center justify-center text-teal-400 font-semibold text-xs flex-shrink-0">
-            SO
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-xs font-semibold text-slate-200 truncate leading-tight">
-              SecOfficer
-            </span>
-            <span className="text-[10.5px] text-slate-400 truncate leading-tight">
-              Air-Gapped Auditor
-            </span>
-          </div>
+      <div className="glass flex items-center justify-center gap-3 rounded-xl p-2 lg:justify-start lg:p-2.5">
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary ring-1 ring-primary/25">SO</div>
+        <div className="hidden min-w-0 leading-tight lg:block">
+          <div className="truncate text-[13px] font-medium text-slate-900">SecOfficer</div>
+          <div className="truncate text-[11px] text-slate-500">Air-Gapped Auditor</div>
         </div>
       </div>
     </aside>
   );
-};
+}
