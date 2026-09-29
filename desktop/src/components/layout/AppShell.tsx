@@ -20,7 +20,7 @@ export function AppShell({
   isRefreshing?: boolean;
 }) {
   return (
-    <div className="h-screen w-screen p-3 md:p-3.5 lg:p-4 flex gap-3 lg:gap-3.5 overflow-hidden box-border">
+    <div className="h-screen w-screen p-2.5 sm:p-3 flex gap-2 overflow-hidden box-border">
       {/* Container 1: Independent Floating Navigation Sidebar */}
       <Sidebar />
 
