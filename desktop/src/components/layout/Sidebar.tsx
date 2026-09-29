@@ -27,7 +27,10 @@ export function Sidebar() {
           </div>
           <div className="hidden leading-tight lg:block">
             <div className="text-[15px] font-semibold tracking-tight text-slate-900">PQC Sentinel</div>
-            <div className="text-[11px] text-slate-500 font-mono">v0.8.4 · Security Assessment</div>
+            <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
+              <span className="rounded bg-purple-100/80 text-purple-700 font-semibold px-1 py-0.2 border border-purple-200/70 text-[10px]">v0.8.4</span>
+              <span>Security Assessment</span>
+            </div>
           </div>
         </div>
 
@@ -51,7 +54,7 @@ export function Sidebar() {
               <Icon className="h-4 w-4 shrink-0 transition-colors duration-150 group-hover:text-primary" />
               <span className="hidden flex-1 lg:block">{label}</span>
               {badge && (
-                <span className="hidden rounded bg-primary/10 px-1.5 text-[10px] font-semibold text-primary ring-1 ring-primary/20 lg:block group-hover:bg-primary/15 transition-colors">
+                <span className="hidden rounded-md bg-purple-100/80 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-300/60 lg:block group-hover:bg-purple-200/70 transition-colors shadow-xs">
                   {badge}
                 </span>
               )}

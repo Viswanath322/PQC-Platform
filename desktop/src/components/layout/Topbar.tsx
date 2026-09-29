@@ -27,7 +27,7 @@ export function Topbar({
         <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
         <button className="flex min-w-0 items-center gap-2 rounded-lg border border-white/80 bg-white/60 px-2.5 py-1 text-muted-foreground backdrop-blur-md transition-all duration-200 hover:border-white/95 hover:bg-white/85 hover:text-slate-950 hover:shadow-[inset_0_1px_1px_#fff,0_3px_10px_rgba(41,56,77,0.06)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] cursor-pointer">
           <span className="truncate">{project}</span>
-          <span className="rounded bg-slate-100 px-1.5 font-mono text-[11px] text-slate-600">{branch}</span>
+          <span className="rounded bg-purple-100/70 border border-purple-200/80 px-1.5 font-mono text-[11px] text-purple-700 font-semibold">{branch}</span>
         </button>
       </nav>
 
@@ -38,7 +38,7 @@ export function Topbar({
           placeholder="Search assets, algorithms, scans…"
           className="h-9 w-full rounded-lg border border-white/80 bg-white/60 pl-9 pr-12 text-[13px] text-foreground outline-none backdrop-blur-md transition-all duration-200 placeholder:text-slate-400 hover:border-white hover:bg-white/80 focus:border-primary/50 focus:bg-white focus:ring-2 focus:ring-primary/20 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]"
         />
-        <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-slate-200 bg-white/90 px-1.5 font-mono text-[10px] text-slate-500 shadow-sm">⌘K</kbd>
+        <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-purple-200/70 bg-purple-50/80 px-1.5 font-mono text-[10px] text-purple-700 shadow-sm">⌘K</kbd>
       </div>
 
       <div className="ml-auto flex shrink-0 items-center gap-2">
