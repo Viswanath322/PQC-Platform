@@ -49,6 +49,26 @@ Configuration is by environment variable:
 
 Example: `PQC_INGESTION_ROOT=.worktrees/hima PQC_ANALYSIS_ROOT=.worktrees/harshitha pytest tests/ingestion tests/analysis -v -rs`
 
+## How to test your branch
+
+Run these from the root of your own branch (rebase on `main` first so you have `tests/`). Start the services you need, then run your slice before you push or open a PR.
+
+| Who | What to start | Command |
+|---|---|---|
+| Aakash (projects, uploads, scans) | Your backend on port 8000 | `pytest tests/backend -v -rs` |
+| Amrutha (health, auth) | Your backend on port 8000 | `pytest tests/backend/test_health.py tests/backend/test_auth.py tests/backend/test_api_security.py -v -rs` |
+| Sathwik (findings, reports) | A backend serving your routers on port 8000 | `pytest tests/backend/test_findings_reports.py -v -rs` |
+| Vamsi (database) | `docker compose up -d` | `PQC_REDIS_URL=redis://:change_me_locally@127.0.0.1:6379/0 pytest tests/database -v -rs` |
+| Hima Bindu (ingestion) | Nothing | `PQC_INGESTION_ROOT=. pytest tests/ingestion -v -rs` |
+| Harshitha (analysis engines) | Nothing (Python 3.11+) | `PQC_ANALYSIS_ROOT=. pytest tests/analysis -v -rs` |
+| Harshith, Sathish, Hema (desktop UI) | Nothing | `pytest tests/frontend tests/security -v -rs` |
+| Everyone | Nothing | `pytest tests/security -v -rs` (secrets, committed junk files, `.gitignore`, dependency audit) |
+| Integration check | Database + backend | `pytest tests/integration -v -rs` |
+
+If your backend runs on a different port, set `PQC_API_URL`, e.g. `PQC_API_URL=http://127.0.0.1:8001`.
+
+A FAIL in your own area means something to fix before merging. A BLOCKED result means the test is waiting on another teammate's piece, so it isn't yours to fix.
+
 ## Reading results
 
 - **PASS** — behaviour matches the contract.
