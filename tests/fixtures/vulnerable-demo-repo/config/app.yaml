@@ -1,7 +1,0 @@
-# Demo bank configuration. FAKE values, INTENTIONALLY INSECURE.
-server:
-  debug: true              # VULN: CFG-005
-  host: 0.0.0.0
-tls:
-  verify: false            # VULN: CFG-006
-  min_version: "TLSv1.0"   # VULN: CFG-007
