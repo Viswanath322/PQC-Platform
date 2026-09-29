@@ -1,27 +1,5 @@
-from datetime import datetime
+"""Backward-compatible import path for the shared user model."""
 
-from sqlalchemy import CHAR, DateTime, ForeignKey, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from database.models import Organization, User
 
-from app.core.database import Base
-
-
-class Organization(Base):
-    __tablename__ = "organizations"
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    name: Mapped[str] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
-
-class User(Base):
-    __tablename__ = "users"
-
-    id: Mapped[str] = mapped_column(CHAR(36), primary_key=True)
-    organization_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True
-    )
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    password_hash: Mapped[str] = mapped_column(String(255))
-    role: Mapped[str] = mapped_column(String(50), default="user")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+__all__ = ["Organization", "User"]
