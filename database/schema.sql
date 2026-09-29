@@ -4,10 +4,9 @@
 -- Target: MySQL 8.0+
 -- Database: pqc_security
 --
--- Schema Requirements:
---   - scans.id = CHAR(36) UUID
---   - projects.id = INT AUTO_INCREMENT
---   - projects.organization_id = INT DEFAULT 1 (seed organization id=1)
+-- Unified Identifier Standard:
+--   - All entities use UUID strings (CHAR(36) / VARCHAR(36)) with DEFAULT (UUID())
+--   - Compatible with air-gapped distributed clients and local desktop agents
 -- =============================================================================
 
 CREATE DATABASE IF NOT EXISTS `pqc_security`
@@ -25,7 +24,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `organizations`;
 CREATE TABLE `organizations` (
-    `id` INT NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(36) NOT NULL DEFAULT (UUID()),
     `name` VARCHAR(255) NOT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -39,7 +38,7 @@ CREATE TABLE `organizations` (
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
     `id` CHAR(36) NOT NULL DEFAULT (UUID()),
-    `organization_id` INT NULL DEFAULT 1,
+    `organization_id` VARCHAR(36) NULL,
     `email` VARCHAR(255) NOT NULL,
     `password_hash` VARCHAR(255) NOT NULL,
     `role` VARCHAR(50) NOT NULL DEFAULT 'user',
@@ -56,12 +55,12 @@ CREATE TABLE `users` (
 -- -----------------------------------------------------------------------------
 -- 3. Table: projects
 -- Description: Projects containing uploaded code repositories to be scanned
--- Requirements: projects.id = INT AUTO_INCREMENT, organization_id DEFAULT 1
+-- Standard: UUID primary key with default organization association
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `projects`;
 CREATE TABLE `projects` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `organization_id` INT NOT NULL DEFAULT 1,
+    `id` VARCHAR(36) NOT NULL DEFAULT (UUID()),
+    `organization_id` VARCHAR(36) NULL DEFAULT 'org-default-001',
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -71,19 +70,19 @@ CREATE TABLE `projects` (
     KEY `idx_projects_name` (`name`),
     CONSTRAINT `fk_projects_organization`
         FOREIGN KEY (`organization_id`) REFERENCES `organizations` (`id`)
-        ON DELETE RESTRICT ON UPDATE CASCADE
+        ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
 -- 4. Table: scans
 -- Description: Security scan jobs initiated for a project
--- Requirements: scans.id = CHAR(36) UUID, project_id = INT (FK -> projects.id)
+-- Requirements: scans.id = CHAR(36) UUID, project_id = VARCHAR(36) UUID
 -- Note: repository_path stores local filesystem path only; NEVER store ZIP binaries in DB!
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `scans`;
 CREATE TABLE `scans` (
     `id` CHAR(36) NOT NULL DEFAULT (UUID()),
-    `project_id` INT NOT NULL,
+    `project_id` VARCHAR(36) NOT NULL,
     `status` ENUM(
         'QUEUED',
         'INGESTING',
@@ -170,11 +169,13 @@ CREATE TABLE `findings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
--- Default Seed: Organization id = 1
--- Required by projects.organization_id DEFAULT 1 foreign key constraint
+-- Default Seed: Organizations (supporting both 'org-default-001' and '1')
+-- Guarantees foreign key resolution for both UUID and legacy/integer references
 -- -----------------------------------------------------------------------------
 INSERT INTO `organizations` (`id`, `name`, `created_at`, `updated_at`)
-VALUES (1, 'Default Organization', NOW(), NOW())
+VALUES 
+    ('org-default-001', 'Default Organization', NOW(), NOW()),
+    ('1', 'Default Organization', NOW(), NOW())
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- Re-enable foreign key checks

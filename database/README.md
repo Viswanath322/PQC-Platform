@@ -18,7 +18,7 @@ erDiagram
     SCANS ||--o{ FINDINGS : "produces"
 
     ORGANIZATIONS {
-        INT id PK "AUTO_INCREMENT (seed id=1)"
+        VARCHAR(36) id PK "UUID / seed: org-default-001, 1"
         VARCHAR(255) name
         DATETIME created_at
         DATETIME updated_at
@@ -26,7 +26,7 @@ erDiagram
 
     USERS {
         CHAR(36) id PK "UUID"
-        INT organization_id FK "DEFAULT 1"
+        VARCHAR(36) organization_id FK
         VARCHAR(255) email UK
         VARCHAR(255) password_hash
         VARCHAR(50) role
@@ -35,8 +35,8 @@ erDiagram
     }
 
     PROJECTS {
-        INT id PK "AUTO_INCREMENT"
-        INT organization_id FK "DEFAULT 1"
+        VARCHAR(36) id PK "UUID (DEFAULT UUID())"
+        VARCHAR(36) organization_id FK "DEFAULT org-default-001"
         VARCHAR(255) name
         TEXT description
         DATETIME created_at
@@ -44,8 +44,8 @@ erDiagram
     }
 
     SCANS {
-        CHAR(36) id PK "UUID"
-        INT project_id FK "REFERENCES projects(id)"
+        CHAR(36) id PK "UUID (DEFAULT UUID())"
+        VARCHAR(36) project_id FK "REFERENCES projects(id)"
         ENUM status "QUEUED, INGESTING, ANALYZING, PROCESSING, AI_ANALYSIS, COMPLETED, FAILED, CANCELLED"
         VARCHAR(1024) repository_path
         DATETIME created_at
@@ -81,55 +81,16 @@ erDiagram
 
 ---
 
-## 2. Table Specifications & Schema Requirements
+## 2. Table Specifications & Identifier Standard
 
-### Table: `organizations`
-* **Purpose:** Multi-tenant / enterprise organization container.
-* **Primary Key:** `id` (`INT AUTO_INCREMENT`, seed organization `id = 1`).
+### Identifier Standard
+All entities (`organizations`, `users`, `projects`, `scans`, `scan_files`, `findings`) use standard **UUID strings (`VARCHAR(36)` / `CHAR(36)`)** with automatic MySQL generation `DEFAULT (UUID())`. This guarantees:
+* Client-side offline generation for desktop shells.
+* Seamless multi-agent asynchronous scanning without sequence contention.
+* Zero ID collisions across air-gapped sync nodes.
 
-### Table: `users`
-* **Purpose:** User identities, authentication records, and authorization roles.
-* **Foreign Keys:** `organization_id` &rarr; `organizations.id` (`INT NULL DEFAULT 1`, `ON DELETE SET NULL`).
-* **Indexes:**
-  * `uq_users_email` (UNIQUE): Fast lookups during login/auth.
-  * `idx_users_organization_id`: Lookup all users within an organization.
-
-### Table: `projects`
-* **Purpose:** Target software repositories / projects being scanned.
-* **Primary Key:** `id` (`INT AUTO_INCREMENT`).
-* **Foreign Keys:** `organization_id` &rarr; `organizations.id` (`INT NOT NULL DEFAULT 1`, `ON DELETE RESTRICT`).
-* **Indexes:**
-  * `idx_projects_organization_id`: Filter projects by organization.
-  * `idx_projects_name`: Project listing and search.
-
-### Table: `scans`
-* **Purpose:** Scan execution lifecycle and repository reference.
-* **Primary Key:** `id` (`CHAR(36)` UUID, `DEFAULT (UUID())`).
-* **Foreign Keys:** `project_id` &rarr; `projects.id` (`INT NOT NULL`, `ON DELETE CASCADE`).
-* **Important Rule:** `repository_path` stores the filesystem location of the ZIP/extracted directory. **Never store ZIP binaries in MySQL**.
-* **Indexes:**
-  * `idx_scans_project_id`: Retrieve all scan runs for a given project.
-  * `idx_scans_status`: Worker polling for `QUEUED` scans.
-  * `idx_scans_created_at`: Sorting scans chronologically.
-  * `idx_scans_project_status`: Composite index for filtering a project's active scans.
-
-### Table: `scan_files`
-* **Purpose:** File catalog discovered during the ingestion phase.
-* **Primary Key:** `id` (`CHAR(36)` UUID, `DEFAULT (UUID())`).
-* **Foreign Keys:** `scan_id` &rarr; `scans.id` (`CHAR(36)`, `ON DELETE CASCADE`).
-* **Indexes:**
-  * `idx_scan_files_scan_id`: Load all files for a scan run.
-  * `idx_scan_files_language`: Aggregate code language breakdown.
-
-### Table: `findings`
-* **Purpose:** Normalized security, cryptographic, and dependency findings.
-* **Primary Key:** `id` (`CHAR(36)` UUID, `DEFAULT (UUID())`).
-* **Foreign Keys:** `scan_id` &rarr; `scans.id` (`CHAR(36)`, `ON DELETE CASCADE`).
-* **Indexes:**
-  * `idx_findings_scan_id`: Query findings for a specific scan.
-  * `idx_findings_severity`: Filter by severity (`critical`, `high`, `medium`, `low`).
-  * `idx_findings_engine`: Filter by engine (`sast`, `crypto`, `dependency`, `configuration`).
-  * `idx_findings_scan_severity`: Composite index for the Dashboard summary cards.
+### Seed Compatibility
+The default organization seeds both `'org-default-001'` and `'1'`, ensuring full compatibility with both string-based and legacy numeric references.
 
 ---
 
@@ -139,17 +100,12 @@ erDiagram
 ```bash
 docker compose up -d mysql
 ```
-*Port:* `3306`  
+*Port:* `127.0.0.1:3306` (Localhost restricted for security)  
 *Default User:* `pqc`  
 *Default Password:* `change_me_locally`  
 *Database:* `pqc_security`
 
-### Step 2: Verify Tables Created
-```bash
-docker exec -it pqc_mysql mysql -u pqc -pchange_me_locally -e "USE pqc_security; SHOW TABLES;"
-```
-
-### Step 3: Run the Verification Script
+### Step 2: Run the Verification Script
 ```bash
 python database/verify_db.py
 ```

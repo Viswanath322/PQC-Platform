@@ -2,10 +2,11 @@
 PQC Security Assessment Platform - Database Verification Script (Day 1)
 Author: Vamsi (Database Engineer)
 
-Validates Schema Requirements:
+Validates Unified UUID Identifier Standard:
+  - organizations.id = VARCHAR(36) UUID / dual seed support
+  - projects.id = VARCHAR(36) UUID
   - scans.id = CHAR(36) UUID
-  - projects.id = INT AUTO_INCREMENT
-  - projects.organization_id = 1 (seed organization id=1)
+  - scans.project_id = VARCHAR(36) UUID
 """
 
 import sys
@@ -27,10 +28,9 @@ from database.models import Base, Organization, User, Project, Scan, ScanFile, F
 
 
 def get_engine():
-    """Determine database engine: MySQL if reachable, otherwise allow SQLite for local testing."""
     default_mysql_url = os.environ.get(
         "DATABASE_URL",
-        "mysql+pymysql://pqc:change_me_locally@localhost:3306/pqc_security"
+        "mysql+pymysql://pqc:change_me_locally@127.0.0.1:3306/pqc_security"
     )
 
     try:
@@ -57,7 +57,6 @@ def run_day1_verification():
     # 1. Ensure tables exist
     print(f"\n[Step 1] Ensuring all 6 core tables exist ({db_type})...")
     Base.metadata.create_all(bind=engine)
-    print("         Tables registered:", list(Base.metadata.tables.keys()))
     expected_tables = {"organizations", "users", "projects", "scans", "scan_files", "findings"}
     registered_tables = set(Base.metadata.tables.keys())
     assert expected_tables.issubset(registered_tables), f"Missing tables: {expected_tables - registered_tables}"
@@ -65,15 +64,20 @@ def run_day1_verification():
 
     session = SessionLocal()
     try:
-        # 2. Insert Organization with id = 1
-        print("\n[Step 2] Inserting Seed Organization (id = 1)...")
+        # 2. Insert Seed Organizations (both 'org-default-001' and '1')
+        print("\n[Step 2] Inserting Seed Organizations...")
         test_org = Organization(
-            id=1,
+            id="org-default-001",
             name="Default Organization"
         )
+        test_org_numeric = Organization(
+            id="1",
+            name="Default Organization (Legacy Compatibility)"
+        )
         session.add(test_org)
+        session.add(test_org_numeric)
         session.commit()
-        print(f"   --> [PASS] Seed Organization verified: id={test_org.id} (INT), name='{test_org.name}'")
+        print(f"   --> [PASS] Seed Organizations verified: 'org-default-001' and '1'")
 
         # 3. Insert User
         print("\n[Step 3] Inserting Test User...")
@@ -88,21 +92,23 @@ def run_day1_verification():
         session.commit()
         print(f"   --> [PASS] Created User: id={test_user.id} (UUID), organization_id={test_user.organization_id}")
 
-        # 4. Insert Project (id auto-increment, organization_id default 1)
-        print("\n[Step 4] Inserting Test Project (id = INT AUTO_INCREMENT, organization_id = 1)...")
+        # 4. Insert Project (id = UUID string, organization_id = 'org-default-001')
+        project_uuid = str(uuid.uuid4())
+        print(f"\n[Step 4] Inserting Test Project (id = UUID: {project_uuid})...")
         test_project = Project(
+            id=project_uuid,
+            organization_id=test_org.id,
             name="Demo Banking Application",
             description="Day 1 demo banking application for security analysis"
         )
         session.add(test_project)
         session.commit()
-        assert isinstance(test_project.id, int), f"Expected projects.id to be INT, got {type(test_project.id)}"
-        assert test_project.organization_id == 1, f"Expected projects.organization_id default 1, got {test_project.organization_id}"
-        print(f"   --> [PASS] Created Project: id={test_project.id} (INT AUTO_INCREMENT), organization_id={test_project.organization_id}")
+        assert len(test_project.id) == 36, f"Expected project.id UUID length 36, got {len(test_project.id)}"
+        print(f"   --> [PASS] Created Project: id={test_project.id} (UUID), organization_id={test_project.organization_id}")
 
-        # 5. Insert Scan with scans.id = CHAR(36) UUID, project_id = INT
+        # 5. Insert Scan with scans.id = UUID, project_id = UUID
         scan_uuid = str(uuid.uuid4())
-        print(f"\n[Step 5] Creating Scan with scans.id = CHAR(36) UUID ({scan_uuid}) and status = 'QUEUED'...")
+        print(f"\n[Step 5] Creating Scan with UUID: {scan_uuid} and status = 'QUEUED'...")
         test_scan = Scan(
             id=scan_uuid,
             project_id=test_project.id,
@@ -112,7 +118,7 @@ def run_day1_verification():
         session.add(test_scan)
         session.commit()
         assert len(test_scan.id) == 36, f"Expected scans.id CHAR(36), got len={len(test_scan.id)}"
-        print(f"   --> [PASS] Scan persisted: id={test_scan.id} (CHAR(36) UUID), project_id={test_scan.project_id} (INT), status='{test_scan.status}'")
+        print(f"   --> [PASS] Scan persisted: id={test_scan.id} (UUID), project_id={test_scan.project_id} (UUID), status='{test_scan.status}'")
 
         # 6. Retrieve Scan and verify
         print("\n[Step 6] Retrieving Scan from Database...")
@@ -122,7 +128,7 @@ def run_day1_verification():
         assert retrieved_scan.project_id == test_project.id, "Project ID mismatch on scan!"
         print(f"   --> [PASS] Retrieved Scan: id={retrieved_scan.id}")
         print(f"              Status:          {retrieved_scan.status}")
-        print(f"              Project ID:      {retrieved_scan.project_id} (INT)")
+        print(f"              Project ID:      {retrieved_scan.project_id} (UUID)")
         print(f"              Project Name:    {retrieved_scan.project.name}")
 
         # 7. Add a finding to verify findings table relationship
@@ -150,12 +156,13 @@ def run_day1_verification():
         print(f"   --> [PASS] Findings count for scan {test_scan.id}: {findings_count}")
 
         print("\n" + "=" * 70)
-        print(" [SUCCESS] DAY 1 DATABASE SCHEMA SPECIFICATION FULLY VALIDATED!")
+        print(" [SUCCESS] UNIFIED UUID IDENTIFIER STANDARD FULLY VALIDATED!")
         print("=" * 70)
         print(" Validated:")
+        print("  * organizations.id = VARCHAR(36) (seeds: 'org-default-001' and '1')")
+        print("  * projects.id = VARCHAR(36) UUID")
         print("  * scans.id = CHAR(36) UUID")
-        print("  * projects.id = INT AUTO_INCREMENT")
-        print("  * projects.organization_id = INT DEFAULT 1 (seed organization id=1)")
+        print("  * scans.project_id = VARCHAR(36) UUID")
         print("  * Scan status QUEUED persisted and retrieved")
         print("=" * 70)
 

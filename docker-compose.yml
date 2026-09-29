@@ -11,7 +11,8 @@ services:
       MYSQL_PASSWORD: change_me_locally
       MYSQL_ROOT_PASSWORD: change_me_locally
     ports:
-      - "3306:3306"
+      # Bound to localhost (127.0.0.1) only for security in air-gapped/desktop environment
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
@@ -28,7 +29,9 @@ services:
     container_name: pqc_redis
     restart: always
     ports:
-      - "6379:6379"
+      # Bound to localhost (127.0.0.1) only
+      - "127.0.0.1:6379:6379"
+    command: redis-server --requirepass change_me_locally
     volumes:
       - redis_data:/data
 

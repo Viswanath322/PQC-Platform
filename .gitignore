@@ -1,5 +1,6 @@
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -24,7 +25,14 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
+# Databases & local sqlite
+*.db
+*.sqlite
+*.sqlite3
+dev.db
+backend/dev.db
+
+# Virtual environments & secrets
 .env
 .env.local
 .env.*.local
@@ -43,12 +51,19 @@ yarn-debug.log*
 yarn-error.log*
 /desktop/dist/
 /desktop/build/
+desktop/dist/
+desktop/build/
 src-tauri/target/
+desktop/src-tauri/target/
+**/src-tauri/target/
 
-# Docker volumes & local data
+# Docker volumes, local uploads & binaries
 mysql_data/
+redis_data/
 uploads/
 storage/
+backend/storage/
+backend/storage/uploads/
 temp/
 *.zip
 
