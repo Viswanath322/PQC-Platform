@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { RefreshCw, GitBranch, FolderGit2, Clock } from 'lucide-react';
+import { RefreshCw, FolderGit2, Clock } from 'lucide-react';
 import { MockDataBadge } from '../pqc/MockDataBadge';
 
 interface TopHeaderProps {
   projectName: string;
-  branch: string;
+  branch?: string;
   lastScanTimestamp: string;
   onRefreshScan: () => void;
   isRefreshing?: boolean;
@@ -12,13 +12,11 @@ interface TopHeaderProps {
 
 export const TopHeader: React.FC<TopHeaderProps> = ({
   projectName,
-  branch,
   lastScanTimestamp,
   onRefreshScan,
   isRefreshing = false,
 }) => {
   const [selectedProject, setSelectedProject] = useState(projectName);
-  const [currentBranch, setCurrentBranch] = useState(branch);
 
   const projects = [
     { name: 'Enterprise-Core-Services', branch: 'main' },
@@ -27,12 +25,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   ];
 
   const handleProjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    setSelectedProject(val);
-    const found = projects.find((p) => p.name === val);
-    if (found) {
-      setCurrentBranch(found.branch);
-    }
+    setSelectedProject(e.target.value);
   };
 
   return (
@@ -89,23 +82,6 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
               </option>
             ))}
           </select>
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            fontSize: '12px',
-            color: 'var(--text-muted)',
-            background: 'rgba(255, 255, 255, 0.6)',
-            padding: '5px 10px',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border-glass)',
-          }}
-        >
-          <GitBranch size={13} />
-          <span>{currentBranch}</span>
         </div>
       </div>
 
