@@ -4,7 +4,7 @@ Silicofeller Quantum · QA + Cyber Security + Desktop Security · owner: Pushpam
 
 Status values: **PASS** · **FAIL** · **BLOCKED** (dependency not delivered) · **N/A**.
 Every PASS/FAIL needs evidence: the command run, its output or a screenshot, and the branch + commit tested.
-Automated tests live under `tests/`; run them with `pytest tests -v -rs` (see [tests/README.md](README.md)).
+Automated tests live under `tests/`; run them with `pytest tests -v -rs` (see [tests/README.md](https://github.com/Viswanath322/PQC-Platform/blob/qa/pushpam/tests/README.md)).
 
 ## A. Environment
 
@@ -21,7 +21,7 @@ Automated tests live under `tests/`; run them with `pytest tests -v -rs` (see [t
 | FND-02 | React + TS UI renders inside the desktop shell | Dashboard visible in window (not a browser tab) | Harshith | | |
 | FND-03 | FastAPI runs locally, Swagger loads | `uvicorn app.main:app` → `http://127.0.0.1:8000/docs` | Amrutha | | |
 | FND-04 | `GET /api/v1/health` returns healthy | `tests/backend/test_health.py` | Amrutha | | |
-| FND-05 | Desktop UI shows Backend Status = healthy; switches to unhealthy when FastAPI is stopped | Manual, [MANUAL_DESKTOP_SMOKE.md](frontend/MANUAL_DESKTOP_SMOKE.md) | Harshith | | |
+| FND-05 | Desktop UI shows Backend Status = healthy; switches to unhealthy when FastAPI is stopped | Manual, [MANUAL_DESKTOP_SMOKE.md](https://github.com/Viswanath322/PQC-Platform/blob/qa/pushpam/tests/frontend/MANUAL_DESKTOP_SMOKE.md) | Harshith | | |
 | FND-06 | MySQL starts from scratch; schema reproducible | `docker compose down -v && docker compose up -d mysql`; `tests/database` | Vamsi | | |
 | FND-07 | Redis runs; connectivity test succeeds | `tests/database/test_redis.py`, `GET /api/v1/redis/ping` | Aakash | | |
 | FND-08 | Auth skeleton exists (register / login / me) | `tests/backend/test_auth.py` | Amrutha | | |
