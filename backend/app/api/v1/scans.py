@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.scan import Project, Scan
+from app.schemas.common import UUID_PATTERN
 from app.schemas.scan import ScanCreate, ScanOut
 from app.services.storage_service import get_upload_path
 from app.services.redis_service import enqueue_scan
@@ -26,7 +27,7 @@ def create_scan(body: ScanCreate, db: Session = Depends(get_db)):
 
 
 @router.get("", response_model=list[ScanOut])
-def list_scans(project_id: int | None = None, db: Session = Depends(get_db)):
+def list_scans(project_id: str | None = Query(default=None, pattern=UUID_PATTERN), db: Session = Depends(get_db)):
     q = db.query(Scan)
     if project_id is not None:
         q = q.filter(Scan.project_id == project_id)

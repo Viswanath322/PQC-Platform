@@ -73,7 +73,7 @@ requires_redis = pytest.mark.skipif(not redis_up(), reason="Redis/Memurai not ru
 # ---------- projects ----------
 def test_create_and_get_project():
     p = create_project()
-    assert p["id"] >= 1
+    uuid.UUID(p["id"])  # project id is a UUID string
     assert p["name"] == "Demo Banking Application"
     assert p["description"] == "test"
     assert "created_at" in p
@@ -91,7 +91,7 @@ def test_list_projects_contains_new_project():
 
 
 def test_get_unknown_project_404():
-    assert client.get(f"{API}/projects/999999").status_code == 404
+    assert client.get(f"{API}/projects/{uuid.uuid4()}").status_code == 404
 
 
 def test_create_project_requires_name():
@@ -159,7 +159,7 @@ def test_list_scans_and_project_filter():
 
 def test_scan_unknown_project_404():
     up = upload_zip()
-    assert create_scan(999999, up["upload_id"]).status_code == 404
+    assert create_scan(str(uuid.uuid4()), up["upload_id"]).status_code == 404
 
 
 def test_scan_unknown_upload_404():
@@ -226,3 +226,34 @@ def test_scan_creation_survives_redis_down(monkeypatch):
     r = create_scan(p["id"], up["upload_id"])
     assert r.status_code == 201
     assert r.json()["status"] == "QUEUED"
+
+
+# ---------- input validation (from QA report BE-03, BE-04, BE-05) ----------
+@pytest.mark.parametrize("bad_name", ["", "   ", "\t\n"])
+def test_project_name_empty_or_whitespace_rejected(bad_name):
+    assert client.post(f"{API}/projects", json={"name": bad_name}).status_code == 422
+
+
+def test_project_name_is_trimmed():
+    r = client.post(f"{API}/projects", json={"name": "  Trimmed Name  "})
+    assert r.status_code == 201
+    assert r.json()["name"] == "Trimmed Name"
+
+
+def test_project_name_too_long_rejected():
+    assert client.post(f"{API}/projects", json={"name": "x" * 256}).status_code == 422
+    assert client.post(f"{API}/projects", json={"name": "x" * 255}).status_code == 201
+
+
+def test_project_description_too_long_rejected():
+    r = client.post(f"{API}/projects", json={"name": "ok", "description": "d" * 10001})
+    assert r.status_code == 422
+
+
+def test_non_uuid_project_id_is_422_not_500():
+    for bad in ["99999999999999999999", "0", "1", "not-a-uuid"]:
+        assert client.get(f"{API}/projects/{bad}").status_code == 422
+    up = upload_zip()
+    assert create_scan("not-a-uuid", up["upload_id"]).status_code == 422
+    assert create_scan(99999999999999999999, up["upload_id"]).status_code == 422
+    assert client.get(f"{API}/scans", params={"project_id": "abc"}).status_code == 422

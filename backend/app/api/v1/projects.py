@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.scan import Project
+from app.schemas.common import UUID_PATTERN
 from app.schemas.project import ProjectCreate, ProjectOut
 
 router = APIRouter(prefix="/projects", tags=["projects"])
@@ -18,11 +19,11 @@ def create_project(body: ProjectCreate, db: Session = Depends(get_db)):
 
 @router.get("", response_model=list[ProjectOut])
 def list_projects(db: Session = Depends(get_db)):
-    return db.query(Project).order_by(Project.id.desc()).all()
+    return db.query(Project).order_by(Project.created_at.desc()).all()
 
 
 @router.get("/{project_id}", response_model=ProjectOut)
-def get_project(project_id: int, db: Session = Depends(get_db)):
+def get_project(project_id: str = Path(pattern=UUID_PATTERN), db: Session = Depends(get_db)):
     project = db.get(Project, project_id)
     if not project:
         raise HTTPException(404, "Project not found")
