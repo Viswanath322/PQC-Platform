@@ -169,5 +169,13 @@ CREATE TABLE `findings` (
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- -----------------------------------------------------------------------------
+-- Default Seed: Organization id = 1
+-- Required by projects.organization_id DEFAULT 1 foreign key constraint
+-- -----------------------------------------------------------------------------
+INSERT INTO `organizations` (`id`, `name`, `created_at`, `updated_at`)
+VALUES (1, 'Default Organization', NOW(), NOW())
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
