@@ -1,12 +1,14 @@
 # Test fixtures
 
-## vulnerable-demo-repo/
-Intentionally vulnerable "demo banking" app (Python + Java + JS + YAML + requirements.txt).
-All secrets are fake. Every vulnerable line ends with `VULN: <ID>`; decoys end with `SAFE: TN-nnn`.
-`EXPECTED_FINDINGS.json` is the answer key (`findings` with category/rule/severity/file/line/cwe,
-and `true_negatives` for false-positive measurement). `test_answer_key_lines_match_source` fails
-if a line number drifts - update the key whenever a source file is edited.
-`node_modules/` and `.git/` are not committed; they are injected as junk entries into `demo-banking.zip`.
+## Demo repo
+The intentionally vulnerable demo banking app and its answer key live on their own branch, `tests/pushpam`, so this branch holds no vulnerable code. To use it:
+
+```bash
+git worktree add .worktrees/tests-pushpam tests/pushpam
+export PQC_DEMO_REPO=.worktrees/tests-pushpam/vulnerable-demo-repo
+```
+
+With `PQC_DEMO_REPO` set, `demo-banking.zip` is built from that repo and the answer-key checks run. Without it, `demo-banking.zip` is built from a small harmless sample with the same file layout, and the answer-key checks are Blocked. `node_modules/` and `.git/` junk entries are added to `demo-banking.zip` either way.
 
 ## make_zips.py
 `python tests/fixtures/make_zips.py <out_dir>` or `make_zips.build_all(out_dir) -> {name: Path}`.
