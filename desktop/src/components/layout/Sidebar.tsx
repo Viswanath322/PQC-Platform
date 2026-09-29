@@ -31,29 +31,52 @@ export const Sidebar: React.FC = () => {
       <div className="flex flex-col gap-3">
         {/* Brand */}
         <div className="flex items-center gap-3 px-2 py-1.5 h-12">
-          <div className="w-9 h-9 rounded-xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-400 shadow-sm flex-shrink-0">
-            <ShieldCheck className="w-5 h-5" />
+          <div
+            style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #243447 0%, #1a2736 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(36, 52, 71, 0.20)',
+              flexShrink: 0,
+            }}
+          >
+            <ShieldCheck size={20} color="#2A9D8F" />
           </div>
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-slate-100 tracking-tight leading-tight truncate">
+              <span style={{ fontSize: '14px', fontWeight: 700, color: '#29384D', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
                 PQC Sentinel
               </span>
-              <span className="text-[9.5px] font-semibold text-teal-400 font-mono bg-teal-950/60 px-1.5 py-0.2 rounded border border-teal-800/40">
+              <span
+                style={{
+                  fontSize: '9.5px',
+                  fontWeight: 600,
+                  color: '#237F74',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  background: 'rgba(42, 157, 143, 0.12)',
+                  padding: '1px 5px',
+                  borderRadius: '4px',
+                  border: '1px solid rgba(42, 157, 143, 0.25)',
+                }}
+              >
                 v0.8.4
               </span>
             </div>
-            <span className="text-[10px] font-medium text-slate-400 tracking-wider uppercase">
+            <span style={{ fontSize: '10.5px', fontWeight: 600, color: '#687587', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
               Security Assessment
             </span>
           </div>
         </div>
 
         {/* Separator */}
-        <div className="h-px bg-slate-800/80 mx-1 my-1" />
+        <div style={{ height: '1px', background: 'rgba(226, 232, 240, 0.9)', margin: '4px 2px' }} />
 
         {/* Nav Links */}
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-col gap-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
 
@@ -61,33 +84,51 @@ export const Sidebar: React.FC = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 relative group ${
-                    isActive
-                      ? 'bg-teal-500/15 text-teal-300 font-semibold'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`
-                }
+                className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 relative group"
+                style={({ isActive }) => ({
+                  background: isActive ? 'rgba(42, 157, 143, 0.14)' : 'transparent',
+                  color: isActive ? '#237F74' : '#687587',
+                  fontWeight: isActive ? 600 : 500,
+                  border: '1px solid',
+                  borderColor: isActive ? 'rgba(42, 157, 143, 0.22)' : 'transparent',
+                })}
               >
                 {({ isActive }) => (
                   <>
                     {/* Active Accent Left Bar */}
                     <div
-                      className={`absolute left-0 w-1 rounded-r-full bg-teal-400 transition-all duration-200 ${
-                        isActive ? 'h-5' : 'h-0'
-                      }`}
+                      style={{
+                        position: 'absolute',
+                        left: '0px',
+                        width: '3.5px',
+                        height: isActive ? '20px' : '0px',
+                        borderRadius: '0 4px 4px 0',
+                        background: '#2A9D8F',
+                        transition: 'height 160ms ease',
+                      }}
                     />
 
                     <Icon
-                      className={`w-4 h-4 flex-shrink-0 transition-colors ${
-                        isActive ? 'text-teal-300' : 'text-slate-400 group-hover:text-slate-200'
-                      }`}
+                      size={17}
+                      color={isActive ? '#2A9D8F' : '#687587'}
+                      strokeWidth={isActive ? 2.2 : 1.9}
+                      className="flex-shrink-0 transition-colors"
                     />
 
                     <span className="truncate flex-1">{item.label}</span>
 
                     {item.highlight && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-500/25 text-teal-300">
+                      <span
+                        style={{
+                          fontSize: '9.5px',
+                          fontWeight: 700,
+                          padding: '1px 6px',
+                          borderRadius: '9999px',
+                          background: 'rgba(42, 157, 143, 0.16)',
+                          color: '#237F74',
+                          border: '1px solid rgba(42, 157, 143, 0.25)',
+                        }}
+                      >
                         {item.highlight}
                       </span>
                     )}
@@ -100,20 +141,46 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Bottom Status & Profile Area */}
-      <div className="flex flex-col gap-2 pt-2 border-t border-slate-800/80">
+      <div className="flex flex-col gap-2.5 pt-3" style={{ borderTop: '1px solid rgba(226, 232, 240, 0.9)' }}>
         {/* Backend Connection Widget */}
         <BackendStatus variant="sidebar" />
 
         {/* User Profile Card */}
-        <div className="p-2 rounded-xl bg-slate-900/60 border border-slate-800/70 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/80 flex items-center justify-center text-teal-400 font-semibold text-xs flex-shrink-0">
+        <div
+          style={{
+            padding: '10px 12px',
+            borderRadius: '12px',
+            background: 'rgba(255, 255, 255, 0.75)',
+            border: '1px solid rgba(226, 232, 240, 0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            boxShadow: '0 1px 3px rgba(41, 56, 77, 0.03)',
+          }}
+        >
+          <div
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              background: 'rgba(42, 157, 143, 0.12)',
+              border: '1px solid rgba(42, 157, 143, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#237F74',
+              fontWeight: 700,
+              fontSize: '11.5px',
+              flexShrink: 0,
+            }}
+          >
             SO
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-semibold text-slate-200 truncate leading-tight">
+            <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#29384D', lineHeight: 1.2 }} className="truncate">
               SecOfficer
             </span>
-            <span className="text-[10.5px] text-slate-400 truncate leading-tight">
+            <span style={{ fontSize: '11px', color: '#687587', lineHeight: 1.2 }} className="truncate">
               Air-Gapped Auditor
             </span>
           </div>
