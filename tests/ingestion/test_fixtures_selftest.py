@@ -4,7 +4,19 @@ import time
 import zipfile
 from pathlib import Path
 
+import sys
+
 import make_zips
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # repo root
+from tests.conftest import blocked  # noqa: E402
+
+
+def _demo_root():
+    root = make_zips.demo_repo()
+    if root is None:
+        blocked("vulnerable demo repo not configured (set PQC_DEMO_REPO to the tests/pushpam checkout)")
+    return root
 
 FIX = Path(make_zips.__file__).parent
 
@@ -74,7 +86,7 @@ def test_unicode_and_many(zips):
 
 def test_answer_key_lines_match_source():
     """Every finding/true-negative line in EXPECTED_FINDINGS.json carries its own marker."""
-    root = FIX / "vulnerable-demo-repo"
+    root = _demo_root()
     key = json.loads((root / "EXPECTED_FINDINGS.json").read_text())
     assert len(key["findings"]) >= 30 and key["true_negatives"]
     for item in key["findings"] + key["true_negatives"]:
@@ -89,7 +101,7 @@ def test_answer_key_lines_match_source():
 
 
 def test_demo_repo_secrets_are_fake():
-    for p in (FIX / "vulnerable-demo-repo").rglob("*"):
+    for p in _demo_root().rglob("*"):
         if p.suffix in {".py", ".java", ".js"}:
             text = p.read_text()
             assert "AKIA" not in text.replace("AKIAIOSFODNN7EXAMPLE", "")
