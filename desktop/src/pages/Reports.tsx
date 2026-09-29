@@ -124,10 +124,10 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
 
           <button
             onClick={handleExportCSV}
-            className="btn-teal px-3.5 py-2 text-xs font-semibold rounded-lg flex items-center gap-2 shadow-sm"
-            title="Export tabular CSV Inventory"
+            className="btn-secondary px-3.5 py-2 text-xs font-semibold rounded-lg flex items-center gap-2"
+            title="Export CSV inventory list"
           >
-            <FileSpreadsheet className="w-4 h-4" />
+            <FileSpreadsheet className="w-4 h-4 text-teal-400" />
             <span>Export CSV</span>
           </button>
         </div>

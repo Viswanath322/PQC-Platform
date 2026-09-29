@@ -27,28 +27,28 @@ export const RiskCard: React.FC<RiskCardProps> = ({
         return {
           title: 'HIGH QUANTUM RISK',
           color: 'var(--color-risk-high)',
-          bgColor: 'rgba(239, 68, 68, 0.12)',
-          borderColor: isActive ? 'var(--color-risk-high)' : 'rgba(239, 68, 68, 0.28)',
-          indicatorBg: 'rgba(239, 68, 68, 0.16)',
+          bgColor: 'rgba(254, 242, 242, 0.75)',
+          borderColor: isActive ? 'var(--color-risk-high)' : 'rgba(239, 68, 68, 0.3)',
+          indicatorBg: 'rgba(197, 48, 48, 0.12)',
           icon: <ShieldAlert size={22} color="var(--color-risk-high)" />,
         };
       case 'MEDIUM':
         return {
           title: 'MEDIUM QUANTUM RISK',
           color: 'var(--color-accent-dark)',
-          bgColor: 'rgba(233, 162, 59, 0.12)',
-          borderColor: isActive ? 'var(--color-accent)' : 'rgba(233, 162, 59, 0.3)',
-          indicatorBg: 'rgba(233, 162, 59, 0.16)',
+          bgColor: 'rgba(254, 247, 236, 0.75)',
+          borderColor: isActive ? 'var(--color-accent)' : 'rgba(233, 162, 59, 0.35)',
+          indicatorBg: 'var(--color-accent-faded)',
           icon: <AlertTriangle size={22} color="var(--color-accent-dark)" />,
         };
       case 'LOW':
         return {
           title: 'LOW QUANTUM RISK',
-          color: '#5eead4',
-          bgColor: 'rgba(42, 157, 143, 0.12)',
-          borderColor: isActive ? 'var(--color-secondary)' : 'rgba(42, 157, 143, 0.28)',
-          indicatorBg: 'rgba(42, 157, 143, 0.16)',
-          icon: <ShieldCheck size={22} color="#5eead4" />,
+          color: 'var(--color-secondary-dark)',
+          bgColor: 'rgba(232, 245, 244, 0.75)',
+          borderColor: isActive ? 'var(--color-secondary)' : 'rgba(42, 157, 143, 0.3)',
+          indicatorBg: 'var(--color-secondary-faded)',
+          icon: <ShieldCheck size={22} color="var(--color-secondary-dark)" />,
         };
     }
   };
@@ -129,7 +129,7 @@ export const RiskCard: React.FC<RiskCardProps> = ({
           {subtext}
         </span>
         {onClick && (
-          <span style={{ fontSize: '11.5px', color: '#5eead4', fontWeight: 600 }}>
+          <span style={{ fontSize: '11.5px', color: 'var(--color-secondary-dark)', fontWeight: 600 }}>
             Filter →
           </span>
         )}

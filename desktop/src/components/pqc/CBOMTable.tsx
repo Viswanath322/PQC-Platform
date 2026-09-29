@@ -66,12 +66,12 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
       {/* CBOM Controls Header */}
       <div
         style={{
-          padding: '16px 22px',
+          padding: '18px 24px',
           borderBottom: '1px solid var(--border-glass)',
-          backgroundColor: 'rgba(15, 23, 36, 0.65)',
+          backgroundColor: 'rgba(255, 255, 255, 0.4)',
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '12px',
+          gap: '14px',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
@@ -81,14 +81,13 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
             style={{
               padding: '6px 10px',
               borderRadius: 'var(--radius-sm)',
-              background: 'rgba(42, 157, 143, 0.16)',
-              color: '#5eead4',
+              background: 'var(--color-primary-faded)',
+              color: 'var(--color-primary)',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               fontWeight: 600,
               fontSize: '12.5px',
-              border: '1px solid rgba(42, 157, 143, 0.3)',
             }}
           >
             <Layers size={14} />
@@ -103,8 +102,8 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              background: 'rgba(255, 255, 255, 0.06)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
+              background: '#ffffff',
+              border: '1px solid var(--border-glass-strong)',
               borderRadius: 'var(--radius-md)',
               padding: '6px 12px',
               minWidth: '240px',
@@ -121,14 +120,14 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                 outline: 'none',
                 width: '100%',
                 fontSize: '12.5px',
-                color: '#f8fafc',
+                color: 'var(--text-primary)',
                 background: 'transparent',
               }}
             />
           </div>
 
           {/* Dependency Filter */}
-          <div style={{ display: 'flex', background: 'rgba(255, 255, 255, 0.06)', padding: '3px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{ display: 'flex', background: '#e2e8f0', padding: '3px', borderRadius: '8px' }}>
             {(['ALL', 'Direct', 'Transitive'] as const).map((type) => (
               <button
                 key={type}
@@ -140,9 +139,9 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                   border: 'none',
                   borderRadius: '6px',
                   cursor: 'pointer',
-                  background: dependencyFilter === type ? 'rgba(42, 157, 143, 0.28)' : 'transparent',
-                  color: dependencyFilter === type ? '#5eead4' : '#94a3b8',
-                  boxShadow: dependencyFilter === type ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                  background: dependencyFilter === type ? '#ffffff' : 'transparent',
+                  color: dependencyFilter === type ? 'var(--color-primary)' : 'var(--text-secondary)',
+                  boxShadow: dependencyFilter === type ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -166,9 +165,9 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
           <thead>
             <tr
               style={{
-                background: 'rgba(15, 23, 36, 0.85)',
+                background: 'rgba(241, 245, 249, 0.75)',
                 borderBottom: '1px solid var(--border-glass)',
-                color: '#94a3b8',
+                color: 'var(--text-secondary)',
                 fontWeight: 600,
                 fontSize: '11.5px',
                 letterSpacing: '0.04em',
@@ -188,8 +187,8 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
               <tr
                 key={entry.id}
                 style={{
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                  backgroundColor: idx % 2 === 0 ? 'rgba(18, 27, 40, 0.45)' : 'rgba(23, 34, 50, 0.7)',
+                  borderBottom: '1px solid rgba(226, 232, 240, 0.6)',
+                  backgroundColor: idx % 2 === 0 ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.8)',
                 }}
               >
                 {/* Asset ID */}
@@ -198,11 +197,10 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                     style={{
                       fontFamily: 'monospace',
                       fontSize: '12px',
-                      color: '#5eead4',
-                      background: 'rgba(42, 157, 143, 0.12)',
+                      color: 'var(--color-primary)',
+                      background: 'rgba(36, 52, 71, 0.05)',
                       padding: '2px 6px',
                       borderRadius: '4px',
-                      border: '1px solid rgba(42, 157, 143, 0.25)',
                     }}
                   >
                     {entry.id}
@@ -211,22 +209,22 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
 
                 {/* Algorithm Spec */}
                 <td style={{ padding: '14px 18px' }}>
-                  <div style={{ fontWeight: 600, color: '#f8fafc' }}>{entry.algorithm}</div>
-                  <div style={{ fontSize: '11px', color: '#94a3b8' }}>{entry.usage}</div>
+                  <div style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{entry.algorithm}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{entry.usage}</div>
                 </td>
 
                 {/* Library & Version */}
                 <td style={{ padding: '14px 16px' }}>
-                  <div style={{ color: '#e2e8f0', fontWeight: 500 }}>{entry.library}</div>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{entry.library}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>v{entry.version}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>v{entry.version}</span>
                     <span
                       style={{
                         fontSize: '10px',
                         padding: '1px 5px',
                         borderRadius: '3px',
-                        background: entry.dependencyType === 'Direct' ? 'rgba(42, 157, 143, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                        color: entry.dependencyType === 'Direct' ? '#5eead4' : '#94a3b8',
+                        background: entry.dependencyType === 'Direct' ? 'var(--color-secondary-light)' : '#f1f5f9',
+                        color: entry.dependencyType === 'Direct' ? 'var(--color-secondary-dark)' : 'var(--text-muted)',
                         fontWeight: 600,
                       }}
                     >
@@ -242,8 +240,8 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                     <code
                       style={{
                         fontSize: '12px',
-                        color: '#5eead4',
-                        background: 'rgba(255, 255, 255, 0.05)',
+                        color: 'var(--color-primary)',
+                        background: 'rgba(36, 52, 71, 0.04)',
                         padding: '2px 6px',
                         borderRadius: '4px',
                       }}
@@ -257,7 +255,7 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                         background: 'transparent',
                         border: 'none',
                         cursor: 'pointer',
-                        color: copiedId === entry.id ? '#5eead4' : '#64748b',
+                        color: copiedId === entry.id ? 'var(--color-secondary-dark)' : 'var(--text-light)',
                         padding: '2px',
                       }}
                     >
@@ -267,7 +265,7 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                 </td>
 
                 {/* Standard Reference */}
-                <td style={{ padding: '14px 16px', fontSize: '11.5px', color: '#94a3b8' }}>
+                <td style={{ padding: '14px 16px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
                   {entry.standardReference || 'Standard Reference'}
                 </td>
 
@@ -283,7 +281,7 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
         style={{
           padding: '12px 24px',
           borderTop: '1px solid var(--border-glass)',
-          backgroundColor: 'rgba(15, 23, 36, 0.4)',
+          backgroundColor: 'rgba(255, 255, 255, 0.3)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',

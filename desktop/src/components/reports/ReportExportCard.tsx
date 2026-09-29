@@ -11,11 +11,11 @@ export const ReportExportCard: React.FC<ReportExportCardProps> = ({ option, onEx
   const getFormatIcon = () => {
     switch (option.format) {
       case 'PDF':
-        return <FileText size={24} color="#f8fafc" />;
+        return <FileText size={24} color="var(--color-primary)" />;
       case 'JSON':
-        return <Code size={24} color="#5eead4" />;
+        return <Code size={24} color="var(--color-secondary-dark)" />;
       case 'CSV':
-        return <FileSpreadsheet size={24} color="#fcd34d" />;
+        return <FileSpreadsheet size={24} color="var(--color-accent-dark)" />;
     }
   };
 
@@ -23,20 +23,20 @@ export const ReportExportCard: React.FC<ReportExportCardProps> = ({ option, onEx
     switch (option.format) {
       case 'PDF':
         return {
-          background: 'rgba(255, 255, 255, 0.1)',
-          color: '#f8fafc',
-          borderColor: 'rgba(255, 255, 255, 0.2)',
+          background: 'rgba(36, 52, 71, 0.08)',
+          color: 'var(--color-primary)',
+          borderColor: 'rgba(36, 52, 71, 0.2)',
         };
       case 'JSON':
         return {
-          background: 'rgba(42, 157, 143, 0.16)',
-          color: '#5eead4',
-          borderColor: 'rgba(42, 157, 143, 0.35)',
+          background: 'var(--color-secondary-light)',
+          color: 'var(--color-secondary-dark)',
+          borderColor: 'rgba(42, 157, 143, 0.3)',
         };
       case 'CSV':
         return {
-          background: 'rgba(233, 162, 59, 0.16)',
-          color: '#fcd34d',
+          background: 'var(--color-accent-light)',
+          color: 'var(--color-accent-dark)',
           borderColor: 'rgba(233, 162, 59, 0.35)',
         };
     }
@@ -54,7 +54,6 @@ export const ReportExportCard: React.FC<ReportExportCardProps> = ({ option, onEx
         justifyContent: 'space-between',
         gap: '20px',
         position: 'relative',
-        backgroundColor: 'rgba(23, 34, 50, 0.75)',
       }}
     >
       <div>
@@ -99,7 +98,7 @@ export const ReportExportCard: React.FC<ReportExportCardProps> = ({ option, onEx
         </div>
 
         {/* Title & Description */}
-        <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#f8fafc', marginBottom: '8px' }}>
+        <h4 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-primary)', marginBottom: '8px' }}>
           {option.title}
         </h4>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '14px' }}>
@@ -111,13 +110,13 @@ export const ReportExportCard: React.FC<ReportExportCardProps> = ({ option, onEx
           style={{
             fontSize: '11.5px',
             color: 'var(--text-muted)',
-            backgroundColor: 'rgba(15, 23, 36, 0.65)',
+            backgroundColor: 'rgba(241, 245, 249, 0.6)',
             padding: '8px 12px',
             borderRadius: '6px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(226, 232, 240, 0.7)',
           }}
         >
-          <span style={{ fontWeight: 600, color: '#cbd5e1' }}>Target Audience: </span>
+          <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Target Audience: </span>
           {option.recommendedFor}
         </div>
       </div>
