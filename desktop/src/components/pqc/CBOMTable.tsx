@@ -66,9 +66,9 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
       {/* CBOM Controls Header */}
       <div
         style={{
-          padding: '16px 22px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-          backgroundColor: 'rgba(0, 0, 0, 0.18)',
+          padding: '16px 24px',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+          backgroundColor: 'rgba(255, 255, 255, 0.3)',
           display: 'flex',
           flexWrap: 'wrap',
           gap: '12px',
@@ -79,41 +79,39 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              background: 'rgba(42, 157, 143, 0.2)',
-              color: '#6ee7b7',
+              padding: '5px 12px',
+              borderRadius: 'var(--radius-full)',
+              background: 'rgba(113, 128, 113, 0.12)',
+              color: '#718071',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               fontWeight: 600,
               fontSize: '12px',
-              border: '1px solid rgba(42, 157, 143, 0.4)',
-              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(113, 128, 113, 0.25)',
             }}
           >
-            <Layers size={14} />
+            <Layers size={13} />
             CycloneDX / CBOM Standard Spec v1.6
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
           {/* Search */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.25)',
-              borderRadius: '9999px',
-              padding: '6px 14px',
+              background: 'rgba(255, 255, 255, 0.65)',
+              border: '1px solid rgba(255, 255, 255, 0.9)',
+              borderRadius: 'var(--radius-full)',
+              padding: '5px 14px',
               minWidth: '240px',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
             }}
           >
-            <Search size={14} color="rgba(255, 255, 255, 0.6)" />
+            <Search size={13} color="var(--text-muted)" />
             <input
               type="text"
               placeholder="Search CBOM entries..."
@@ -123,29 +121,29 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                 border: 'none',
                 outline: 'none',
                 width: '100%',
-                fontSize: '12.5px',
-                color: '#ffffff',
+                fontSize: '12px',
+                color: 'var(--text-primary)',
                 background: 'transparent',
               }}
             />
           </div>
 
-          {/* Dependency Filter Pill Switcher */}
-          <div style={{ display: 'flex', background: 'rgba(255, 255, 255, 0.08)', padding: '3px', borderRadius: '9999px', border: '1px solid rgba(255, 255, 255, 0.14)' }}>
+          {/* Dependency Filter */}
+          <div style={{ display: 'flex', background: 'rgba(0, 0, 0, 0.04)', padding: '3px', borderRadius: 'var(--radius-full)' }}>
             {(['ALL', 'Direct', 'Transitive'] as const).map((type) => (
               <button
                 key={type}
                 onClick={() => setDependencyFilter(type)}
                 style={{
-                  padding: '4px 12px',
-                  fontSize: '12px',
+                  padding: '4px 11px',
+                  fontSize: '11.5px',
                   fontWeight: 500,
                   border: 'none',
-                  borderRadius: '9999px',
+                  borderRadius: 'var(--radius-full)',
                   cursor: 'pointer',
-                  background: dependencyFilter === type ? 'rgba(255, 255, 255, 0.22)' : 'transparent',
-                  color: dependencyFilter === type ? '#ffffff' : 'rgba(255, 255, 255, 0.7)',
-                  boxShadow: dependencyFilter === type ? 'inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 6px rgba(0,0,0,0.2)' : 'none',
+                  background: dependencyFilter === type ? '#ffffff' : 'transparent',
+                  color: dependencyFilter === type ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  boxShadow: dependencyFilter === type ? '0 1px 4px rgba(0,0,0,0.06)' : 'none',
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -169,21 +167,21 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
           <thead>
             <tr
               style={{
-                background: 'rgba(0, 0, 0, 0.28)',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-                color: 'rgba(255, 255, 255, 0.65)',
+                background: 'rgba(255, 255, 255, 0.35)',
+                borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+                color: '#666762',
                 fontWeight: 600,
                 fontSize: '11.5px',
-                letterSpacing: '0.04em',
+                letterSpacing: '0.03em',
                 textTransform: 'uppercase',
               }}
             >
-              <th style={{ padding: '12px 20px', width: '120px' }}>CBOM Asset ID</th>
+              <th style={{ padding: '12px 22px', width: '120px' }}>CBOM Asset ID</th>
               <th style={{ padding: '12px 18px', width: '170px' }}>Algorithm Spec</th>
               <th style={{ padding: '12px 16px', width: '150px' }}>Library & Version</th>
               <th style={{ padding: '12px 18px', minWidth: '220px' }}>Call Site / AST Location</th>
               <th style={{ padding: '12px 16px', width: '150px' }}>Standard Ref</th>
-              <th style={{ padding: '12px 18px', width: '110px' }}>Quantum Risk</th>
+              <th style={{ padding: '12px 22px', width: '110px' }}>Quantum Risk</th>
             </tr>
           </thead>
           <tbody>
@@ -191,21 +189,26 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
               <tr
                 key={entry.id}
                 style={{
-                  borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-                  backgroundColor: idx % 2 === 0 ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.05)',
+                  borderBottom: '1px solid rgba(0, 0, 0, 0.04)',
+                  backgroundColor: idx % 2 === 0 ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.45)',
+                  transition: 'background 150ms ease',
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.65)')}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor =
+                    idx % 2 === 0 ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.45)')
+                }
               >
                 {/* Asset ID */}
-                <td style={{ padding: '14px 20px', fontWeight: 600 }}>
+                <td style={{ padding: '13px 22px', fontWeight: 600 }}>
                   <span
                     style={{
                       fontFamily: 'monospace',
                       fontSize: '12px',
-                      color: '#6ee7b7',
-                      background: 'rgba(42, 157, 143, 0.18)',
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(42, 157, 143, 0.35)',
+                      color: '#252522',
+                      background: 'rgba(0, 0, 0, 0.035)',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
                     }}
                   >
                     {entry.id}
@@ -213,23 +216,23 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                 </td>
 
                 {/* Algorithm Spec */}
-                <td style={{ padding: '14px 18px' }}>
-                  <div style={{ fontWeight: 600, color: '#ffffff' }}>{entry.algorithm}</div>
-                  <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.55)' }}>{entry.usage}</div>
+                <td style={{ padding: '13px 18px' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{entry.algorithm}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{entry.usage}</div>
                 </td>
 
                 {/* Library & Version */}
-                <td style={{ padding: '14px 16px' }}>
-                  <div style={{ color: '#ffffff', fontWeight: 500 }}>{entry.library}</div>
+                <td style={{ padding: '13px 16px' }}>
+                  <div style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{entry.library}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                    <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.6)' }}>v{entry.version}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>v{entry.version}</span>
                     <span
                       style={{
                         fontSize: '10px',
-                        padding: '1px 6px',
-                        borderRadius: '9999px',
-                        background: entry.dependencyType === 'Direct' ? 'rgba(42, 157, 143, 0.25)' : 'rgba(255, 255, 255, 0.1)',
-                        color: entry.dependencyType === 'Direct' ? '#6ee7b7' : 'rgba(255, 255, 255, 0.7)',
+                        padding: '1px 5px',
+                        borderRadius: '3px',
+                        background: entry.dependencyType === 'Direct' ? 'rgba(113, 128, 113, 0.12)' : 'rgba(0,0,0,0.03)',
+                        color: entry.dependencyType === 'Direct' ? '#718071' : 'var(--text-muted)',
                         fontWeight: 600,
                       }}
                     >
@@ -239,17 +242,16 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                 </td>
 
                 {/* Location */}
-                <td style={{ padding: '14px 18px' }}>
+                <td style={{ padding: '13px 18px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FileCode2 size={13} color="rgba(255, 255, 255, 0.6)" />
+                    <FileCode2 size={13} color="var(--text-muted)" />
                     <code
                       style={{
                         fontSize: '12px',
-                        color: '#6ee7b7',
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        padding: '2px 7px',
-                        borderRadius: '6px',
+                        color: '#252522',
+                        background: 'rgba(0, 0, 0, 0.03)',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
                       }}
                     >
                       {entry.location}
@@ -261,7 +263,7 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                         background: 'transparent',
                         border: 'none',
                         cursor: 'pointer',
-                        color: copiedId === entry.id ? '#6ee7b7' : 'rgba(255, 255, 255, 0.45)',
+                        color: copiedId === entry.id ? '#718071' : 'var(--text-muted)',
                         padding: '2px',
                       }}
                     >
@@ -271,12 +273,12 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
                 </td>
 
                 {/* Standard Reference */}
-                <td style={{ padding: '14px 16px', fontSize: '11.5px', color: 'rgba(255, 255, 255, 0.75)' }}>
+                <td style={{ padding: '13px 16px', fontSize: '11.5px', color: 'var(--text-secondary)' }}>
                   {entry.standardReference || 'Standard Reference'}
                 </td>
 
                 {/* Risk */}
-                <td style={{ padding: '14px 18px' }}>{renderRiskBadge(entry.risk)}</td>
+                <td style={{ padding: '13px 22px' }}>{renderRiskBadge(entry.risk)}</td>
               </tr>
             ))}
           </tbody>
@@ -286,13 +288,13 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
       <div
         style={{
           padding: '12px 24px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          backgroundColor: 'rgba(0, 0, 0, 0.15)',
+          borderTop: '1px solid rgba(0, 0, 0, 0.04)',
+          backgroundColor: 'rgba(255, 255, 255, 0.25)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           fontSize: '12px',
-          color: 'rgba(255, 255, 255, 0.6)',
+          color: 'var(--text-muted)',
         }}
       >
         <span>

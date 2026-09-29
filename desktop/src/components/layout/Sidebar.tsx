@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -9,7 +9,6 @@ import {
   FileBarChart,
   Settings,
   Cpu,
-  Activity,
 } from 'lucide-react';
 
 export type NavPage = 'dashboard' | 'projects' | 'scans' | 'findings' | 'pqc' | 'inventory' | 'reports' | 'settings';
@@ -17,16 +16,11 @@ export type NavPage = 'dashboard' | 'projects' | 'scans' | 'findings' | 'pqc' | 
 interface SidebarProps {
   currentPage: NavPage;
   onNavigate: (page: NavPage) => void;
-  isHovered: boolean;
-  onHoverChange: (hovered: boolean) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
-  currentPage,
-  onNavigate,
-  isHovered,
-  onHoverChange,
-}) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   const navItems = [
     { id: 'dashboard' as NavPage, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects' as NavPage, label: 'Projects', icon: FolderGit2 },
@@ -39,36 +33,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <nav
-      onMouseEnter={() => onHoverChange(true)}
-      onMouseLeave={() => onHoverChange(false)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         position: 'fixed',
         left: '20px',
-        top: '24px',
-        bottom: '24px',
-        height: 'calc(100vh - 48px)',
-        width: isHovered ? '240px' : '76px',
-        background: isHovered ? 'rgba(25, 34, 46, 0.65)' : 'rgba(18, 25, 36, 0.45)',
-        backdropFilter: 'blur(35px) saturate(190%)',
-        WebkitBackdropFilter: 'blur(35px) saturate(190%)',
-        border: '1px solid rgba(255, 255, 255, 0.22)',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        height: 'min(540px, calc(100vh - 48px))',
+        width: isHovered ? '236px' : '72px',
+        background: isHovered ? 'rgba(255, 255, 255, 0.68)' : 'rgba(255, 255, 255, 0.52)',
+        backdropFilter: 'blur(30px) saturate(125%)',
+        WebkitBackdropFilter: 'blur(30px) saturate(125%)',
+        border: '1px solid rgba(255, 255, 255, 0.8)',
         boxShadow: isHovered
-          ? 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.38), 0 24px 50px rgba(0, 0, 0, 0.45)'
-          : 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.3), 0 16px 40px rgba(0, 0, 0, 0.35)',
-        borderRadius: '26px',
-        padding: '20px 10px',
+          ? '0 16px 44px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.95)'
+          : '0 12px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95)',
+        borderRadius: '24px',
+        padding: '16px 8px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
         zIndex: 100,
-        transition: 'width 240ms cubic-bezier(0.2, 0, 0, 1), background 240ms ease, box-shadow 240ms ease',
+        transition: 'width 260ms cubic-bezier(.22, 1, .36, 1), background 260ms ease, box-shadow 260ms ease',
         overflow: 'hidden',
         boxSizing: 'border-box',
       }}
       aria-label="Floating Application Navigation"
     >
       {/* Top Header & Navigation Links */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {/* Brand Header */}
         <div
           style={{
@@ -76,28 +70,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
             alignItems: 'center',
             gap: '12px',
             padding: '4px 6px',
-            height: '46px',
+            height: '42px',
             boxSizing: 'border-box',
           }}
         >
-          {/* Apple Frosted Glass Icon */}
+          {/* Logo Icon */}
           <div
             style={{
               width: '40px',
               height: '40px',
               minWidth: '40px',
-              borderRadius: '13px',
-              background: 'rgba(255, 255, 255, 0.15)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255, 255, 255, 0.35)',
-              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25)',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.8)',
+              border: '1px solid rgba(255, 255, 255, 0.9)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 #ffffff',
               flexShrink: 0,
             }}
           >
-            <ShieldCheck size={22} color="#6ee7b7" />
+            <ShieldCheck size={20} color="#718071" />
           </div>
 
           {/* Expanded Brand Name */}
@@ -106,33 +99,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
               opacity: isHovered ? 1 : 0,
               visibility: isHovered ? 'visible' : 'hidden',
               transform: isHovered ? 'translateX(0)' : 'translateX(-8px)',
-              transition: 'opacity 200ms ease, transform 200ms ease',
+              transition: 'opacity 180ms ease, transform 180ms ease',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
             }}
           >
             <div
               style={{
-                fontSize: '14.5px',
-                fontWeight: 700,
-                color: '#ffffff',
-                letterSpacing: '-0.02em',
+                fontSize: '13.5px',
+                fontWeight: 600,
+                color: '#252522',
+                letterSpacing: '-0.01em',
                 lineHeight: 1.2,
-                textShadow: '0 1px 4px rgba(0, 0, 0, 0.4)',
               }}
             >
-              PQC Sentinel
+              PQC Security
             </div>
             <div
               style={{
-                fontSize: '10.5px',
-                fontWeight: 600,
-                color: 'rgba(255, 255, 255, 0.65)',
-                letterSpacing: '0.05em',
+                fontSize: '10px',
+                fontWeight: 500,
+                color: '#8B8C86',
+                letterSpacing: '0.04em',
                 textTransform: 'uppercase',
               }}
             >
-              Security Assessment
+              Assessment
             </div>
           </div>
         </div>
@@ -141,13 +133,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div
           style={{
             height: '1px',
-            background: 'rgba(255, 255, 255, 0.12)',
-            margin: '0 4px',
+            background: 'rgba(0, 0, 0, 0.05)',
+            margin: '2px 4px',
           }}
         />
 
         {/* Navigation Items */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
@@ -162,52 +154,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   alignItems: 'center',
                   gap: '12px',
                   width: '100%',
-                  height: '44px',
+                  height: '42px',
                   padding: '0 8px',
-                  borderRadius: '14px',
-                  border: isActive ? '1px solid rgba(42, 157, 143, 0.5)' : '1px solid transparent',
+                  borderRadius: '12px',
+                  border: 'none',
                   background: isActive
-                    ? 'rgba(42, 157, 143, 0.28)'
+                    ? 'rgba(113, 128, 113, 0.12)'
                     : 'transparent',
-                  color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.72)',
+                  color: isActive ? '#252522' : '#666762',
                   cursor: 'pointer',
-                  transition: 'background 160ms ease, color 160ms ease, border-color 160ms ease',
+                  transition: 'background 140ms ease, color 140ms ease',
                   position: 'relative',
                   outline: 'none',
                   textAlign: 'left',
                   boxSizing: 'border-box',
-                  boxShadow: isActive ? 'inset 0 1px 0 rgba(255, 255, 255, 0.35)' : 'none',
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-                    e.currentTarget.style.color = '#ffffff';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.035)';
+                    e.currentTarget.style.color = '#252522';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) {
                     e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'rgba(255, 255, 255, 0.72)';
-                    e.currentTarget.style.borderColor = 'transparent';
+                    e.currentTarget.style.color = '#666762';
                   }
                 }}
               >
-                {/* Active Indicator Dot */}
+                {/* Active Indicator Strip */}
                 <div
                   style={{
                     position: 'absolute',
                     left: '2px',
-                    width: '3.5px',
+                    width: '3px',
                     height: isActive ? '20px' : '0px',
                     borderRadius: '2px',
-                    background: '#6ee7b7',
-                    boxShadow: isActive ? '0 0 8px rgba(110, 231, 183, 0.6)' : 'none',
-                    transition: 'height 180ms ease',
+                    background: '#718071',
+                    transition: 'height 160ms ease',
                   }}
                 />
 
-                {/* Icon Container with subtle glass roundel */}
+                {/* Icon Container with subtle active pill */}
                 <div
                   style={{
                     width: '40px',
@@ -217,30 +205,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
-                    borderRadius: '11px',
-                    background: isActive ? 'rgba(255, 255, 255, 0.18)' : 'transparent',
-                    border: isActive ? '1px solid rgba(255, 255, 255, 0.25)' : 'none',
+                    borderRadius: '10px',
+                    background: isActive ? 'rgba(113, 128, 113, 0.16)' : 'transparent',
                   }}
                 >
                   <Icon
-                    size={20}
-                    color={isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.75)'}
-                    strokeWidth={isActive ? 2.2 : 1.9}
+                    size={19}
+                    color={isActive ? '#718071' : '#666762'}
+                    strokeWidth={isActive ? 2.1 : 1.8}
                   />
                 </div>
 
-                {/* Text Label */}
+                {/* Text Label (revealed on hover) */}
                 <div
                   style={{
                     opacity: isHovered ? 1 : 0,
                     visibility: isHovered ? 'visible' : 'hidden',
                     transform: isHovered ? 'translateX(0)' : 'translateX(-6px)',
-                    transition: 'opacity 200ms ease, transform 200ms ease',
+                    transition: 'opacity 180ms ease, transform 180ms ease',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
-                    fontSize: '13.5px',
+                    fontSize: '13px',
                     fontWeight: isActive ? 600 : 500,
-                    color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.88)',
+                    color: isActive ? '#252522' : '#666762',
                     flex: 1,
                   }}
                 >
@@ -253,11 +240,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     style={{
                       fontSize: '9.5px',
                       fontWeight: 700,
-                      padding: '2px 7px',
-                      borderRadius: '9999px',
-                      background: 'rgba(42, 157, 143, 0.85)',
-                      color: '#ffffff',
-                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      background: 'rgba(113, 128, 113, 0.18)',
+                      color: '#718071',
                       marginRight: '4px',
                     }}
                   >
@@ -270,17 +256,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
 
-      {/* Bottom Section: Settings & Status */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {/* Bottom Section: Settings */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         <div
           style={{
             height: '1px',
-            background: 'rgba(255, 255, 255, 0.12)',
-            margin: '0 4px',
+            background: 'rgba(0, 0, 0, 0.05)',
+            margin: '2px 4px',
           }}
         />
 
-        {/* Settings button */}
         <button
           onClick={() => onNavigate('settings')}
           title={!isHovered ? 'Settings' : undefined}
@@ -289,16 +274,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
             alignItems: 'center',
             gap: '12px',
             width: '100%',
-            height: '44px',
+            height: '42px',
             padding: '0 8px',
-            borderRadius: '14px',
-            border: currentPage === 'settings' ? '1px solid rgba(42, 157, 143, 0.5)' : '1px solid transparent',
+            borderRadius: '12px',
+            border: 'none',
             background: currentPage === 'settings'
-              ? 'rgba(42, 157, 143, 0.28)'
+              ? 'rgba(113, 128, 113, 0.12)'
               : 'transparent',
-            color: currentPage === 'settings' ? '#ffffff' : 'rgba(255, 255, 255, 0.72)',
+            color: currentPage === 'settings' ? '#252522' : '#666762',
             cursor: 'pointer',
-            transition: 'background 160ms ease, color 160ms ease',
+            transition: 'background 140ms ease, color 140ms ease',
             position: 'relative',
             outline: 'none',
             textAlign: 'left',
@@ -306,26 +291,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
           }}
           onMouseEnter={(e) => {
             if (currentPage !== 'settings') {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.background = 'rgba(0, 0, 0, 0.035)';
+              e.currentTarget.style.color = '#252522';
             }
           }}
           onMouseLeave={(e) => {
             if (currentPage !== 'settings') {
               e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.72)';
+              e.currentTarget.style.color = '#666762';
             }
           }}
         >
+          {/* Active Indicator for Settings */}
           <div
             style={{
               position: 'absolute',
               left: '2px',
-              width: '3.5px',
+              width: '3px',
               height: currentPage === 'settings' ? '20px' : '0px',
               borderRadius: '2px',
-              background: '#6ee7b7',
-              transition: 'height 180ms ease',
+              background: '#718071',
+              transition: 'height 160ms ease',
             }}
           />
 
@@ -338,14 +324,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              borderRadius: '11px',
-              background: currentPage === 'settings' ? 'rgba(255, 255, 255, 0.18)' : 'transparent',
+              borderRadius: '10px',
+              background: currentPage === 'settings' ? 'rgba(113, 128, 113, 0.16)' : 'transparent',
             }}
           >
             <Settings
-              size={20}
-              color={currentPage === 'settings' ? '#ffffff' : 'rgba(255, 255, 255, 0.75)'}
-              strokeWidth={1.9}
+              size={19}
+              color={currentPage === 'settings' ? '#718071' : '#666762'}
+              strokeWidth={1.8}
             />
           </div>
 
@@ -354,67 +340,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               opacity: isHovered ? 1 : 0,
               visibility: isHovered ? 'visible' : 'hidden',
               transform: isHovered ? 'translateX(0)' : 'translateX(-6px)',
-              transition: 'opacity 200ms ease, transform 200ms ease',
+              transition: 'opacity 180ms ease, transform 180ms ease',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
-              fontSize: '13.5px',
+              fontSize: '13px',
               fontWeight: currentPage === 'settings' ? 600 : 500,
-              color: '#ffffff',
+              color: '#252522',
             }}
           >
             Settings
           </div>
         </button>
-
-        {/* Engine Status / Apple Glass Pill */}
-        <div
-          style={{
-            padding: '8px 10px',
-            borderRadius: '12px',
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            overflow: 'hidden',
-            minHeight: '38px',
-            boxSizing: 'border-box',
-          }}
-          title="PQC Sentinel AST Analyzer v0.8.4"
-        >
-          <div
-            style={{
-              width: '18px',
-              height: '18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Activity size={14} color="#6ee7b7" />
-          </div>
-
-          <div
-            style={{
-              opacity: isHovered ? 1 : 0,
-              visibility: isHovered ? 'visible' : 'hidden',
-              transform: isHovered ? 'translateX(0)' : 'translateX(-6px)',
-              transition: 'opacity 200ms ease, transform 200ms ease',
-              whiteSpace: 'nowrap',
-              fontSize: '11px',
-              color: 'rgba(255, 255, 255, 0.7)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-            }}
-          >
-            <span style={{ fontWeight: 600, color: '#ffffff' }}>Sentinel Engine</span>
-            <span style={{ fontSize: '10px', opacity: 0.85 }}>v0.8.4</span>
-          </div>
-        </div>
       </div>
     </nav>
   );

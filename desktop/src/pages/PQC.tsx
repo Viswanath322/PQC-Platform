@@ -55,23 +55,23 @@ export const PQC: React.FC<PQCPageProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
       {/* 1. Page Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <h1 className="title-level-1">PQC Security Overview</h1>
             <MockDataBadge />
           </div>
-          <p className="subtitle-muted" style={{ fontSize: '14px', marginTop: '4px' }}>
+          <p className="subtitle-muted" style={{ fontSize: '14px', marginTop: '3px' }}>
             Quantum readiness and cryptographic inventory for your project
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={onNavigateToInventory} className="btn-secondary">
-            <Lock size={14} /> Full Inventory
+            <Lock size={13} color="#252522" /> Full Inventory
           </button>
-          <button onClick={onNavigateToReports} className="btn-teal">
-            <FileSpreadsheet size={14} /> View Reports
+          <button onClick={onNavigateToReports} className="btn-primary">
+            <FileSpreadsheet size={13} /> View Reports
           </button>
         </div>
       </div>
@@ -121,12 +121,12 @@ export const PQC: React.FC<PQCPageProps> = ({
         <div
           className="glass-panel"
           style={{
-            padding: '20px 22px',
+            padding: '22px 24px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            minHeight: '140px',
-            background: 'linear-gradient(145deg, rgba(28, 42, 60, 0.9) 0%, rgba(20, 31, 46, 0.8) 100%)',
+            minHeight: '144px',
+            background: 'rgba(255, 255, 255, 0.58)',
           }}
         >
           <div>
@@ -134,8 +134,8 @@ export const PQC: React.FC<PQCPageProps> = ({
               <span
                 style={{
                   fontSize: '11px',
-                  fontWeight: 700,
-                  letterSpacing: '0.06em',
+                  fontWeight: 600,
+                  letterSpacing: '0.05em',
                   textTransform: 'uppercase',
                   color: 'var(--text-muted)',
                 }}
@@ -146,11 +146,10 @@ export const PQC: React.FC<PQCPageProps> = ({
                 style={{
                   fontSize: '11px',
                   fontWeight: 600,
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  background: 'rgba(233, 162, 59, 0.2)',
-                  color: '#fcd34d',
-                  border: '1px solid rgba(233, 162, 59, 0.35)',
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  background: 'rgba(200, 155, 85, 0.12)',
+                  color: '#C89B55',
                 }}
               >
                 {mockRiskSummary.atRiskPercentage}% At Risk
@@ -161,27 +160,27 @@ export const PQC: React.FC<PQCPageProps> = ({
               <span
                 style={{
                   fontSize: '32px',
-                  fontWeight: 700,
-                  color: '#f8fafc',
+                  fontWeight: 600,
+                  color: '#252522',
                   lineHeight: 1.1,
                 }}
               >
                 {mockRiskSummary.readinessPercentage}%
               </span>
-              <span style={{ fontSize: '13px', color: '#5eead4', fontWeight: 600 }}>
+              <span style={{ fontSize: '13px', color: '#718071', fontWeight: 600 }}>
                 Quantum Resilient
               </span>
             </div>
           </div>
 
-          {/* Simple Progress Bar */}
+          {/* Thin Apple-style Progress Bar */}
           <div style={{ marginTop: '12px' }}>
             <div
               style={{
-                height: '8px',
+                height: '6px',
                 width: '100%',
-                backgroundColor: 'rgba(239, 68, 68, 0.25)',
-                borderRadius: '4px',
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                borderRadius: '9999px',
                 overflow: 'hidden',
                 display: 'flex',
               }}
@@ -189,8 +188,9 @@ export const PQC: React.FC<PQCPageProps> = ({
               <div
                 style={{
                   width: `${mockRiskSummary.readinessPercentage}%`,
-                  backgroundColor: 'var(--color-secondary)',
+                  backgroundColor: '#718071', // Muted sage, NO cyan
                   height: '100%',
+                  borderRadius: '9999px',
                 }}
                 title={`Resilient: ${mockRiskSummary.readinessPercentage}%`}
               />
@@ -229,9 +229,9 @@ export const PQC: React.FC<PQCPageProps> = ({
         {/* Key Insights Card */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Lightbulb size={18} color="var(--color-accent-dark)" />
+                <Lightbulb size={17} color="#252522" />
                 <h3 className="title-level-2">Key Insights</h3>
               </div>
               <MockDataBadge size="sm" />
@@ -245,30 +245,32 @@ export const PQC: React.FC<PQCPageProps> = ({
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '10px',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    background: 'rgba(18, 27, 40, 0.65)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    padding: '10px 14px',
+                    borderRadius: '12px',
+                    background: 'rgba(255, 255, 255, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.85)',
+                    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.02)',
                   }}
                 >
                   <div style={{ marginTop: '2px', flexShrink: 0 }}>
+                    {/* Small monochrome icons */}
                     {insight.category === 'critical' ? (
-                      <ShieldAlert size={15} color="var(--color-risk-high)" />
+                      <ShieldAlert size={14} color="#252522" />
                     ) : insight.category === 'warning' ? (
-                      <AlertTriangle size={15} color="var(--color-accent-dark)" />
+                      <AlertTriangle size={14} color="#C89B55" />
                     ) : (
-                      <CheckCircle2 size={15} color="#5eead4" />
+                      <CheckCircle2 size={14} color="#718071" />
                     )}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '13px', color: '#f1f5f9', lineHeight: 1.45, fontWeight: 500 }}>
+                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.45, fontWeight: 500 }}>
                       {insight.text}
                     </p>
                     {insight.componentRef && (
                       <span
                         style={{
                           fontSize: '11px',
-                          color: '#94a3b8',
+                          color: 'var(--text-muted)',
                           fontFamily: 'monospace',
                           display: 'inline-block',
                           marginTop: '2px',
@@ -287,9 +289,9 @@ export const PQC: React.FC<PQCPageProps> = ({
             style={{
               fontSize: '11.5px',
               color: 'var(--text-muted)',
-              marginTop: '12px',
+              marginTop: '14px',
               paddingTop: '10px',
-              borderTop: '1px solid var(--border-glass)',
+              borderTop: '1px solid rgba(0, 0, 0, 0.04)',
             }}
           >
             Insights generated from development AST rule engine ruleset v0.8.
@@ -312,8 +314,8 @@ export const PQC: React.FC<PQCPageProps> = ({
             </p>
           </div>
 
-          {/* View Mode Toggle */}
-          <div style={{ display: 'flex', background: 'rgba(15, 23, 36, 0.75)', padding: '3px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          {/* View Mode Toggle Pill */}
+          <div style={{ display: 'flex', background: 'rgba(0, 0, 0, 0.04)', padding: '3px', borderRadius: 'var(--radius-full)' }}>
             <button
               onClick={() => setActiveTableTab('inventory')}
               style={{
@@ -321,18 +323,18 @@ export const PQC: React.FC<PQCPageProps> = ({
                 alignItems: 'center',
                 gap: '6px',
                 padding: '6px 14px',
-                fontSize: '12.5px',
+                fontSize: '12px',
                 fontWeight: 600,
                 border: 'none',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-full)',
                 cursor: 'pointer',
-                background: activeTableTab === 'inventory' ? 'rgba(42, 157, 143, 0.28)' : 'transparent',
-                color: activeTableTab === 'inventory' ? '#5eead4' : '#94a3b8',
-                boxShadow: activeTableTab === 'inventory' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                background: activeTableTab === 'inventory' ? '#ffffff' : 'transparent',
+                color: activeTableTab === 'inventory' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                boxShadow: activeTableTab === 'inventory' ? '0 1px 4px rgba(0,0,0,0.06)' : 'none',
                 transition: 'all 0.15s ease',
               }}
             >
-              <Lock size={13} />
+              <Lock size={12} />
               Inventory View
             </button>
             <button
@@ -342,18 +344,18 @@ export const PQC: React.FC<PQCPageProps> = ({
                 alignItems: 'center',
                 gap: '6px',
                 padding: '6px 14px',
-                fontSize: '12.5px',
+                fontSize: '12px',
                 fontWeight: 600,
                 border: 'none',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-full)',
                 cursor: 'pointer',
-                background: activeTableTab === 'cbom' ? 'rgba(42, 157, 143, 0.28)' : 'transparent',
-                color: activeTableTab === 'cbom' ? '#5eead4' : '#94a3b8',
-                boxShadow: activeTableTab === 'cbom' ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                background: activeTableTab === 'cbom' ? '#ffffff' : 'transparent',
+                color: activeTableTab === 'cbom' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                boxShadow: activeTableTab === 'cbom' ? '0 1px 4px rgba(0,0,0,0.06)' : 'none',
                 transition: 'all 0.15s ease',
               }}
             >
-              <Layers size={13} />
+              <Layers size={12} />
               CBOM View
             </button>
           </div>
@@ -392,13 +394,13 @@ export const PQC: React.FC<PQCPageProps> = ({
             flexDirection: 'column',
             justifyContent: 'space-between',
             gap: '16px',
-            backgroundColor: 'rgba(23, 34, 50, 0.75)',
+            backgroundColor: 'rgba(255, 255, 255, 0.58)',
           }}
         >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileSpreadsheet size={18} color="#5eead4" />
+                <FileSpreadsheet size={17} color="#252522" />
                 <h3 className="title-level-2">Compliance Reports</h3>
               </div>
               <MockDataBadge size="sm" />
@@ -407,15 +409,16 @@ export const PQC: React.FC<PQCPageProps> = ({
               Export quantum risk assessments, CBOM documentation, and inventory audits
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {mockReportOptions.map((opt) => (
                 <div
                   key={opt.id}
                   style={{
                     padding: '12px 14px',
-                    borderRadius: '10px',
-                    background: 'rgba(15, 23, 36, 0.65)',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    background: 'rgba(255, 255, 255, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.9)',
+                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -425,35 +428,34 @@ export const PQC: React.FC<PQCPageProps> = ({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div
                       style={{
-                        width: '34px',
-                        height: '34px',
-                        borderRadius: '8px',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '10px',
                         background:
                           opt.format === 'PDF'
-                            ? 'rgba(255, 255, 255, 0.1)'
+                            ? 'rgba(43, 43, 40, 0.06)'
                             : opt.format === 'JSON'
-                            ? 'rgba(42, 157, 143, 0.16)'
-                            : 'rgba(233, 162, 59, 0.16)',
+                            ? 'rgba(113, 128, 113, 0.1)'
+                            : 'rgba(200, 155, 85, 0.1)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
                       }}
                     >
                       {opt.format === 'PDF' ? (
-                        <FileText size={17} color="#f8fafc" />
+                        <FileText size={17} color="#2B2B28" />
                       ) : opt.format === 'JSON' ? (
-                        <Code size={17} color="#5eead4" />
+                        <Code size={17} color="#718071" />
                       ) : (
-                        <FileSpreadsheet size={17} color="#fcd34d" />
+                        <FileSpreadsheet size={17} color="#C89B55" />
                       )}
                     </div>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {opt.title}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         Format: {opt.format} • Approx: {opt.estimatedSize}
                       </div>
                     </div>
@@ -461,10 +463,10 @@ export const PQC: React.FC<PQCPageProps> = ({
 
                   <button
                     onClick={() => handleQuickExport(opt.format, opt.title)}
-                    className="btn-secondary"
-                    style={{ padding: '6px 12px', fontSize: '12px', flexShrink: 0 }}
+                    className="btn-primary"
+                    style={{ padding: '6px 14px', fontSize: '12px', borderRadius: 'var(--radius-md)', flexShrink: 0 }}
                   >
-                    <Download size={13} />
+                    <Download size={12} />
                     Export {opt.format}
                   </button>
                 </div>
@@ -475,7 +477,7 @@ export const PQC: React.FC<PQCPageProps> = ({
           <div
             style={{
               paddingTop: '12px',
-              borderTop: '1px solid var(--border-glass)',
+              borderTop: '1px solid rgba(0, 0, 0, 0.04)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -492,7 +494,7 @@ export const PQC: React.FC<PQCPageProps> = ({
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#5eead4',
+                color: '#718071',
                 fontWeight: 600,
                 fontSize: '12px',
                 cursor: 'pointer',

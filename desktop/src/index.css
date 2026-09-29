@@ -1,54 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Apple Glassmorphic Palette */
-  --color-primary: #ffffff;
-  --color-primary-dark: #e2e8f0;
-  --color-primary-light: #ffffff;
-  --color-primary-faded: rgba(255, 255, 255, 0.12);
+  /* Apple-Inspired Palette */
+  --color-graphite: #2B2B28;       /* Primary controls, headings, strong text */
+  --color-graphite-hover: #3D3D38;
+  --color-sage: #718071;           /* Active navigation, success, low-risk, selected controls */
+  --color-sage-light: rgba(113, 128, 113, 0.12);
+  --color-sage-hover: #5d6b5d;
+  --color-amber: #C89B55;          /* Medium risk, warnings, attention */
+  --color-amber-light: rgba(200, 155, 85, 0.12);
 
-  --color-secondary: #2A9D8F;          /* Apple Teal / Mint Accent */
-  --color-secondary-dark: #1f776d;
-  --color-secondary-light: rgba(42, 157, 143, 0.22);
-  --color-secondary-faded: rgba(42, 157, 143, 0.16);
+  /* High Risk - Restrained Warm/Dark Treatment */
+  --color-risk-high-text: #3D3535;
+  --color-risk-high-bg: rgba(61, 53, 53, 0.08);
+  --color-risk-high-border: rgba(61, 53, 53, 0.2);
 
-  --color-accent: #E9A23B;             /* Muted Amber */
-  --color-accent-dark: #f59e0b;
-  --color-accent-light: rgba(233, 162, 59, 0.22);
-  --color-accent-faded: rgba(233, 162, 59, 0.16);
+  /* Text Colors */
+  --text-primary: #252522;         /* Primary Body & Headings */
+  --text-secondary: #666762;       /* Supporting Labels */
+  --text-muted: #8B8C86;           /* Metadata, Timestamps, Placeholders */
 
-  /* High Risk */
-  --color-risk-high: #ff6b6b;
-  --color-risk-high-light: rgba(255, 107, 107, 0.2);
-  --color-risk-high-faded: rgba(255, 107, 107, 0.14);
+  /* Light Canvas & Frosted Glass Surfaces */
+  --bg-app: #F5F6F4;
+  --surface-main-glass: rgba(255, 255, 255, 0.48);
+  --surface-glass: rgba(255, 255, 255, 0.58);
+  --surface-glass-solid: rgba(255, 255, 255, 0.85);
+  --surface-glass-subtle: rgba(255, 255, 255, 0.42);
+  --surface-navbar: rgba(255, 255, 255, 0.52);
 
-  /* Apple Liquid Glass Surfaces */
-  --surface-nav-glass: rgba(18, 26, 36, 0.48);
-  --surface-main-glass: rgba(15, 22, 32, 0.52);
-  --surface-glass: rgba(255, 255, 255, 0.08);
-  --surface-glass-solid: rgba(255, 255, 255, 0.14);
-  --surface-glass-subtle: rgba(255, 255, 255, 0.05);
+  /* Glass Borders & Highlights */
+  --border-glass: rgba(255, 255, 255, 0.72);
+  --border-glass-strong: rgba(255, 255, 255, 0.9);
+  --border-subtle: rgba(0, 0, 0, 0.06);
 
-  --border-glass-specular: 1px solid rgba(255, 255, 255, 0.22);
-  --border-glass: rgba(255, 255, 255, 0.16);
-  --border-glass-strong: rgba(255, 255, 255, 0.26);
+  /* Apple-grade Soft Shadows with Inset White Highlights */
+  --shadow-glass: 0 10px 35px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --shadow-navbar: 0 12px 40px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  --shadow-card: 0 8px 28px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.85);
-  --text-muted: rgba(255, 255, 255, 0.62);
-  --text-light: rgba(255, 255, 255, 0.42);
-
-  --shadow-apple-glass: 
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.32),
-    0 16px 40px rgba(0, 0, 0, 0.38);
-  --shadow-apple-card:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.24),
-    0 8px 24px rgba(0, 0, 0, 0.28);
-
-  --radius-sm: 10px;
+  --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
-  --radius-xl: 28px;
+  --radius-xl: 24px;
   --radius-full: 9999px;
 }
 
@@ -59,16 +52,15 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: #0d141e;
-  /* Atmospheric Coastal Ocean Wallpaper Background with subtle dark overlay */
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-app);
+  /* Very light background with extremely subtle ambient blurred warm & sage glows */
   background-image: 
-    linear-gradient(rgba(10, 16, 24, 0.48), rgba(6, 10, 16, 0.72)),
-    url('/apple-wallpaper.jpg');
-  background-size: cover;
-  background-position: center center;
+    radial-gradient(circle at 10% 8%, rgba(255, 255, 255, 0.9) 0%, transparent 40%),
+    radial-gradient(circle at 85% 15%, rgba(113, 128, 113, 0.045) 0%, transparent 45%),
+    radial-gradient(circle at 50% 90%, rgba(200, 155, 85, 0.035) 0%, transparent 50%),
+    linear-gradient(180deg, #F8F9F7 0%, #EFF0ED 100%);
   background-attachment: fixed;
-  background-repeat: no-repeat;
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -78,71 +70,66 @@ body {
 }
 
 code, kbd, samp, pre {
-  font-family: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, Monaco, monospace;
+  font-family: 'JetBrains Mono', 'SF Mono', Consolas, Monaco, monospace;
 }
 
-/* Application Layout */
+/* Application Overall Layout */
 .app-layout {
   min-height: 100vh;
   position: relative;
   display: flex;
 }
 
-/* Main Application Glass Container (Apple Frosted Workspace) */
+/* Level 2: Main Application Glass Container */
 .main-glass-container {
   flex: 1;
-  margin-left: 116px;
+  margin-left: 112px;
   margin-right: 24px;
   margin-top: 24px;
   margin-bottom: 24px;
   min-height: calc(100vh - 48px);
   background: var(--surface-main-glass);
-  backdrop-filter: blur(34px) saturate(180%);
-  -webkit-backdrop-filter: blur(34px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.28),
-    0 24px 64px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(28px) saturate(120%);
+  -webkit-backdrop-filter: blur(28px) saturate(120%);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-glass);
   border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
   min-width: 0;
-  transition: margin-left 240ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .main-workspace-body {
   flex: 1;
-  padding: 28px 34px 48px 34px;
+  padding: 32px 36px 48px 36px;
   max-width: 1440px;
   width: 100%;
   margin: 0 auto;
 }
 
-/* Apple Frosted Glass Panel (Notification Pill Style) */
+/* Level 3: Frosted Glass Panel */
 .glass-panel {
   background: var(--surface-glass);
-  backdrop-filter: blur(28px) saturate(170%);
-  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  backdrop-filter: blur(28px) saturate(120%);
+  -webkit-backdrop-filter: blur(28px) saturate(120%);
   border: 1px solid var(--border-glass);
-  box-shadow: var(--shadow-apple-card);
+  box-shadow: var(--shadow-card);
   border-radius: var(--radius-lg);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .glass-panel:hover {
   border-color: var(--border-glass-strong);
-  box-shadow: 
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.32),
-    0 12px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .glass-panel-subtle {
   background: var(--surface-glass-subtle);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px) saturate(115%);
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
+  border: 1px solid var(--border-glass);
   border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 /* Custom Scrollbars */
@@ -152,59 +139,55 @@ code, kbd, samp, pre {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.02);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.12);
   border-radius: 4px;
-  backdrop-filter: blur(8px);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(0, 0, 0, 0.22);
 }
 
 /* Typography Hierarchy */
 .title-level-1 {
-  font-size: 25px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.025em;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
 .title-level-2 {
-  font-size: 17.5px;
+  font-size: 17px;
   font-weight: 600;
-  color: #ffffff;
-  letter-spacing: -0.015em;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .subtitle-muted {
   font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.68);
+  color: var(--text-secondary);
   margin-top: 2px;
 }
 
-/* Badges & Tags (Apple Pill Badges) */
+/* Badges & Tags */
 .badge-dev-mock {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: var(--radius-full);
-  background: rgba(42, 157, 143, 0.2);
-  color: #6ee7b7;
-  border: 1px solid rgba(42, 157, 143, 0.45);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--color-sage);
+  border: 1px solid rgba(113, 128, 113, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .badge-risk-high {
@@ -213,12 +196,11 @@ code, kbd, samp, pre {
   gap: 5px;
   font-size: 11.5px;
   font-weight: 600;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  background: rgba(255, 107, 107, 0.22);
-  color: #fca5a5;
-  border: 1px solid rgba(255, 107, 107, 0.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--color-risk-high-bg);
+  color: var(--color-risk-high-text);
+  border: 1px solid var(--color-risk-high-border);
 }
 
 .badge-risk-medium {
@@ -227,12 +209,11 @@ code, kbd, samp, pre {
   gap: 5px;
   font-size: 11.5px;
   font-weight: 600;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  background: rgba(233, 162, 59, 0.22);
-  color: #fcd34d;
-  border: 1px solid rgba(233, 162, 59, 0.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--color-amber-light);
+  color: var(--color-amber);
+  border: 1px solid rgba(200, 155, 85, 0.28);
 }
 
 .badge-risk-low {
@@ -241,43 +222,35 @@ code, kbd, samp, pre {
   gap: 5px;
   font-size: 11.5px;
   font-weight: 600;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  background: rgba(42, 157, 143, 0.22);
-  color: #6ee7b7;
-  border: 1px solid rgba(42, 157, 143, 0.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--color-sage-light);
+  color: var(--color-sage);
+  border: 1px solid rgba(113, 128, 113, 0.28);
 }
 
-/* Apple Frosted Glass Buttons */
+/* Apple-style Buttons */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 8px 18px;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: var(--radius-full);
+  background: var(--color-graphite);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: all 0.16s ease;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
 }
 
 .btn-primary:hover {
-  background: rgba(255, 255, 255, 0.28);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: var(--color-graphite-hover);
   transform: translateY(-1px);
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 6px 18px rgba(0, 0, 0, 0.32);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.16);
 }
 
 .btn-secondary {
@@ -288,20 +261,18 @@ code, kbd, samp, pre {
   padding: 8px 16px;
   font-size: 13px;
   font-weight: 500;
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.16s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.14);
 }
 
 .btn-teal {
@@ -310,50 +281,40 @@ code, kbd, samp, pre {
   justify-content: center;
   gap: 8px;
   padding: 8px 18px;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #ffffff;
-  background: rgba(42, 157, 143, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(42, 157, 143, 0.9);
-  border-radius: var(--radius-full);
+  background: var(--color-graphite);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 6px 18px rgba(42, 157, 143, 0.35);
+  transition: all 0.16s ease;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
 }
 
 .btn-teal:hover {
-  background: rgba(42, 157, 143, 0.88);
-  transform: translateY(-1px);
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 8px 24px rgba(42, 157, 143, 0.45);
+  background: var(--color-graphite-hover);
 }
 
-/* Toast Notification (Apple Notification Pill) */
+/* Toast Notification */
 .toast-notification {
   position: fixed;
-  bottom: 32px;
-  right: 36px;
-  background: rgba(20, 28, 40, 0.65);
-  backdrop-filter: blur(32px) saturate(190%);
-  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  bottom: 28px;
+  right: 32px;
+  background: rgba(43, 43, 40, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: #ffffff;
-  padding: 14px 22px;
-  border-radius: 20px;
-  box-shadow: 
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.35),
-    0 16px 40px rgba(0, 0, 0, 0.45);
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 13.5px;
+  gap: 10px;
+  font-size: 13px;
   z-index: 1000;
   animation: slideUpToast 0.22s ease forwards;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 @keyframes slideUpToast {

@@ -19,7 +19,6 @@ import { MockDataBadge } from './components/pqc/MockDataBadge';
 export const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<NavPage>('pqc');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isNavHovered, setIsNavHovered] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (message: string) => {
@@ -59,22 +58,23 @@ export const App: React.FC = () => {
               style={{
                 width: '56px',
                 height: '56px',
-                borderRadius: '14px',
-                background: 'var(--color-primary-faded)',
+                borderRadius: '16px',
+                background: 'rgba(0, 0, 0, 0.04)',
+                border: '1px solid rgba(0, 0, 0, 0.06)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 16px auto',
               }}
             >
-              <LayoutDashboard size={28} color="var(--color-primary)" />
+              <LayoutDashboard size={26} color="#2B2B28" />
             </div>
             <h2 className="title-level-1">System Security Dashboard</h2>
             <p className="subtitle-muted" style={{ maxWidth: '520px', margin: '8px auto 24px auto' }}>
               High-level overview of enterprise vulnerability scanning, SAST pipelines, and compliance tracking.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-              <button onClick={() => setCurrentPage('pqc')} className="btn-teal">
+              <button onClick={() => setCurrentPage('pqc')} className="btn-primary">
                 Open PQC Security Module →
               </button>
             </div>
@@ -87,22 +87,23 @@ export const App: React.FC = () => {
               style={{
                 width: '56px',
                 height: '56px',
-                borderRadius: '14px',
-                background: 'var(--color-primary-faded)',
+                borderRadius: '16px',
+                background: 'rgba(0, 0, 0, 0.04)',
+                border: '1px solid rgba(0, 0, 0, 0.06)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 16px auto',
               }}
             >
-              <FolderGit2 size={28} color="var(--color-primary)" />
+              <FolderGit2 size={26} color="#2B2B28" />
             </div>
             <h2 className="title-level-1">Connected Repositories</h2>
             <p className="subtitle-muted" style={{ maxWidth: '520px', margin: '8px auto 24px auto' }}>
               Manage Git repositories, branch hooks, and automated CI/CD security scanning triggers.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-              <button onClick={() => setCurrentPage('pqc')} className="btn-primary">
+              <button onClick={() => setCurrentPage('pqc')} className="btn-secondary">
                 Return to PQC Overview
               </button>
             </div>
@@ -115,22 +116,23 @@ export const App: React.FC = () => {
               style={{
                 width: '56px',
                 height: '56px',
-                borderRadius: '14px',
-                background: 'var(--color-primary-faded)',
+                borderRadius: '16px',
+                background: 'rgba(0, 0, 0, 0.04)',
+                border: '1px solid rgba(0, 0, 0, 0.06)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 16px auto',
               }}
             >
-              <Scan size={28} color="var(--color-primary)" />
+              <Scan size={26} color="#2B2B28" />
             </div>
             <h2 className="title-level-1">Cryptographic Scans & History</h2>
             <p className="subtitle-muted" style={{ maxWidth: '520px', margin: '8px auto 24px auto' }}>
               View historical cryptographic inspection runs, diffs between scan revisions, and CI logs.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-              <button onClick={() => setCurrentPage('pqc')} className="btn-primary">
+              <button onClick={() => setCurrentPage('pqc')} className="btn-secondary">
                 View Active Scan (PQC)
               </button>
             </div>
@@ -143,22 +145,23 @@ export const App: React.FC = () => {
               style={{
                 width: '56px',
                 height: '56px',
-                borderRadius: '14px',
-                background: 'rgba(239, 68, 68, 0.1)',
+                borderRadius: '16px',
+                background: 'rgba(0, 0, 0, 0.04)',
+                border: '1px solid rgba(0, 0, 0, 0.06)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 16px auto',
               }}
             >
-              <Bug size={28} color="var(--color-risk-high)" />
+              <Bug size={26} color="#C89B55" />
             </div>
             <h2 className="title-level-1">Vulnerability Findings</h2>
             <p className="subtitle-muted" style={{ maxWidth: '520px', margin: '8px auto 24px auto' }}>
               Triage and track remediation across general software vulnerabilities and cryptographic risks.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
-              <button onClick={() => setCurrentPage('pqc')} className="btn-teal">
+              <button onClick={() => setCurrentPage('pqc')} className="btn-primary">
                 Jump to Quantum Risk Findings
               </button>
             </div>
@@ -168,22 +171,23 @@ export const App: React.FC = () => {
         return (
           <div className="glass-panel" style={{ padding: '36px', maxWidth: '720px', margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-              <SettingsIcon size={24} color="var(--color-primary)" />
+              <SettingsIcon size={22} color="#2B2B28" />
               <h2 className="title-level-1">Platform Settings</h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div
                 style={{
                   padding: '16px 20px',
-                  borderRadius: '12px',
+                  borderRadius: '14px',
                   background: 'rgba(255, 255, 255, 0.65)',
-                  border: '1px solid var(--border-glass)',
+                  border: '1px solid rgba(255, 255, 255, 0.85)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
                 }}
               >
-                <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-primary)' }}>
+                <div style={{ fontWeight: 600, fontSize: '14px', color: '#252522' }}>
                   Scanner Engine Configuration
                 </div>
-                <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                <div style={{ fontSize: '12.5px', color: '#666762', marginTop: '4px' }}>
                   Engine: PQC-Sentinel AST Analyzer v0.8.4-preview (FIPS 203/204/205 reference baseline)
                 </div>
               </div>
@@ -191,17 +195,18 @@ export const App: React.FC = () => {
               <div
                 style={{
                   padding: '16px 20px',
-                  borderRadius: '12px',
+                  borderRadius: '14px',
                   background: 'rgba(255, 255, 255, 0.65)',
-                  border: '1px solid var(--border-glass)',
+                  border: '1px solid rgba(255, 255, 255, 0.85)',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
                 }}
               >
-                <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--color-primary)' }}>
+                <div style={{ fontWeight: 600, fontSize: '14px', color: '#252522' }}>
                   Data Telemetry Mode
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
                   <MockDataBadge size="sm" />
-                  <span style={{ fontSize: '12.5px', color: 'var(--text-secondary)' }}>
+                  <span style={{ fontSize: '12.5px', color: '#666762' }}>
                     Active (FastAPI endpoint integration ready)
                   </span>
                 </div>
@@ -216,21 +221,14 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-layout">
-      {/* 1. Long Vertical Floating Navigation */}
+      {/* 1. Floating Left Glass Navigation (Overlays on cursor hover) */}
       <Sidebar
         currentPage={currentPage}
         onNavigate={setCurrentPage}
-        isHovered={isNavHovered}
-        onHoverChange={setIsNavHovered}
       />
 
-      {/* 2. Main Glass Workspace Container (Synchronized with Nav Hover) */}
-      <div
-        className="main-glass-container"
-        style={{
-          marginLeft: isNavHovered ? '280px' : '116px',
-        }}
-      >
+      {/* 2. Main Glass Workspace Container */}
+      <div className="main-glass-container">
         <TopHeader
           projectName={mockProjectMetadata.projectName}
           branch={mockProjectMetadata.branch}
@@ -245,7 +243,7 @@ export const App: React.FC = () => {
       {/* Toast Notification */}
       {toastMessage && (
         <div className="toast-notification">
-          <Info size={18} color="var(--color-secondary)" />
+          <Info size={16} color="#718071" />
           <span>{toastMessage}</span>
           <button
             onClick={() => setToastMessage(null)}
