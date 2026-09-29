@@ -44,6 +44,7 @@ export const App: React.FC = () => {
           <PQC
             onNavigateToInventory={() => setCurrentPage('inventory')}
             onNavigateToReports={() => setCurrentPage('reports')}
+            onShowToast={showToast}
           />
         );
       case 'inventory':
@@ -52,7 +53,7 @@ export const App: React.FC = () => {
         return <Reports onShowToast={showToast} />;
       case 'dashboard':
         return (
-          <div className="glass-panel" style={{ padding: '36px', textAlign: 'center' }}>
+          <div className="glass-panel" style={{ padding: '40px', textAlign: 'center' }}>
             <div
               style={{
                 width: '56px',
@@ -80,7 +81,7 @@ export const App: React.FC = () => {
         );
       case 'projects':
         return (
-          <div className="glass-panel" style={{ padding: '36px', textAlign: 'center' }}>
+          <div className="glass-panel" style={{ padding: '40px', textAlign: 'center' }}>
             <div
               style={{
                 width: '56px',
@@ -108,7 +109,7 @@ export const App: React.FC = () => {
         );
       case 'scans':
         return (
-          <div className="glass-panel" style={{ padding: '36px', textAlign: 'center' }}>
+          <div className="glass-panel" style={{ padding: '40px', textAlign: 'center' }}>
             <div
               style={{
                 width: '56px',
@@ -136,7 +137,7 @@ export const App: React.FC = () => {
         );
       case 'findings':
         return (
-          <div className="glass-panel" style={{ padding: '36px', textAlign: 'center' }}>
+          <div className="glass-panel" style={{ padding: '40px', textAlign: 'center' }}>
             <div
               style={{
                 width: '56px',
@@ -164,7 +165,7 @@ export const App: React.FC = () => {
         );
       case 'settings':
         return (
-          <div className="glass-panel" style={{ padding: '36px', maxWidth: '700px', margin: '0 auto' }}>
+          <div className="glass-panel" style={{ padding: '36px', maxWidth: '720px', margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
               <SettingsIcon size={24} color="var(--color-primary)" />
               <h2 className="title-level-1">Platform Settings</h2>
@@ -172,9 +173,9 @@ export const App: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div
                 style={{
-                  padding: '16px',
-                  borderRadius: '10px',
-                  background: 'rgba(255, 255, 255, 0.6)',
+                  padding: '16px 20px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.65)',
                   border: '1px solid var(--border-glass)',
                 }}
               >
@@ -182,15 +183,15 @@ export const App: React.FC = () => {
                   Scanner Engine Configuration
                 </div>
                 <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  Engine: PQC-Sentinel AST Analyzer v0.8.4-preview
+                  Engine: PQC-Sentinel AST Analyzer v0.8.4-preview (FIPS 203/204/205 reference baseline)
                 </div>
               </div>
 
               <div
                 style={{
-                  padding: '16px',
-                  borderRadius: '10px',
-                  background: 'rgba(255, 255, 255, 0.6)',
+                  padding: '16px 20px',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.65)',
                   border: '1px solid var(--border-glass)',
                 }}
               >
@@ -213,12 +214,12 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="app-container">
-      {/* Fixed Left Sidebar */}
+    <div className="app-layout">
+      {/* 1. Floating Left Navigation */}
       <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
 
-      {/* Main Content Area */}
-      <div className="main-content">
+      {/* 2. Main Glass Workspace Container */}
+      <div className="main-glass-container">
         <TopHeader
           projectName={mockProjectMetadata.projectName}
           branch={mockProjectMetadata.branch}
@@ -227,7 +228,7 @@ export const App: React.FC = () => {
           isRefreshing={isRefreshing}
         />
 
-        <main className="page-body">{renderContent()}</main>
+        <main className="main-workspace-body">{renderContent()}</main>
       </div>
 
       {/* Toast Notification */}

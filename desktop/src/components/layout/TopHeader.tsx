@@ -39,30 +39,34 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
     <header
       style={{
         height: '68px',
-        background: 'rgba(255, 255, 255, 0.82)',
+        background: 'rgba(255, 255, 255, 0.65)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid var(--border-glass)',
-        padding: '0 36px',
+        borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+        borderTopLeftRadius: '22px',
+        borderTopRightRadius: '22px',
+        padding: '0 32px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
         zIndex: 40,
+        boxSizing: 'border-box',
       }}
     >
       {/* Project Selector */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'rgba(36, 52, 71, 0.05)',
+            background: 'rgba(255, 255, 255, 0.85)',
             border: '1px solid var(--border-glass-strong)',
             padding: '6px 12px',
             borderRadius: 'var(--radius-md)',
+            boxShadow: '0 1px 3px rgba(36, 52, 71, 0.05)',
           }}
         >
           <FolderGit2 size={16} color="var(--color-primary)" />
@@ -72,7 +76,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             style={{
               border: 'none',
               background: 'transparent',
-              fontSize: '13.5px',
+              fontSize: '13px',
               fontWeight: 600,
               color: 'var(--color-primary)',
               cursor: 'pointer',
@@ -92,9 +96,9 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: '5px',
-            fontSize: '12.5px',
+            fontSize: '12px',
             color: 'var(--text-muted)',
-            background: '#ffffff',
+            background: 'rgba(255, 255, 255, 0.6)',
             padding: '5px 10px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-glass)',
@@ -106,7 +110,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
       </div>
 
       {/* Right controls: Last Scan, Refresh, Mock Data Badge */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--text-muted)' }}>
           <Clock size={13} />
           <span>Last Scan: </span>
@@ -118,11 +122,12 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           disabled={isRefreshing}
           className="btn-secondary"
           style={{
-            padding: '7px 14px',
-            fontSize: '12.5px',
+            padding: '6px 13px',
+            fontSize: '12px',
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
+            backgroundColor: '#ffffff',
           }}
           title="Trigger fresh workspace re-scan"
         >

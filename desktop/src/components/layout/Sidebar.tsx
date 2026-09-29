@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -19,6 +19,8 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   const navItems = [
     { id: 'dashboard' as NavPage, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'projects' as NavPage, label: 'Projects', icon: FolderGit2 },
@@ -30,203 +32,320 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate }) => 
   ];
 
   return (
-    <aside
+    <nav
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
-        width: 'var(--sidebar-width)',
-        backgroundColor: 'var(--bg-sidebar)',
-        height: '100vh',
         position: 'fixed',
-        left: 0,
-        top: 0,
+        left: '20px',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: isHovered ? '230px' : '72px',
+        maxHeight: 'calc(100vh - 48px)',
+        background: isHovered ? 'rgba(255, 255, 255, 0.72)' : 'rgba(255, 255, 255, 0.52)',
+        backdropFilter: 'blur(22px)',
+        WebkitBackdropFilter: 'blur(22px)',
+        border: '1px solid rgba(255, 255, 255, 0.65)',
+        boxShadow: isHovered
+          ? '0 20px 48px rgba(36, 52, 71, 0.16)'
+          : '0 16px 40px rgba(36, 52, 71, 0.12)',
+        borderRadius: '22px',
+        padding: '18px 10px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-        zIndex: 50,
-        boxShadow: '4px 0 20px rgba(0, 0, 0, 0.12)',
+        zIndex: 100,
+        transition: 'width 220ms ease, backdrop-filter 220ms ease, box-shadow 220ms ease, background 220ms ease',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
       }}
+      aria-label="Floating Application Navigation"
     >
-      {/* Brand Header */}
-      <div>
+      {/* Top Header / Brand Logo */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div
           style={{
-            padding: '24px 20px 20px 20px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
+            padding: '6px 8px',
+            height: '42px',
+            boxSizing: 'border-box',
           }}
         >
+          {/* Logo Icon */}
           <div
             style={{
               width: '36px',
               height: '36px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #2A9D8F 0%, #1d6e64 100%)',
+              minWidth: '36px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #243447 0%, #1a2736 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(42, 157, 143, 0.4)',
+              boxShadow: '0 4px 12px rgba(36, 52, 71, 0.25)',
+              flexShrink: 0,
             }}
           >
-            <ShieldCheck size={20} color="#ffffff" />
+            <ShieldCheck size={20} color="#2A9D8F" />
           </div>
-          <div>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', letterSpacing: '-0.01em' }}>
-              PQC Sentinel
+
+          {/* Expanded Brand Name */}
+          <div
+            style={{
+              opacity: isHovered ? 1 : 0,
+              visibility: isHovered ? 'visible' : 'hidden',
+              transform: isHovered ? 'translateX(0)' : 'translateX(-8px)',
+              transition: 'opacity 180ms ease, transform 180ms ease',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '14px',
+                fontWeight: 700,
+                color: 'var(--color-primary)',
+                letterSpacing: '-0.01em',
+                lineHeight: 1.2,
+              }}
+            >
+              PQC Security
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-on-dark-muted)', letterSpacing: '0.04em' }}>
-              ENTERPRISE SECURITY
+            <div
+              style={{
+                fontSize: '10.5px',
+                fontWeight: 600,
+                color: 'var(--text-muted)',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Assessment
             </div>
           </div>
         </div>
 
-        {/* Navigation items */}
-        <nav style={{ padding: '16px 12px' }}>
-          <div
-            style={{
-              fontSize: '10.5px',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: '#8b9bb4',
-              padding: '0 12px 8px 12px',
-            }}
-          >
-            Security Modules
-          </div>
+        {/* Separator */}
+        <div
+          style={{
+            height: '1px',
+            background: 'rgba(36, 52, 71, 0.08)',
+            margin: '0 4px',
+          }}
+        />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentPage === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => onNavigate(item.id)}
+        {/* Navigation Items */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentPage === item.id;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => onNavigate(item.id)}
+                title={!isHovered ? item.label : undefined}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  width: '100%',
+                  height: '42px',
+                  padding: '0 8px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: isActive
+                    ? 'rgba(42, 157, 143, 0.14)'
+                    : 'transparent',
+                  color: isActive ? 'var(--color-primary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'background 160ms ease, color 160ms ease',
+                  position: 'relative',
+                  outline: 'none',
+                  textAlign: 'left',
+                  boxSizing: 'border-box',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'rgba(36, 52, 71, 0.06)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
+              >
+                {/* Active Indicator Strip / Dot */}
+                <div
                   style={{
+                    position: 'absolute',
+                    left: '2px',
+                    width: '3.5px',
+                    height: isActive ? '20px' : '0px',
+                    borderRadius: '2px',
+                    background: 'var(--color-secondary)',
+                    transition: 'height 180ms ease',
+                  }}
+                />
+
+                {/* Icon Container with subtle active pill */}
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    minWidth: '36px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    padding: '10px 14px',
+                    justifyContent: 'center',
+                    flexShrink: 0,
                     borderRadius: '8px',
-                    border: 'none',
                     background: isActive ? 'rgba(42, 157, 143, 0.18)' : 'transparent',
-                    color: isActive ? '#5eead4' : '#cbd5e1',
-                    fontSize: '13px',
-                    fontWeight: isActive ? 600 : 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    textAlign: 'left',
-                    position: 'relative',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.color = '#ffffff';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#cbd5e1';
-                    }
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Icon
-                      size={17}
-                      color={isActive ? 'var(--color-secondary)' : '#94a3b8'}
-                      style={{ flexShrink: 0 }}
-                    />
-                    <span>{item.label}</span>
-                  </div>
+                  <Icon
+                    size={19}
+                    color={isActive ? 'var(--color-secondary)' : '#475569'}
+                    strokeWidth={isActive ? 2.2 : 1.9}
+                  />
+                </div>
 
-                  {item.id === 'pqc' && (
-                    <span
-                      style={{
-                        fontSize: '9.5px',
-                        fontWeight: 700,
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        background: 'var(--color-secondary)',
-                        color: '#ffffff',
-                      }}
-                    >
-                      PQC
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </nav>
+                {/* Text Label (visible when hovered) */}
+                <div
+                  style={{
+                    opacity: isHovered ? 1 : 0,
+                    visibility: isHovered ? 'visible' : 'hidden',
+                    transform: isHovered ? 'translateX(0)' : 'translateX(-6px)',
+                    transition: 'opacity 180ms ease, transform 180ms ease',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    fontSize: '13px',
+                    fontWeight: isActive ? 600 : 500,
+                    color: isActive ? 'var(--color-primary)' : 'var(--text-primary)',
+                    flex: 1,
+                  }}
+                >
+                  {item.label}
+                </div>
+
+                {/* PQC Highlight Badge in expanded state */}
+                {isHovered && item.id === 'pqc' && (
+                  <span
+                    style={{
+                      fontSize: '9.5px',
+                      fontWeight: 700,
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      background: 'var(--color-secondary)',
+                      color: '#ffffff',
+                      marginRight: '4px',
+                    }}
+                  >
+                    PQC
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Sidebar Footer */}
-      <div style={{ padding: '16px 12px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+      {/* Bottom Section: Settings */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '14px' }}>
+        <div
+          style={{
+            height: '1px',
+            background: 'rgba(36, 52, 71, 0.08)',
+            margin: '0 4px',
+          }}
+        />
+
         <button
           onClick={() => onNavigate('settings')}
+          title={!isHovered ? 'Settings' : undefined}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
+            gap: '12px',
             width: '100%',
-            padding: '9px 14px',
-            borderRadius: '8px',
+            height: '42px',
+            padding: '0 8px',
+            borderRadius: '12px',
             border: 'none',
-            background: currentPage === 'settings' ? 'rgba(42, 157, 143, 0.18)' : 'transparent',
-            color: currentPage === 'settings' ? '#5eead4' : '#94a3b8',
-            fontSize: '13px',
-            fontWeight: 500,
+            background: currentPage === 'settings'
+              ? 'rgba(42, 157, 143, 0.14)'
+              : 'transparent',
+            color: currentPage === 'settings' ? 'var(--color-primary)' : 'var(--text-secondary)',
             cursor: 'pointer',
-            transition: 'all 0.15s ease',
+            transition: 'background 160ms ease, color 160ms ease',
+            position: 'relative',
+            outline: 'none',
+            textAlign: 'left',
+            boxSizing: 'border-box',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-            e.currentTarget.style.color = '#ffffff';
+            if (currentPage !== 'settings') {
+              e.currentTarget.style.background = 'rgba(36, 52, 71, 0.06)';
+            }
           }}
           onMouseLeave={(e) => {
             if (currentPage !== 'settings') {
               e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = '#94a3b8';
             }
           }}
         >
-          <Settings size={16} />
-          <span>Settings</span>
-        </button>
+          {/* Active Indicator for Settings */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '2px',
+              width: '3.5px',
+              height: currentPage === 'settings' ? '20px' : '0px',
+              borderRadius: '2px',
+              background: 'var(--color-secondary)',
+              transition: 'height 180ms ease',
+            }}
+          />
 
-        {/* Engine status indicator */}
-        <div
-          style={{
-            marginTop: '12px',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            background: 'rgba(0, 0, 0, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: '11px',
-            color: '#94a3b8',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span
-              style={{
-                width: '7px',
-                height: '7px',
-                borderRadius: '50%',
-                background: 'var(--color-secondary)',
-                display: 'inline-block',
-              }}
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              minWidth: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              borderRadius: '8px',
+              background: currentPage === 'settings' ? 'rgba(42, 157, 143, 0.18)' : 'transparent',
+            }}
+          >
+            <Settings
+              size={19}
+              color={currentPage === 'settings' ? 'var(--color-secondary)' : '#64748b'}
+              strokeWidth={1.9}
             />
-            <span>Engine Ready</span>
           </div>
-          <span style={{ fontSize: '10px', opacity: 0.7 }}>v0.8.4</span>
-        </div>
+
+          <div
+            style={{
+              opacity: isHovered ? 1 : 0,
+              visibility: isHovered ? 'visible' : 'hidden',
+              transform: isHovered ? 'translateX(0)' : 'translateX(-6px)',
+              transition: 'opacity 180ms ease, transform 180ms ease',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              fontSize: '13px',
+              fontWeight: currentPage === 'settings' ? 600 : 500,
+              color: 'var(--text-primary)',
+            }}
+          >
+            Settings
+          </div>
+        </button>
       </div>
-    </aside>
+    </nav>
   );
 };

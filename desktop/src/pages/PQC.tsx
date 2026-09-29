@@ -7,6 +7,11 @@ import {
   Lock,
   Layers,
   FileSpreadsheet,
+  FileText,
+  Code,
+  Download,
+  Clock,
+  ArrowRight,
 } from 'lucide-react';
 import { MockDataBadge } from '../components/pqc/MockDataBadge';
 import { RiskCard } from '../components/pqc/RiskCard';
@@ -20,16 +25,19 @@ import {
   mockCryptoInventory,
   mockCBOM,
   mockMigrationCandidates,
+  mockReportOptions,
 } from '../data/pqcMockData';
 
 interface PQCPageProps {
   onNavigateToInventory?: () => void;
   onNavigateToReports?: () => void;
+  onShowToast?: (message: string) => void;
 }
 
 export const PQC: React.FC<PQCPageProps> = ({
   onNavigateToInventory,
   onNavigateToReports,
+  onShowToast,
 }) => {
   const [selectedRiskFilter, setSelectedRiskFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
   const [activeTableTab, setActiveTableTab] = useState<'inventory' | 'cbom'>('inventory');
@@ -38,8 +46,14 @@ export const PQC: React.FC<PQCPageProps> = ({
     setSelectedRiskFilter(risk);
   };
 
+  const handleQuickExport = (format: string, title: string) => {
+    if (onShowToast) {
+      onShowToast(`Report export (${format}) for "${title}" will be available in a later release.`);
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
       {/* 1. Page Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
         <div>
@@ -47,7 +61,7 @@ export const PQC: React.FC<PQCPageProps> = ({
             <h1 className="title-level-1">PQC Security Overview</h1>
             <MockDataBadge />
           </div>
-          <p className="subtitle-muted" style={{ fontSize: '14.5px', marginTop: '4px' }}>
+          <p className="subtitle-muted" style={{ fontSize: '14px', marginTop: '4px' }}>
             Quantum readiness and cryptographic inventory for your project
           </p>
         </div>
@@ -66,8 +80,8 @@ export const PQC: React.FC<PQCPageProps> = ({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '18px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+          gap: '16px',
         }}
       >
         {/* High Risk Card */}
@@ -107,12 +121,12 @@ export const PQC: React.FC<PQCPageProps> = ({
         <div
           className="glass-panel"
           style={{
-            padding: '20px 24px',
+            padding: '20px 22px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
             minHeight: '140px',
-            background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(244, 246, 249, 0.8) 100%)',
+            background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.88) 0%, rgba(244, 246, 249, 0.8) 100%)',
           }}
         >
           <div>
@@ -165,7 +179,7 @@ export const PQC: React.FC<PQCPageProps> = ({
               style={{
                 height: '8px',
                 width: '100%',
-                backgroundColor: 'rgba(239, 68, 68, 0.25)',
+                backgroundColor: 'rgba(239, 68, 68, 0.22)',
                 borderRadius: '4px',
                 overflow: 'hidden',
                 display: 'flex',
@@ -182,7 +196,7 @@ export const PQC: React.FC<PQCPageProps> = ({
             </div>
             <div
               style={{
-                fontSize: '12px',
+                fontSize: '11.5px',
                 color: 'var(--text-muted)',
                 marginTop: '6px',
                 display: 'flex',
@@ -200,8 +214,8 @@ export const PQC: React.FC<PQCPageProps> = ({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
-          gap: '20px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+          gap: '18px',
         }}
       >
         {/* Risk Distribution Card */}
@@ -214,7 +228,7 @@ export const PQC: React.FC<PQCPageProps> = ({
         {/* Key Insights Card */}
         <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Lightbulb size={18} color="var(--color-accent-dark)" />
                 <h3 className="title-level-2">Key Insights</h3>
@@ -222,7 +236,7 @@ export const PQC: React.FC<PQCPageProps> = ({
               <MockDataBadge size="sm" />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
               {mockKeyInsights.map((insight) => (
                 <div
                   key={insight.id}
@@ -272,7 +286,7 @@ export const PQC: React.FC<PQCPageProps> = ({
             style={{
               fontSize: '11.5px',
               color: 'var(--text-muted)',
-              marginTop: '14px',
+              marginTop: '12px',
               paddingTop: '10px',
               borderTop: '1px solid var(--border-glass)',
             }}
@@ -287,7 +301,7 @@ export const PQC: React.FC<PQCPageProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <h2 className="title-level-2" style={{ fontSize: '19px' }}>
+              <h2 className="title-level-2" style={{ fontSize: '18px' }}>
                 Cryptographic Inventory & CBOM
               </h2>
               <MockDataBadge size="sm" />
@@ -354,8 +368,141 @@ export const PQC: React.FC<PQCPageProps> = ({
         )}
       </div>
 
-      {/* 5. Migration Candidates Section */}
-      <MigrationCandidates candidates={mockMigrationCandidates} />
+      {/* 5. Bottom Section: Migration Candidates & Reports */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+          gap: '18px',
+          alignItems: 'start',
+        }}
+      >
+        {/* Migration Candidates */}
+        <div style={{ flex: 1 }}>
+          <MigrationCandidates candidates={mockMigrationCandidates} />
+        </div>
+
+        {/* Quick Reports Section */}
+        <div
+          className="glass-panel"
+          style={{
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '16px',
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileSpreadsheet size={18} color="var(--color-primary)" />
+                <h3 className="title-level-2">Compliance Reports</h3>
+              </div>
+              <MockDataBadge size="sm" />
+            </div>
+            <p className="subtitle-muted" style={{ marginBottom: '16px' }}>
+              Export quantum risk assessments, CBOM documentation, and inventory audits
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {mockReportOptions.map((opt) => (
+                <div
+                  key={opt.id}
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: '10px',
+                    background: 'rgba(255, 255, 255, 0.65)',
+                    border: '1px solid var(--border-glass)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div
+                      style={{
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '8px',
+                        background:
+                          opt.format === 'PDF'
+                            ? 'rgba(36, 52, 71, 0.08)'
+                            : opt.format === 'JSON'
+                            ? 'var(--color-secondary-light)'
+                            : 'var(--color-accent-light)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {opt.format === 'PDF' ? (
+                        <FileText size={17} color="var(--color-primary)" />
+                      ) : opt.format === 'JSON' ? (
+                        <Code size={17} color="var(--color-secondary-dark)" />
+                      ) : (
+                        <FileSpreadsheet size={17} color="var(--color-accent-dark)" />
+                      )}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-primary)' }}>
+                        {opt.title}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        Format: {opt.format} • Approx: {opt.estimatedSize}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleQuickExport(opt.format, opt.title)}
+                    className="btn-secondary"
+                    style={{ padding: '6px 12px', fontSize: '12px', flexShrink: 0 }}
+                  >
+                    <Download size={13} />
+                    Export {opt.format}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div
+            style={{
+              paddingTop: '12px',
+              borderTop: '1px solid var(--border-glass)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '12px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}>
+              <Clock size={12} />
+              <span>Compilation ready on request</span>
+            </div>
+
+            <button
+              onClick={onNavigateToReports}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--color-secondary-dark)',
+                fontWeight: 600,
+                fontSize: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              Full Reports Page <ArrowRight size={12} />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
