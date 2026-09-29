@@ -18,7 +18,7 @@ against any teammate's branch.
 | `security/` | Secrets, committed artifacts, `.gitignore`, air-gap (no external calls), dependency audit, Tauri hardening |
 | `frontend/` | Desktop UI build/lint smoke tests and the manual desktop smoke checklist |
 | `fixtures/` | Intentionally vulnerable demo repo (with answer key) and malicious ZIP generator |
-| `reports/` | Day 1 QA report and raw per-area results |
+| `reports/` | Latest retest report, the QA + security fix list, and raw per-area results |
 
 The Day 1 acceptance checklist is [DAY1_ACCEPTANCE_CHECKLIST.md](DAY1_ACCEPTANCE_CHECKLIST.md).
 

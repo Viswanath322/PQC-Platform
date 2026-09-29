@@ -3,8 +3,6 @@
 PQC Security Assessment Platform (desktop) · Silicofeller Quantum
 Pushpam, QA / security · 30 Sep 2026 · branch `qa/pushpam`
 
-Yesterday's report: [DAY1_QA_REPORT.md](DAY1_QA_REPORT.md)
-
 ## Where we are
 
 Big improvement since yesterday. The Day 1 flow now works end to end on MySQL: Aakash's backend on Vamsi's database creates a project with a UUID, uploads a ZIP, creates a scan, stores it as `QUEUED`, pushes it onto the Redis queue and cancels it (a second cancel correctly gets a 409). Yesterday's Critical (INT-01) is fixed.
