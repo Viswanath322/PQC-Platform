@@ -3,10 +3,12 @@ PQC Security Assessment Platform - Database Verification Script (Day 1)
 Author: Vamsi (Database Engineer)
 
 Validates Unified UUID Identifier Standard:
-  - organizations.id = VARCHAR(36) UUID / dual seed support
+  - organizations.id = VARCHAR(36) UUID ('org-default-001')
   - projects.id = VARCHAR(36) UUID
   - scans.id = CHAR(36) UUID
   - scans.project_id = VARCHAR(36) UUID
+  - findings: includes explanation, is_development
+  - Leaves NO leftover rows in live database after execution
 """
 
 import sys
@@ -19,7 +21,7 @@ try:
     from sqlalchemy.orm import sessionmaker
 except ImportError:
     print("[ERROR] SQLAlchemy is not installed.")
-    print("Please install requirements: pip install sqlalchemy pymysql")
+    print("Please install requirements: pip install sqlalchemy pymysql psycopg2-binary")
     sys.exit(1)
 
 # Allow importing local models
@@ -28,22 +30,37 @@ from database.models import Base, Organization, User, Project, Scan, ScanFile, F
 
 
 def get_engine():
-    default_mysql_url = os.environ.get(
-        "DATABASE_URL",
-        "mysql+pymysql://pqc:change_me_locally@127.0.0.1:3306/pqc_security"
-    )
+    env_url = os.environ.get("DATABASE_URL")
+    candidate_urls = []
+    if env_url:
+        candidate_urls.append(env_url)
 
-    try:
-        mysql_engine = create_engine(default_mysql_url, echo=False, pool_pre_ping=True)
-        with mysql_engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        print(f"[OK] Successfully connected to live MySQL instance at: {default_mysql_url}")
-        return mysql_engine, "MySQL"
-    except Exception as e:
-        print(f"[WARN] Live MySQL connection failed ({e}).")
-        print("[INFO] Falling back to SQLite in-memory database to verify Schema/Model logic...")
-        sqlite_engine = create_engine("sqlite:///:memory:", echo=False)
-        return sqlite_engine, "SQLite (Model Validation)"
+    # Check candidates: environment URL, MySQL, then PostgreSQL
+    candidate_urls.extend([
+        "mysql+pymysql://pqc:change_me_locally@127.0.0.1:3306/pqc_security",
+        "postgresql+psycopg2://postgres@localhost:5432/pqc_security",
+    ])
+
+    for url in candidate_urls:
+        try:
+            db_engine = create_engine(url, echo=False, pool_pre_ping=True)
+            with db_engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            dialect = db_engine.dialect.name.lower()
+            if dialect == "mysql":
+                print(f"[OK] Successfully connected to live MySQL instance at: {url}")
+            elif dialect == "postgresql":
+                print(f"[OK] Successfully connected to live POSTGRESQL instance at: {url}")
+            else:
+                print(f"[OK] Successfully connected to live {dialect.upper()} instance at: {url}")
+            return db_engine, db_engine.dialect.name.upper()
+        except Exception:
+            continue
+
+    print("[WARN] Live database connection failed.")
+    print("[INFO] Falling back to SQLite in-memory database to verify Schema/Model logic...")
+    sqlite_engine = create_engine("sqlite:///:memory:", echo=False)
+    return sqlite_engine, "SQLite (Model Validation)"
 
 
 def run_day1_verification():
@@ -63,33 +80,38 @@ def run_day1_verification():
     print("   --> [PASS] All 6 tables verified.")
 
     session = SessionLocal()
+    created_user_id = None
+    created_project_id = None
+    created_scan_id = None
+    created_finding_id = None
+    created_test_org = False
+
     try:
-        # 2. Insert Seed Organizations (both 'org-default-001' and '1')
-        print("\n[Step 2] Inserting Seed Organizations...")
-        test_org = Organization(
-            id="org-default-001",
-            name="Default Organization"
-        )
-        test_org_numeric = Organization(
-            id="1",
-            name="Default Organization (Legacy Compatibility)"
-        )
-        session.add(test_org)
-        session.add(test_org_numeric)
-        session.commit()
-        print(f"   --> [PASS] Seed Organizations verified: 'org-default-001' and '1'")
+        # 2. Ensure Seed Organization exists (idempotent)
+        print("\n[Step 2] Ensuring Seed Organization exists...")
+        test_org = session.get(Organization, "org-default-001")
+        if not test_org:
+            test_org = Organization(
+                id="org-default-001",
+                name="Default Organization"
+            )
+            session.add(test_org)
+            session.commit()
+            created_test_org = True
+        print(f"   --> [PASS] Seed Organization verified: 'org-default-001'")
 
         # 3. Insert User
         print("\n[Step 3] Inserting Test User...")
         test_user = User(
             id=str(uuid.uuid4()),
             organization_id=test_org.id,
-            email=f"vamsi.test.{uuid.uuid4().hex[:6]}@pqc.local",
+            email=f"vamsi.test.{uuid.uuid4().hex[:6]}@pqc.example",
             password_hash="$2b$12$dummyhashforverification1234567890",
             role="admin"
         )
         session.add(test_user)
         session.commit()
+        created_user_id = test_user.id
         print(f"   --> [PASS] Created User: id={test_user.id} (UUID), organization_id={test_user.organization_id}")
 
         # 4. Insert Project (id = UUID string, organization_id = 'org-default-001')
@@ -103,6 +125,7 @@ def run_day1_verification():
         )
         session.add(test_project)
         session.commit()
+        created_project_id = test_project.id
         assert len(test_project.id) == 36, f"Expected project.id UUID length 36, got {len(test_project.id)}"
         print(f"   --> [PASS] Created Project: id={test_project.id} (UUID), organization_id={test_project.organization_id}")
 
@@ -117,6 +140,7 @@ def run_day1_verification():
         )
         session.add(test_scan)
         session.commit()
+        created_scan_id = test_scan.id
         assert len(test_scan.id) == 36, f"Expected scans.id CHAR(36), got len={len(test_scan.id)}"
         print(f"   --> [PASS] Scan persisted: id={test_scan.id} (UUID), project_id={test_scan.project_id} (UUID), status='{test_scan.status}'")
 
@@ -131,7 +155,7 @@ def run_day1_verification():
         print(f"              Project ID:      {retrieved_scan.project_id} (UUID)")
         print(f"              Project Name:    {retrieved_scan.project.name}")
 
-        # 7. Add a finding to verify findings table relationship
+        # 7. Add a finding to verify findings table relationship (including explanation and is_development)
         print("\n[Step 7] Adding a mock Finding linked to Scan...")
         mock_finding = Finding(
             id=str(uuid.uuid4()),
@@ -143,11 +167,14 @@ def run_day1_verification():
             file_path="src/crypto/keys.py",
             line_number=45,
             evidence="key = RSA.generate(1024)",
-            confidence="high",
-            recommendation="Migrate to Post-Quantum Cryptography algorithm (ML-KEM/Kyber-768)"
+            explanation="RSA with 1024-bit modulus is vulnerable to Shor's algorithm.",
+            confidence=0.95,
+            recommendation="Migrate to Post-Quantum Cryptography algorithm (ML-KEM/Kyber-768)",
+            is_development=True
         )
         session.add(mock_finding)
         session.commit()
+        created_finding_id = mock_finding.id
         print(f"   --> [PASS] Finding persisted: id={mock_finding.id}, severity='{mock_finding.severity}'")
 
         # 8. Query count
@@ -159,11 +186,12 @@ def run_day1_verification():
         print(" [SUCCESS] UNIFIED UUID IDENTIFIER STANDARD FULLY VALIDATED!")
         print("=" * 70)
         print(" Validated:")
-        print("  * organizations.id = VARCHAR(36) (seeds: 'org-default-001' and '1')")
+        print("  * organizations.id = VARCHAR(36) (seed: 'org-default-001')")
         print("  * projects.id = VARCHAR(36) UUID")
         print("  * scans.id = CHAR(36) UUID")
         print("  * scans.project_id = VARCHAR(36) UUID")
         print("  * Scan status QUEUED persisted and retrieved")
+        print("  * Findings: explanation and is_development schema verified")
         print("=" * 70)
 
     except Exception as e:
@@ -171,7 +199,23 @@ def run_day1_verification():
         print(f"\n[FAIL] Verification error: {e}")
         raise
     finally:
-        session.close()
+        # Clean up test rows in reverse dependency order so verify_db leaves NO leftover rows
+        try:
+            if created_finding_id:
+                session.query(Finding).filter_by(id=created_finding_id).delete()
+            if created_scan_id:
+                session.query(Scan).filter_by(id=created_scan_id).delete()
+            if created_project_id:
+                session.query(Project).filter_by(id=created_project_id).delete()
+            if created_user_id:
+                session.query(User).filter_by(id=created_user_id).delete()
+            if created_test_org:
+                session.query(Organization).filter_by(id="org-default-001").delete()
+            session.commit()
+        except Exception:
+            session.rollback()
+        finally:
+            session.close()
 
 
 if __name__ == "__main__":

@@ -154,8 +154,10 @@ CREATE TABLE `findings` (
     `file_path` VARCHAR(1024) NOT NULL,
     `line_number` INT NULL,
     `evidence` TEXT NULL,
-    `confidence` VARCHAR(50) NULL,
+    `explanation` TEXT NULL,
+    `confidence` FLOAT NULL,
     `recommendation` TEXT NULL,
+    `is_development` BOOLEAN NOT NULL DEFAULT FALSE,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     KEY `idx_findings_scan_id` (`scan_id`),
@@ -169,14 +171,13 @@ CREATE TABLE `findings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
--- Default Seed: Organizations (supporting both 'org-default-001' and '1')
--- Guarantees foreign key resolution for both UUID and legacy/integer references
+-- Default Seed: Organization (Single unified UUID-compatible standard)
 -- -----------------------------------------------------------------------------
 INSERT INTO `organizations` (`id`, `name`, `created_at`, `updated_at`)
 VALUES 
-    ('org-default-001', 'Default Organization', NOW(), NOW()),
-    ('1', 'Default Organization', NOW(), NOW())
+    ('org-default-001', 'Default Organization', NOW(), NOW())
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
+

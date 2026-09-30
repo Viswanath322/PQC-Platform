@@ -96,7 +96,27 @@ The default organization seeds both `'org-default-001'` and `'1'`, ensuring full
 
 ## 3. How to Run & Verify
 
-### Step 1: Start MySQL with Docker Compose
+### Option A: Local PostgreSQL & pgAdmin (Recommended for Lab / Desktop Setup)
+* **Status:** Fully supported. Uses the local PostgreSQL service (`localhost:5432`).
+* **Database Name:** `pqc_security`
+* **Schema Script:** [`database/schema_postgres.sql`](file:///d:/Projects/PQC/PQC-Platform/database/schema_postgres.sql)
+* **Seed Script:** [`database/seed_postgres.sql`](file:///d:/Projects/PQC/PQC-Platform/database/seed_postgres.sql)
+
+To initialize and verify with Python:
+```bash
+python database/verify_db.py
+```
+
+To view or manage in **pgAdmin**:
+1. Open **pgAdmin**.
+2. Connect to your local PostgreSQL server (`localhost:5432`).
+3. Expand **Databases** -> **pqc_security** -> **Schemas** -> **public** -> **Tables**.
+4. You will see all 6 core tables: `organizations`, `users`, `projects`, `scans`, `scan_files`, `findings`.
+
+---
+
+### Option B: Start MySQL with Docker Compose
+If Docker Desktop is installed:
 ```bash
 docker compose up -d mysql
 ```
@@ -105,7 +125,11 @@ docker compose up -d mysql
 *Default Password:* `change_me_locally`  
 *Database:* `pqc_security`
 
+---
+
 ### Step 2: Run the Verification Script
 ```bash
 python database/verify_db.py
 ```
+Automatically detects PostgreSQL first, then MySQL, or falls back to SQLite for schema validation.
+

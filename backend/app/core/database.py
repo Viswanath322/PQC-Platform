@@ -4,13 +4,16 @@ Prepared by: Vamsi (Database Engineer) for Amrutha (Backend Foundation)
 """
 
 import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# Configured for MySQL 8 instance started via docker-compose.yml
+load_dotenv()
+
+# Defaults to local PostgreSQL, with fallback to environment configuration
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "mysql+pymysql://pqc:change_me_locally@localhost:3306/pqc_security"
+    "postgresql+psycopg2://postgres@localhost:5432/pqc_security"
 )
 
 engine = create_engine(

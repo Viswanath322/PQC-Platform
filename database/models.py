@@ -18,6 +18,8 @@ from sqlalchemy import (
     Integer,
     ForeignKey,
     Enum,
+    Boolean,
+    Float,
 )
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -37,9 +39,9 @@ class Organization(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # Relationships
-    users = relationship("User", back_populates="organization", cascade="all, delete-orphan")
-    projects = relationship("Project", back_populates="organization", cascade="all, delete-orphan")
+    # Relationships (aligned with SQL ON DELETE SET NULL)
+    users = relationship("User", back_populates="organization", passive_deletes=True)
+    projects = relationship("Project", back_populates="organization", passive_deletes=True)
 
     def __repr__(self) -> str:
         return f"<Organization id={self.id} name='{self.name}'>"
@@ -154,8 +156,10 @@ class Finding(Base):
     file_path = Column(String(1024), nullable=False)
     line_number = Column(Integer, nullable=True)
     evidence = Column(Text, nullable=True)
-    confidence = Column(String(50), nullable=True)
+    explanation = Column(Text, nullable=True)
+    confidence = Column(Float, nullable=True)
     recommendation = Column(Text, nullable=True)
+    is_development = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
