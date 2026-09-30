@@ -35,6 +35,8 @@ These endpoints use the `users` table and expect Vamsi's shared schema to provid
 
 The API also exposes project creation/list/detail, ZIP upload, scan creation/list/status/cancellation, and `GET /api/v1/redis/ping`. Uploads use multipart form data with the field name `file`; ZIP files are saved under `UPLOAD_DIR` (default `backend/storage/uploads`) and are not stored in MySQL. Scan creation records the saved ZIP path and starts in `QUEUED`. Redis enqueue is best-effort, so a scan record can be created while Redis is unavailable. Current request and response schemas are available in Swagger at `http://127.0.0.1:8000/docs`.
 
+Project, upload, and scan endpoints require `Authorization: Bearer <access_token>`. Access is scoped to the authenticated user's organization. Newly registered accounts are assigned to the seeded `org-default-001`; registration returns `503` if that organization is not present. Uploads are stored in an organization-specific directory, and a scan can only reference an upload from the same organization. Scan responses omit the server-side `repository_path`; ingestion reads it from the `scans` row. `POST /api/v1/scans` reports Redis enqueue success in `X-Queue-Status` (`enqueued` or `deferred`).
+
 The API uses the shared SQLAlchemy models under `database.models` through `app.models`; it does not declare a second `Base` or duplicate project/scan tables.
 
 ## Local security notes
