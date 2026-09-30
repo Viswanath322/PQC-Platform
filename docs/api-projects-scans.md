@@ -1,35 +1,68 @@
-# Projects, Upload, and Scan API
+# Projects, Upload and Scan APIs (login required, organization scoped)
 
-Base URL: `http://127.0.0.1:8000/api/v1`  
-Swagger: `http://127.0.0.1:8000/docs`
+Base URL: `http://127.0.0.1:8000/api/v1` | Swagger: `/docs`
+All ids are UUID strings. Example values below are illustrative.
 
-All project and scan IDs are UUID strings. The seeded organization ID is the opaque string `org-default-001`.
+## Authentication
+Every route below needs `Authorization: Bearer <access_token>`.
 
-## Authentication and organization access
+1. `POST /auth/register` `{"email": "...", "password": "<12+ chars>"}` puts the new user in organization `org-default-001`.
+2. `POST /auth/login` returns `{"access_token": "...", "token_type": "bearer"}`.
+3. Send the token on every request. In Swagger, click **Authorize** and paste the token.
 
-Register with `POST /auth/register`, then log in with `POST /auth/login`. Send the returned token as `Authorization: Bearer <access_token>` on every project, upload, and scan request. Missing, invalid, or expired tokens return `401`. An authenticated account without an organization returns `403` for organization-scoped operations.
+| Situation | Response |
+|---|---|
+| No token, bad token, expired token, unknown user | `401` |
+| User has no organization | `403` |
+| Object belongs to another organization | `404` (same as "does not exist") |
 
-New registrations are assigned to `org-default-001`; the organization must exist in the database seed. Project creation assigns the authenticated user's organization. Project and scan list/detail operations only return records belonging to that organization. Upload files are stored beneath an organization-specific directory and can only be used to create scans within that organization.
+## Organization scoping
+- A project gets the organization of the user who creates it.
+- Users only see projects, scans and uploads of their own organization.
+- Uploads are stored per organization on disk, so an `upload_id` from another organization returns `404`.
+- Users in the same organization share data.
 
 ## Projects
+- `POST /projects` `{"name": "Demo Banking Application", "description": "test"}` returns `201`. `name` is trimmed, 1-255 chars; `description` max 10,000.
+- `GET /projects` returns your organization's projects, newest first.
+- `GET /projects/{project_id}` returns `200`, `422` if not a UUID, or `404`.
 
-- `POST /projects` — JSON `{"name": "Demo", "description": "optional"}`; creates a project in the caller's organization.
-- `GET /projects` — lists projects in the caller's organization.
-- `GET /projects/{project_id}` — returns an organization-scoped project; inaccessible and missing IDs both return `404`.
-
-## Uploads
-
-- `POST /uploads` — multipart form data with field `file`; accepts valid ZIP files up to 200 MB.
-- Response includes `upload_id`, a sanitized basename-only `filename`, and `size_bytes`.
-- Upload files are stored on local disk, not in MySQL. The upload ID is only valid within the organization that uploaded it.
+## Upload
+`POST /uploads` is `multipart/form-data`, field `file`, a `.zip` up to 200 MB. Returns `201`:
+```json
+{"upload_id": "d9752a19-855b-445b-a6b3-5c5e82545e14", "filename": "test-repo.zip", "size_bytes": 130}
+```
+`filename` is sanitized (basename only, harmless characters, max 100 chars). Errors: `400` not a valid `.zip`, `413` too large.
 
 ## Scans
+`POST /scans` `{"project_id": "<uuid>", "upload_id": "<uuid>"}` returns `201`:
+```json
+{"id": "01f62f10-e8c6-4f3e-88de-65af165b33a7", "project_id": "<uuid>", "status": "QUEUED",
+ "created_at": "2026-09-30T09:50:10.837998", "started_at": null, "completed_at": null}
+```
+- The server-side ZIP path is not returned. It is saved in `scans.repository_path` in MySQL for ingestion.
+- Response header `X-Queue-Status`: `enqueued` (pushed to Redis list `pqc:scan_queue`) or `deferred` (Redis unreachable; scan is still saved as `QUEUED`).
+- Errors: `422` ids that are not UUIDs, `404` project or upload not found (or in another organization).
 
-- `POST /scans` — JSON `{"project_id": "<uuid>", "upload_id": "<uuid>"}`; project and upload must belong to the caller's organization.
-- The response omits `repository_path`. That server-side path remains stored in `scans.repository_path` for ingestion.
-- Response header `X-Queue-Status` is `enqueued` when Redis accepted the scan ID or `deferred` when Redis is unavailable. The scan row remains saved as `QUEUED` either way.
-- `GET /scans` — lists scans in the caller's organization; optional filter `?project_id=<uuid>`.
-- `GET /scans/{scan_id}` — returns a scan in the caller's organization.
-- `POST /scans/{scan_id}/cancel` — cancels an active scan and best-effort removes it from the Redis queue.
+Other routes:
+- `GET /scans` (optional `?project_id=<uuid>`) and `GET /scans/{scan_id}`.
+- `POST /scans/{scan_id}/cancel` sets `CANCELLED`, fills `completed_at`, and removes the scan from the Redis queue. `409` if already `COMPLETED`, `FAILED` or `CANCELLED`.
 
-Other organizations' project and scan IDs return `404`, avoiding disclosure of their existence. The Redis diagnostic endpoint is `GET /redis/ping`.
+## Redis test
+`GET /redis/ping` returns `{"redis": "ok", "queue_length": 0}`, or `503` if Redis is unreachable or the password is wrong.
+
+## Local run
+```
+cd backend
+copy .env.example .env          # then set DATABASE_URL and a random JWT_SECRET_KEY (32+ chars)
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --reload
+```
+`REDIS_URL` with the compose password: `redis://:change_me_locally@127.0.0.1:6379/0` (Memurai without a password: `redis://127.0.0.1:6379/0`).
+
+## Tests
+```
+python -m pip install pytest httpx
+python -m pytest tests -v
+```
+Uses a throwaway SQLite DB and random JWT secret. Redis tests are skipped when Redis is not running.
