@@ -25,7 +25,7 @@ export function AppShell({
       <Sidebar />
 
       {/* Container 2: Separate Workspace Container Beside It */}
-      <div className="flex flex-1 min-w-0 h-full flex-col rounded-2xl border border-white/10 bg-slate-950/60 shadow-[0_12px_40px_rgba(0,0,0,0.65)] backdrop-blur-2xl backdrop-saturate-180 overflow-hidden">
+      <div className="flex flex-1 min-w-0 h-full flex-col rounded-2xl border border-white/80 bg-white/55 shadow-[0_8px_32px_rgba(41,56,77,0.06)] backdrop-blur-xl overflow-hidden">
         <Topbar
           page={page}
           project={project}
