@@ -8,7 +8,7 @@ from ingestion import ingest_repository
 summary = ingest_repository("uploads/repository.zip", "storage/scans/<scan-id>/repository")
 ```
 
-The destination must be empty or not yet exist. Archive members with absolute paths, parent traversal, drive-qualified paths, or symbolic links are rejected. A failed extraction removes the partial destination. Excluded directories are `.git`, `.hg`, `.svn`, `node_modules`, common build/cache/coverage directories, virtual environments, and `vendor`; `.DS_Store` and `Thumbs.db` are excluded files. Files under excluded directories are not included in the summary.
+The destination must be empty or not yet exist. Archive members with absolute paths, parent traversal, drive-qualified paths, duplicate/colliding paths, or symbolic links are rejected. A failed extraction removes the partial destination. ZIPs are limited by default to 512 MiB expanded content, a 200:1 compression ratio, 50,000 files, and 100,000 total entries. Limits can be overridden with `ZipLimits` for controlled deployments and tests. Excluded directories are `.git`, `.hg`, `.svn`, `node_modules`, common build/cache/coverage directories, standard virtual environments, and `vendor`; `.DS_Store` and `Thumbs.db` are excluded files. Generic folder names such as `out`, `env`, and `target` are retained. Files under excluded directories are not included in the summary.
 
 The initial exclusions come from the Day 1 guide and common generated/dependency directories. The guide points to additional exclusions in the product PRD, but that PRD was not present in this repository when this package was implemented; reconcile `ingestion/file_filter.py` with the PRD before integration sign-off.
 

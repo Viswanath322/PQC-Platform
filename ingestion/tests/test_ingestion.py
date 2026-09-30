@@ -1,13 +1,16 @@
 import json
 import tempfile
 import unittest
+import warnings
 import zipfile
 from pathlib import Path
 
 from ingestion.extractor import ExtractionError
+from ingestion.classifier import classify_file
+from ingestion.file_filter import is_excluded
 from ingestion.scan_adapter import ingest_scan_upload
 from ingestion.summary import ingest_repository
-from ingestion.validator import InvalidArchiveError
+from ingestion.validator import InvalidArchiveError, ZipLimits
 
 
 class IngestionTests(unittest.TestCase):
@@ -58,6 +61,67 @@ class IngestionTests(unittest.TestCase):
             z.writestr("main.py", "print('ok')")
         with self.assertRaises(ValueError):
             ingest_scan_upload(self.archive, "../../outside", self.root / "storage")
+
+    def test_expansion_size_limit_rejects_zip_bomb_before_extraction(self):
+        with zipfile.ZipFile(self.archive, "w", compression=zipfile.ZIP_DEFLATED) as z:
+            z.writestr("large.txt", b"A" * 100_000)
+        limits = ZipLimits(max_uncompressed_bytes=50_000, max_compression_ratio=10_000)
+        with self.assertRaisesRegex(InvalidArchiveError, "expands"):
+            ingest_repository(self.archive, self.destination, limits)
+        self.assertFalse(self.destination.exists())
+
+    def test_compression_ratio_limit_rejects_highly_compressible_member(self):
+        with zipfile.ZipFile(self.archive, "w", compression=zipfile.ZIP_DEFLATED) as z:
+            z.writestr("large.txt", b"A" * 100_000)
+        limits = ZipLimits(max_uncompressed_bytes=200_000, max_compression_ratio=10)
+        with self.assertRaisesRegex(InvalidArchiveError, "compression ratio"):
+            ingest_repository(self.archive, self.destination, limits)
+
+    def test_file_count_limit_rejects_too_many_files(self):
+        with zipfile.ZipFile(self.archive, "w") as z:
+            z.writestr("one.txt", "1")
+            z.writestr("two.txt", "2")
+        limits = ZipLimits(max_files=1)
+        with self.assertRaisesRegex(InvalidArchiveError, "too many files"):
+            ingest_repository(self.archive, self.destination, limits)
+
+    def test_duplicate_member_paths_are_rejected_and_output_cleaned(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            with zipfile.ZipFile(self.archive, "w") as z:
+                z.writestr("same.txt", "first")
+                z.writestr("same.txt", "second")
+        with self.assertRaisesRegex(ExtractionError, "Duplicate ZIP member"):
+            ingest_repository(self.archive, self.destination)
+        self.assertFalse(self.destination.exists())
+
+    def test_case_insensitive_duplicate_paths_are_rejected(self):
+        with zipfile.ZipFile(self.archive, "w") as z:
+            z.writestr("Repo/Readme.txt", "first")
+            z.writestr("repo/README.txt", "second")
+        with self.assertRaisesRegex(ExtractionError, "Duplicate ZIP member"):
+            ingest_repository(self.archive, self.destination)
+
+    def test_unknown_text_config_and_legitimate_directory_names(self):
+        with zipfile.ZipFile(self.archive, "w") as z:
+            z.writestr("out/notes.unknown", "plain notes")
+            z.writestr("env/settings.conf", "setting=value")
+            z.writestr("target/src/main.rs", "fn main() {}")
+        result = ingest_repository(self.archive, self.destination)
+        self.assertEqual(result["files_included"], 3)
+        classes = {item["path"]: item["file_type"] for item in result["files"]}
+        self.assertEqual(classes["out/notes.unknown"], "docs")
+        self.assertEqual(classes["env/settings.conf"], "config")
+        self.assertEqual(classes["target/src/main.rs"], "source")
+        self.assertFalse(is_excluded("out/notes.txt"))
+        self.assertFalse(is_excluded("env/settings.conf"))
+        self.assertFalse(is_excluded("target/src/main.rs"))
+
+    def test_extensionless_configuration_and_unknown_binary_classification(self):
+        self.assertEqual(classify_file("Dockerfile"), "config")
+        self.assertEqual(classify_file("settings.unknown", b"API_URL=http://localhost\n"), "config")
+        self.assertEqual(classify_file("settings.unknown", b"{\"debug\": true}"), "config")
+        self.assertEqual(classify_file("payload.unknown", b"\x00\x01"), "binary")
 
 
 if __name__ == "__main__":

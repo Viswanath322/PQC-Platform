@@ -3,9 +3,9 @@
 from pathlib import Path
 
 EXCLUDED_DIRS = {
-    ".git", ".hg", ".svn", "node_modules", "build", "dist", "target",
-    "out", "coverage", "__pycache__", ".pytest_cache", ".mypy_cache",
-    ".ruff_cache", ".tox", ".venv", "venv", "env", "vendor",
+    ".git", ".hg", ".svn", "node_modules", "build", "dist",
+    "coverage", "__pycache__", ".pytest_cache", ".mypy_cache",
+    ".ruff_cache", ".tox", ".venv", "venv", "vendor",
 }
 EXCLUDED_FILES = {".ds_store", "thumbs.db"}
 
