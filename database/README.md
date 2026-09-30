@@ -83,16 +83,20 @@ erDiagram
 
 ## 2. Table Specifications & Identifier Standard
 
-### Identifier Standard
-All entities (`organizations`, `users`, `projects`, `scans`, `scan_files`, `findings`) use standard **UUID strings (`VARCHAR(36)` / `CHAR(36)`)** with automatic MySQL generation `DEFAULT (UUID())`. This guarantees:
+### Identifier Standard (Agreed Contract)
+All entities (`organizations`, `users`, `projects`, `scans`, `scan_files`, `findings`) strictly use **standard 36-character UUID strings (`VARCHAR(36)` / `CHAR(36)`)** with automatic generation `DEFAULT (UUID())`. Auto-incrementing integer IDs are deprecated across all routes and models.
+* **Project IDs:** Standard 36-char lowercase UUID string (`VARCHAR(36)`), e.g. `00000000-0000-0000-0001-000000000001`. Validated in FastAPI routes via `UUID_PATTERN`.
+* **Organization IDs:** Standard 36-char string (`VARCHAR(36)`). Standardized on the single default organization `'org-default-001'`. The legacy numeric compatibility row `'1'` has been dropped (resolving DB-11).
+* **Scan & Finding IDs:** Standard 36-char UUID string (`CHAR(36)`).
+* **Findings Schema Alignment:** Includes `explanation TEXT NULL` (for API queries), `confidence FLOAT NULL` (0.0 to 1.0, matching analysis engine contract), and `is_development BOOLEAN NOT NULL DEFAULT FALSE` (distinguishing synthetic fixtures).
+
+This guarantees:
 * Client-side offline generation for desktop shells.
 * Seamless multi-agent asynchronous scanning without sequence contention.
 * Zero ID collisions across air-gapped sync nodes.
 
-### Seed Compatibility
-The default organization seeds both `'org-default-001'` and `'1'`, ensuring full compatibility with both string-based and legacy numeric references.
-
 ---
+
 
 ## 3. How to Run & Verify
 
