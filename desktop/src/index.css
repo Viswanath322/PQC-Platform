@@ -104,11 +104,11 @@ body {
   overflow: hidden;
 
   background-image:
-    radial-gradient(900px 580px at 85% -5%, rgba(126, 34, 206, 0.28), transparent 70%),
-    radial-gradient(850px 520px at 15% 10%, rgba(13, 148, 136, 0.22), transparent 65%),
-    radial-gradient(800px 500px at 50% 105%, rgba(88, 28, 135, 0.25), transparent 70%),
-    radial-gradient(650px 450px at 90% 90%, rgba(14, 165, 233, 0.18), transparent 65%),
-    radial-gradient(550px 380px at 0% 85%, rgba(16, 185, 129, 0.15), transparent 65%);
+    radial-gradient(950px 620px at 85% -5%, rgba(147, 51, 234, 0.36), transparent 70%),
+    radial-gradient(900px 560px at 15% 10%, rgba(13, 148, 136, 0.30), transparent 65%),
+    radial-gradient(850px 520px at 50% 105%, rgba(126, 34, 206, 0.32), transparent 70%),
+    radial-gradient(700px 480px at 90% 90%, rgba(14, 165, 233, 0.24), transparent 65%),
+    radial-gradient(600px 420px at 0% 85%, rgba(16, 185, 129, 0.20), transparent 65%);
   background-attachment: fixed;
 }
 
@@ -195,25 +195,25 @@ body {
    APPLE DARK GLASS SYSTEM
    ═══════════════════════════════════════════════════════ */
 .glass {
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  background-color: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(28px) saturate(1.8);
-  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(28px) saturate(1.85);
+  -webkit-backdrop-filter: blur(28px) saturate(1.85);
   box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 12px 36px -12px rgba(0, 0, 0, 0.70);
+    0 1px 0 0 rgba(255, 255, 255, 0.22) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 16px 40px -12px rgba(0, 0, 0, 0.75);
 }
 
 .glass-strong {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background-color: rgba(11, 15, 25, 0.65);
-  backdrop-filter: blur(36px) saturate(1.8);
-  -webkit-backdrop-filter: blur(36px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  background-color: rgba(11, 15, 25, 0.75);
+  backdrop-filter: blur(36px) saturate(1.9);
+  -webkit-backdrop-filter: blur(36px) saturate(1.9);
   box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.16) inset,
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 20px 48px -12px rgba(0, 0, 0, 0.80);
+    0 1px 0 0 rgba(255, 255, 255, 0.28) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.10),
+    0 24px 56px -12px rgba(0, 0, 0, 0.85);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -221,27 +221,31 @@ body {
    ═══════════════════════════════════════════════════════ */
 .card {
   border-radius: var(--radius-xl);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background-color: rgba(15, 23, 42, 0.40);
-  backdrop-filter: blur(28px) saturate(1.8);
-  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background-color: rgba(15, 23, 42, 0.50);
+  backdrop-filter: blur(28px) saturate(1.85);
+  -webkit-backdrop-filter: blur(28px) saturate(1.85);
   box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.10) inset,
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 12px 32px -12px rgba(0, 0, 0, 0.70);
+    0 1px 0 0 rgba(255, 255, 255, 0.20) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 16px 36px -12px rgba(0, 0, 0, 0.75);
 }
 
 .card-hover {
-  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease, background-color 200ms ease;
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1), border-color 220ms cubic-bezier(0.16, 1, 0.3, 1), background-color 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card-hover:hover {
   transform: translateY(-2px);
-  border-color: rgba(168, 85, 247, 0.40);
-  background-color: rgba(22, 30, 49, 0.60);
+  border-color: rgba(255, 255, 255, 0.32);
+  background-color: rgba(30, 41, 59, 0.70);
+  backdrop-filter: blur(36px) saturate(2);
+  -webkit-backdrop-filter: blur(36px) saturate(2);
   box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.20) inset,
-    0 20px 48px -12px rgba(126, 34, 206, 0.30);
+    0 1px 1px 0 rgba(255, 255, 255, 0.35) inset,
+    0 0 0 1px rgba(168, 85, 247, 0.45),
+    0 24px 52px -12px rgba(0, 0, 0, 0.90),
+    0 0 28px -4px rgba(168, 85, 247, 0.35);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -253,8 +257,8 @@ body {
   align-items: center;
   gap: 8px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background-color: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background-color: rgba(255, 255, 255, 0.08);
   padding: 0 14px;
   font-size: 13px;
   font-weight: 500;
@@ -262,15 +266,15 @@ body {
   cursor: pointer;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.12) inset, 0 2px 6px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.20) inset, 0 2px 8px rgba(0, 0, 0, 0.40);
   transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn:hover {
-  background-color: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 1px 1px 0 rgba(255, 255, 255, 0.20) inset, 0 4px 14px rgba(0, 0, 0, 0.45);
-  transform: translateY(-0.5px);
+  background-color: rgba(255, 255, 255, 0.20);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 1px 1px 0 rgba(255, 255, 255, 0.40) inset, 0 6px 20px rgba(0, 0, 0, 0.60), 0 0 16px rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
   color: #ffffff;
 }
 
@@ -417,10 +421,43 @@ html.dark,
 .dark input,
 .dark select {
   background-color: rgba(15, 23, 42, 0.60) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
   color: #f8fafc !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark input:hover,
+.dark select:hover {
+  border-color: rgba(255, 255, 255, 0.30) !important;
+  background-color: rgba(255, 255, 255, 0.10) !important;
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.dark input:focus,
+.dark select:focus {
+  border-color: rgba(168, 85, 247, 0.80) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.25), 0 0 20px 0 rgba(168, 85, 247, 0.40) !important;
 }
 
 .dark input::placeholder {
   color: #64748b !important;
 }
+
+/* ═══════════════════════════════════════════════════════
+   APPLE PRO DARK GLASS INTERACTIVE TABLE ROW HOVER
+   ═══════════════════════════════════════════════════════ */
+.dark tbody tr {
+  transition: background-color 160ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.09) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.20), inset 0 -1px 0 0 rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(20px) saturate(1.85);
+  -webkit-backdrop-filter: blur(20px) saturate(1.85);
+}
+

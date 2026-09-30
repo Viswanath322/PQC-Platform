@@ -55,8 +55,8 @@ export function Sidebar() {
       <div className="flex flex-col gap-3">
         {/* Brand Header */}
         <div className="flex items-center gap-2.5 px-1 py-1 border-b border-white/10 pb-3">
-          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/5 border border-white/10 text-white shadow-xs">
-            <Shield className="h-4.5 w-4.5 text-teal-400" />
+          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/[0.08] border border-white/15 text-white backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_2px_8px_rgba(0,0,0,0.3)]">
+            <Shield className="h-4.5 w-4.5 text-teal-400 drop-shadow-[0_0_8px_rgba(45,212,191,0.5)]" />
           </div>
           <div className="hidden leading-tight lg:block min-w-0">
             <div className="flex items-center gap-1.5">
@@ -96,10 +96,10 @@ export function Sidebar() {
                   aria-label={label}
                   className={({ isActive }) =>
                     cn(
-                      "group flex h-8.5 items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] font-medium transition-all duration-150 lg:justify-start",
+                      "group flex h-9 items-center justify-center gap-2.5 rounded-xl px-2.5 text-[13px] font-medium transition-all duration-200 lg:justify-start backdrop-blur-md cursor-pointer border",
                       isActive
-                        ? "bg-white/10 text-white font-semibold shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)] ring-1 ring-white/15"
-                        : "text-slate-300 hover:text-white hover:bg-white/5"
+                        ? "border-white/20 bg-white/15 text-white font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.30),0_4px_16px_rgba(0,0,0,0.5)] ring-1 ring-purple-400/40 backdrop-blur-xl"
+                        : "border-transparent text-slate-300 hover:text-white hover:border-white/20 hover:bg-white/[0.12] hover:backdrop-blur-xl hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.22),0_4px_16px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
                     )
                   }
                 >
@@ -142,10 +142,10 @@ export function Sidebar() {
           title="Open and edit auditor profile"
           className={({ isActive }) =>
             cn(
-              "flex items-center justify-center gap-2.5 rounded-xl p-1.5 transition-all duration-150 lg:justify-start lg:p-2 group cursor-pointer",
+              "flex items-center justify-center gap-2.5 rounded-xl p-1.5 transition-all duration-200 lg:justify-start lg:p-2 group cursor-pointer border",
               isActive
-                ? "bg-white/10 text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)] ring-1 ring-white/15"
-                : "hover:bg-white/5 text-slate-300"
+                ? "border-white/25 bg-white/15 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_6px_20px_rgba(147,51,234,0.25)] ring-1 ring-purple-500/40 backdrop-blur-xl"
+                : "border-transparent hover:border-white/20 hover:bg-white/[0.12] hover:backdrop-blur-xl hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.22),0_6px_18px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
             )
           }
         >
