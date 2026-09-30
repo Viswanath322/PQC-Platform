@@ -1,0 +1,352 @@
+/* Local Air-Gapped Font Bundling */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/600.css";
+
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+/* ═══════════════════════════════════════════════════════
+   LIGHT THEME DESIGN TOKENS (default)
+   ═══════════════════════════════════════════════════════ */
+:root {
+  --background: 210 40% 98%;
+  --surface: 0 0% 100%;
+  --surface-2: 214 32% 95%;
+  --border: 214 25% 88%;
+  --foreground: 222 47% 11%;
+  --muted-foreground: 215 16% 47%;
+
+  --primary: 172 76% 30%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 270 70% 55%;
+
+  --critical: 347 77% 48%;
+  --high: 24 94% 46%;
+  --medium: 38 92% 42%;
+  --low: 201 90% 40%;
+  --success: 152 62% 33%;
+
+  --radius: 0.75rem;
+
+  /* Purple accent tokens */
+  --accent-purple: 271 81% 53%;
+  --accent-purple-light: 270 95% 96%;
+  --accent-purple-border: 270 80% 88%;
+
+  /* Font variables */
+  --font-sans: "Inter", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono Variable", ui-monospace, monospace;
+}
+
+/* ═══════════════════════════════════════════════════════
+   THEME (Tailwind v4)
+   ═══════════════════════════════════════════════════════ */
+@theme {
+  --font-sans: "Inter", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono Variable", ui-monospace, monospace;
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-surface: hsl(var(--surface));
+  --color-surface-2: hsl(var(--surface-2));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-ring: hsl(var(--ring));
+  --color-critical: hsl(var(--critical));
+  --color-high: hsl(var(--high));
+  --color-medium: hsl(var(--medium));
+  --color-low: hsl(var(--low));
+  --color-success: hsl(var(--success));
+
+  --radius-xl: var(--radius);
+
+  --backdrop-blur-xs: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BASE RESETS
+   ═══════════════════════════════════════════════════════ */
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+}
+
+/* ═══════════════════════════════════════════════════════
+   APPLE LIGHT AURORA BACKGROUND
+   Soft ambient gradient glow with light purple / lavender & teal
+   ═══════════════════════════════════════════════════════ */
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+
+  background-image:
+    radial-gradient(850px 580px at 88% -5%, hsl(268 85% 82% / 0.42), transparent 70%),
+    radial-gradient(750px 520px at 55% 10%, hsl(272 80% 86% / 0.28), transparent 68%),
+    radial-gradient(680px 460px at 6% -5%, hsl(172 72% 66% / 0.20), transparent 65%),
+    radial-gradient(660px 480px at 85% 100%, hsl(201 90% 75% / 0.18), transparent 65%),
+    radial-gradient(560px 380px at 0% 100%, hsl(24 90% 80% / 0.14), transparent 65%);
+  background-attachment: fixed;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FOCUS / SELECTION
+   ═══════════════════════════════════════════════════════ */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.4), 0 0 0 4px hsl(var(--primary) / 0.1);
+}
+
+::selection {
+  background: hsl(var(--primary) / 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY CLASSES & TYPOGRAPHY
+   ═══════════════════════════════════════════════════════ */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: hsl(var(--muted-foreground));
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: hsl(var(--foreground));
+}
+
+.section-sub {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+}
+
+.text-purple-accent {
+  color: #7e22ce;
+}
+
+.pill-purple {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.375rem;
+  background-color: rgba(243, 232, 255, 0.75);
+  border: 1px solid rgba(233, 213, 255, 0.85);
+  color: #7e22ce;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  box-shadow: 0 1px 2px rgba(126, 34, 206, 0.04);
+}
+
+.badge-purple {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  background-color: rgba(243, 232, 255, 0.75);
+  border: 1px solid rgba(233, 213, 255, 0.85);
+  color: #7e22ce;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(126, 34, 206, 0.04);
+}
+
+/* ═══════════════════════════════════════════════════════
+   APPLE LIGHT GLASS SYSTEM
+   ═══════════════════════════════════════════════════════ */
+.glass {
+  border: 1px solid hsl(0 0% 100% / 0.75);
+  background-color: hsl(0 0% 100% / 0.65);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.95) inset,
+    0 0 0 1px hsl(214 30% 80% / 0.25),
+    0 10px 30px -12px hsl(222 47% 20% / 0.12),
+    0 2px 6px -2px hsl(222 47% 20% / 0.04);
+}
+
+.glass-strong {
+  border: 1px solid hsl(0 0% 100% / 0.85);
+  background-color: hsl(0 0% 100% / 0.82);
+  backdrop-filter: blur(32px) saturate(1.6);
+  -webkit-backdrop-filter: blur(32px) saturate(1.6);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 1) inset,
+    0 0 0 1px hsl(214 30% 80% / 0.30),
+    0 16px 40px -16px hsl(222 47% 20% / 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════
+   CARD SYSTEM
+   ═══════════════════════════════════════════════════════ */
+.card {
+  border-radius: var(--radius-xl);
+  border: 1px solid hsl(0 0% 100% / 0.75);
+  background-color: hsl(0 0% 100% / 0.65);
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  box-shadow:
+    0 1px 0 0 hsl(0 0% 100% / 0.95) inset,
+    0 0 0 1px hsl(214 30% 80% / 0.20),
+    0 10px 30px -12px hsl(222 47% 20% / 0.10),
+    0 2px 6px -2px hsl(222 47% 20% / 0.04);
+}
+
+.card-hover {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1), border-color 220ms cubic-bezier(0.16, 1, 0.3, 1), background-color 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  border-color: rgba(168, 85, 247, 0.45);
+  background-color: hsl(0 0% 100% / 0.88);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  box-shadow:
+    0 1px 1px 0 hsl(0 0% 100% / 1) inset,
+    0 0 0 1px rgba(168, 85, 247, 0.25),
+    0 18px 40px -14px rgba(126, 34, 206, 0.20),
+    0 4px 12px -2px hsl(222 47% 20% / 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid hsl(0 0% 100% / 0.85);
+  background-color: hsl(0 0% 100% / 0.65);
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.95) inset, 0 1px 3px hsl(222 47% 20% / 0.06);
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn:hover {
+  background-color: hsl(0 0% 100% / 0.92);
+  border-color: hsl(0 0% 100% / 1);
+  box-shadow: 0 1px 1px 0 hsl(0 0% 100% / 1) inset, 0 6px 16px -2px rgba(41, 56, 77, 0.12);
+  transform: translateY(-0.5px);
+}
+
+.btn:active {
+  transform: translateY(0.5px) scale(0.99);
+}
+
+.btn-primary {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 8px;
+  background: linear-gradient(to bottom, hsl(var(--primary) / 0.90), hsl(var(--primary)));
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(var(--primary-foreground));
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.35) inset, 0 8px 20px -8px hsl(var(--primary) / 0.55);
+  transition: filter 150ms ease, transform 150ms ease;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-0.5px);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SKELETON
+   ═══════════════════════════════════════════════════════ */
+.skeleton {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 6px;
+  background-color: hsl(214 32% 88% / 0.70);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════
+   APPLE LIGHT GLASS INTERACTIVE HOVER SYSTEM
+   ═══════════════════════════════════════════════════════ */
+tbody tr {
+  transition: background-color 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+tbody tr:hover {
+  background-color: rgba(243, 232, 255, 0.45) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 0 rgba(233, 213, 255, 0.5) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+input, select {
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
