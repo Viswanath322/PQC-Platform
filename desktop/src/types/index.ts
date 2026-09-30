@@ -111,6 +111,7 @@ export interface Scan {
   low_count: number;
   pqc_readiness_score: number;
   progress_percent?: number;
+  is_mock?: boolean;
 }
 
 export interface Finding {

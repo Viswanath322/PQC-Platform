@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight, Cpu, GitBranch } from 'lucide-react';
 import type { MigrationCandidate } from '../../types/pqc';
+import { MockDataBadge } from './MockDataBadge';
 
 interface MigrationCandidatesProps {
   candidates: MigrationCandidate[];
@@ -21,13 +22,14 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
             <span className="rounded-full bg-purple-100/70 border border-purple-200/80 px-2.5 py-0.5 text-[11px] font-semibold text-purple-700 shadow-xs">
               NIST FIPS 203 / 204
             </span>
+            <MockDataBadge size="sm" label="Development / Mock Data" />
           </div>
-          <p className="section-sub mt-0.5">
-            High-priority quantum-vulnerable primitives and recommended post-quantum replacements
+          <p className="section-sub mt-0.5 text-muted-foreground">
+            Development examples — not generated from an actual scan. Illustrative quantum-vulnerable primitives and recommended post-quantum replacements.
           </p>
         </div>
         <div className="text-[12px] text-muted-foreground">
-          Showing <span className="tabular font-medium text-foreground">{candidates.length}</span> prioritized candidates
+          Showing <span className="tabular font-medium text-foreground">{candidates.length}</span> example candidates
         </div>
       </div>
 
@@ -41,11 +43,12 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
             {/* Header info */}
             <div>
               <div className="flex items-start justify-between gap-2 mb-2">
-                <span className="font-mono text-[11px] text-muted-foreground">{item.id}</span>
+                <span className="font-mono text-[11px] text-muted-foreground">{item.id} · Example</span>
                 <span className="rounded-full bg-critical/10 px-2 py-0.5 text-[10px] font-medium text-critical ring-1 ring-critical/25 uppercase">
                   {item.risk} Risk
                 </span>
               </div>
+
 
               {/* Current vs Target Algorithm */}
               <div className="rounded-lg bg-surface p-3 border border-border">
@@ -87,6 +90,7 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
               <button
                 onClick={() => onAssessCandidate?.(item)}
                 className="btn h-7 px-2.5 text-[12px]"
+                title="Migration Blueprint (Day 1 UI placeholder)"
               >
                 <span>Migration Blueprint</span>
                 <ArrowRight className="h-3 w-3" />

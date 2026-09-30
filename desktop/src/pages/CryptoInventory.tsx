@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Layers, Binary, Hash, Shield } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { MockDataBadge } from '@/components/pqc/MockDataBadge';
 import { CryptoInventoryTable } from '@/components/pqc/CryptoInventoryTable';
 import { CBOMTable } from '@/components/pqc/CBOMTable';
 import { mockCryptoInventory, mockCBOM } from '@/data/pqcMockData';
@@ -29,7 +30,9 @@ export const CryptoInventory: React.FC = () => {
     <>
       <PageHeader
         title="Cryptographic inventory & CBOM"
-        description="Cryptographic primitives, algorithms, key sizes, and library bindings discovered during assessment."
+        badge={<MockDataBadge label="DEVELOPMENT / MOCK DATA" />}
+        description="Development / Mock Data: Example cryptographic primitives, algorithms, key sizes, and library bindings for demonstration."
+
         actions={
           <div className="flex rounded-lg border border-border bg-surface p-1">
             <button

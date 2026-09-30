@@ -15,6 +15,7 @@ export const RepositoryUpload: React.FC<RepositoryUploadProps> = ({
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [isMockUpload, setIsMockUpload] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,6 +85,8 @@ export const RepositoryUpload: React.FC<RepositoryUploadProps> = ({
         setUploadProgress(progress);
       });
 
+      // Real upload succeeded — is_mock is no longer returned by the API
+      setIsMockUpload(false);
       setUploadStatus('success');
       setUploadProgress(100);
       onUploadSuccess({
@@ -219,9 +222,13 @@ export const RepositoryUpload: React.FC<RepositoryUploadProps> = ({
 
       {/* Status Messages */}
       {uploadStatus === 'success' && (
-        <div className="p-3 rounded-lg border border-success/30 bg-success/10 text-success text-[12px] flex items-center gap-2">
+        <div className="p-3 rounded-lg border border-primary/30 bg-primary/10 text-primary text-[12px] flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span>Archive verified and cached in local air-gapped memory sandbox.</span>
+          <span>
+            {isMockUpload
+              ? 'Archive staged for Day 1 UI preview. Backend ingestion service is offline.'
+              : 'Archive uploaded and verified successfully.'}
+          </span>
         </div>
       )}
 

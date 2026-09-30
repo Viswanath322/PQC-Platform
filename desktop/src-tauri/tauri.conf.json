@@ -12,15 +12,19 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "PQC Security Assessment Platform",
-        "width": 800,
-        "height": 600,
+        "width": 1280,
+        "height": 800,
+        "minWidth": 960,
+        "minHeight": 640,
         "resizable": true,
         "fullscreen": false
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000; media-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'",
+      "devCsp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 ws://localhost:5173 ws://127.0.0.1:5173; media-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'"
     }
   },
   "bundle": {

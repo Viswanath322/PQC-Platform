@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertOctagon, AlertTriangle, AlertCircle, Info, Plus, RefreshCw, ArrowRight } from "lucide-react";
+import { AlertOctagon, AlertTriangle, AlertCircle, Info, Plus, RefreshCw, ArrowRight, WifiOff } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Panel } from "@/components/dashboard/Panel";
 import { SegmentBar } from "@/components/dashboard/SegmentBar";
 import { ScoreRing } from "@/components/dashboard/ScoreRing";
+import { MockDataBadge } from "@/components/pqc/MockDataBadge";
 import { NewScanModal } from "@/components/scans/NewScanModal";
-import { api } from "@/services/api";
+import { api, ApiError } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 import type { Project, Scan, Finding } from "@/types";
 
 const activity = [
@@ -19,13 +21,16 @@ const activity = [
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const { handleUnauthorized } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [scans, setScans] = useState<Scan[]>([]);
   const [findings, setFindings] = useState<Finding[]>([]);
   const [isNewScanOpen, setIsNewScanOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<ApiError | Error | null>(null);
 
   const loadData = async () => {
+    setLoadError(null);
     try {
       const [projList, scanList, findingsList] = await Promise.all([
         api.getProjects(),
@@ -36,6 +41,12 @@ export function Dashboard() {
       setScans(scanList);
       setFindings(findingsList);
     } catch (err) {
+      // Surface real error — metrics will show zeroes, banner explains why
+      const apiErr = err instanceof ApiError ? err : new Error(String(err));
+      setLoadError(apiErr);
+      if (err instanceof ApiError && err.errorType === 'UNAUTHORIZED') {
+        handleUnauthorized();
+      }
       console.error("Failed to load dashboard telemetry:", err);
     }
   };
@@ -54,11 +65,11 @@ export function Dashboard() {
     setScans((prev) => [newScan, ...prev]);
   };
 
-  // Severity counts
-  const criticalCount = findings.filter((f) => f.severity === "CRITICAL").length || 5;
-  const highCount = findings.filter((f) => f.severity === "HIGH").length || 4;
-  const mediumCount = findings.filter((f) => f.severity === "MEDIUM").length || 3;
-  const lowCount = findings.filter((f) => f.severity === "LOW").length || 2;
+  // Severity counts — real data when backend available, zero when offline/errored
+  const criticalCount = findings.filter((f) => f.severity === "CRITICAL").length;
+  const highCount = findings.filter((f) => f.severity === "HIGH").length;
+  const mediumCount = findings.filter((f) => f.severity === "MEDIUM").length;
+  const lowCount = findings.filter((f) => f.severity === "LOW").length;
   const totalFindings = criticalCount + highCount + mediumCount + lowCount;
 
   const currentScan = scans.find((s) => s.status === "QUEUED" || s.status === "ANALYZING") || scans[0];
@@ -67,7 +78,8 @@ export function Dashboard() {
     <>
       <PageHeader
         title="Security overview"
-        description="Application vulnerabilities, post-quantum readiness and cryptographic inventory in one view."
+        badge={<MockDataBadge size="sm" label="DEVELOPMENT / MOCK DATA" />}
+        description="Development / Mock Data: Application vulnerabilities, post-quantum readiness, and cryptographic inventory in one view."
         actions={
           <>
             <button
@@ -87,6 +99,32 @@ export function Dashboard() {
           </>
         }
       />
+
+      {/* Backend error notice — shown when API unreachable, metrics show zero */}
+      {loadError && !isRefreshing && (
+        <div
+          role="alert"
+          className="flex items-center gap-3 rounded-xl px-4 py-3 text-[13px] mb-2"
+          style={{
+            background: 'rgba(71, 85, 105, 0.07)',
+            border: '1px solid rgba(71, 85, 105, 0.18)',
+            color: '#475569',
+          }}
+        >
+          <WifiOff size={15} className="shrink-0" />
+          <span>
+            <strong>Backend unavailable</strong> — metrics show zero until the API is reachable.{' '}
+            {loadError instanceof ApiError ? loadError.userMessage : ''}
+          </span>
+          <button
+            onClick={loadData}
+            className="ml-auto text-xs font-semibold hover:underline"
+            style={{ color: '#2A9D8F' }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* 5 Equal KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -160,20 +198,24 @@ export function Dashboard() {
 
       {/* Row 1: [Security score | PQC readiness] */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Panel title="Overall security score" sub="AST syntax validation, dependency CVEs and configuration exposure.">
+        <Panel
+          title="Overall security score"
+          sub="Development / Mock Data — AST syntax validation, dependency CVEs and configuration exposure."
+          right={<MockDataBadge size="xs" label="DEVELOPMENT / MOCK DATA" />}
+        >
           <div className="flex items-center justify-between gap-6">
             <div>
               <div className="tabular text-[48px] font-semibold leading-none tracking-tight">
                 74<span className="text-[20px] text-muted-foreground"> / 100</span>
               </div>
-              <p className="mt-2 text-[13px] text-success">▲ 3 pts vs last scan</p>
+              <p className="mt-2 text-[13px] text-muted-foreground">Development example score</p>
             </div>
             <ScoreRing value={74} />
           </div>
         </Panel>
         <Panel
           title="PQC readiness index"
-          sub="NIST FIPS 203 / 204 readiness."
+          sub="Development / Mock Data — NIST FIPS 203 / 204 readiness baseline."
           right={<span className="tabular font-semibold text-purple-700">58% quantum safe</span>}
         >
           <SegmentBar
@@ -222,7 +264,7 @@ export function Dashboard() {
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel
           title="Post-quantum cryptographic risk"
-          sub="Components classified against Shor and Grover threats."
+          sub="Development / Mock Data — Components classified against Shor and Grover threats."
           right={<span className="tabular font-semibold text-purple-700">25 components</span>}
           footer={
             <button

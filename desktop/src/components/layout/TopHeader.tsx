@@ -6,9 +6,11 @@ import {
   RefreshCw,
   FolderGit2,
   GitBranch,
+  LogOut,
 } from 'lucide-react';
 import { BackendStatus } from '../common/BackendStatus';
 import { MockDataBadge } from '../pqc/MockDataBadge';
+import { useAuth } from '../../context/AuthContext';
 
 interface TopHeaderProps {
   pageTitle: string;
@@ -25,8 +27,20 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   onRefreshScan,
   isRefreshing = false,
 }) => {
+  const { user, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // Derive display initials from real user data
+  const displayName = user?.full_name || user?.email?.split('@')[0] || 'User';
+  const initials = displayName
+    .trim()
+    .split(/\s+/)
+    .map((w: string) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+  const emailDisplay = user?.email || '';
 
   const notifications = [
     {
@@ -191,15 +205,17 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           )}
         </div>
 
-        {/* User Menu */}
+        {/* User Menu — shows real user name/email from AuthContext */}
         <div className="relative">
           <button
+            id="user-menu-trigger"
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="flex items-center gap-1.5 p-1 rounded-lg transition-colors"
             style={{
               background: 'rgba(255, 255, 255, 0.6)',
               border: '1px solid rgba(226, 232, 240, 0.8)',
             }}
+            aria-label="User menu"
           >
             <div
               className="w-6 h-6 rounded-md flex items-center justify-center font-bold text-[10px]"
@@ -209,14 +225,14 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                 color: '#237F74',
               }}
             >
-              SO
+              {initials}
             </div>
             <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
 
           {showProfileMenu && (
             <div
-              className="absolute right-0 mt-2 w-48 rounded-xl shadow-xl p-2.5 z-50 text-xs animate-in fade-in"
+              className="absolute right-0 mt-2 w-52 rounded-xl shadow-xl p-2.5 z-50 text-xs animate-in fade-in"
               style={{
                 background: 'rgba(255, 255, 255, 0.94)',
                 backdropFilter: 'blur(20px)',
@@ -225,13 +241,46 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                 boxShadow: '0 12px 36px rgba(41, 56, 77, 0.12)',
               }}
             >
-              <div className="px-2 py-1 mb-1" style={{ borderBottom: '1px solid rgba(226, 232, 240, 0.8)' }}>
-                <div style={{ fontWeight: 600, color: '#29384D' }}>Security Officer</div>
-                <div style={{ fontSize: '10px', color: '#687587' }}>analyst@pqc-sentinel.local</div>
+              {/* Real user identity */}
+              <div
+                className="px-2 py-1.5 mb-1"
+                style={{ borderBottom: '1px solid rgba(226, 232, 240, 0.8)' }}
+              >
+                <div style={{ fontWeight: 600, color: '#29384D' }}>{displayName}</div>
+                <div style={{ fontSize: '10px', color: '#687587', marginTop: 2 }}>{emailDisplay}</div>
+                {user?.role && (
+                  <div
+                    className="inline-block mt-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold"
+                    style={{
+                      background: 'rgba(42,157,143,0.10)',
+                      color: '#237F74',
+                      border: '1px solid rgba(42,157,143,0.18)',
+                    }}
+                  >
+                    {user.role}
+                  </div>
+                )}
               </div>
+
               <div className="space-y-0.5" style={{ color: '#475569' }}>
                 <div className="px-2 py-1 hover:bg-slate-50 rounded cursor-pointer">Compliance Logs</div>
                 <div className="px-2 py-1 hover:bg-slate-50 rounded cursor-pointer">Scanner Engine</div>
+              </div>
+
+              {/* Sign Out */}
+              <div style={{ borderTop: '1px solid rgba(226, 232, 240, 0.8)', marginTop: 4, paddingTop: 4 }}>
+                <button
+                  id="sign-out-btn"
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    logout();
+                  }}
+                  className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-left hover:bg-red-50 transition-colors"
+                  style={{ color: '#dc2626', fontSize: 12 }}
+                >
+                  <LogOut size={12} />
+                  <span>Sign Out</span>
+                </button>
               </div>
             </div>
           )}

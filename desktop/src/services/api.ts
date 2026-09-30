@@ -6,21 +6,80 @@ import type {
   Finding,
   Report,
 } from '../types';
-import {
-  mockProjects,
-  mockScans,
-  mockFindings,
-  mockReport,
-} from '../data/mockData';
 
 export const API_BASE_URL =
   (import.meta.env.VITE_API_URL as string) || 'http://127.0.0.1:8000/api/v1';
 
-// In-memory cache & fallback store for offline / air-gapped demo
-let localProjects: Project[] = [...mockProjects];
-let localScans: Scan[] = [...mockScans];
-let localFindings: Finding[] = [...mockFindings];
+// ──────────────────────────────────────────────
+// ApiError — typed error with HTTP status code
+// ──────────────────────────────────────────────
+export type ApiErrorType =
+  | 'UNAUTHORIZED'
+  | 'FORBIDDEN'
+  | 'NOT_FOUND'
+  | 'CONFLICT'
+  | 'SERVER_ERROR'
+  | 'NETWORK_ERROR'
+  | 'UNKNOWN';
 
+export class ApiError extends Error {
+  readonly status: number;
+  readonly errorType: ApiErrorType;
+  readonly userMessage: string;
+
+  constructor(status: number, serverDetail?: string) {
+    let errorType: ApiErrorType;
+    let userMessage: string;
+
+    if (status === 0) {
+      errorType = 'NETWORK_ERROR';
+      userMessage = 'Backend unavailable. Check that the server is running and try again.';
+    } else if (status === 401) {
+      errorType = 'UNAUTHORIZED';
+      userMessage = 'Authentication required. Please sign in to continue.';
+    } else if (status === 403) {
+      errorType = 'FORBIDDEN';
+      userMessage = 'Your account is not associated with an organization.';
+    } else if (status === 404) {
+      errorType = 'NOT_FOUND';
+      userMessage = 'Resource not found or unavailable.';
+    } else if (status === 409) {
+      errorType = 'CONFLICT';
+      userMessage = serverDetail || 'A conflict occurred with this request.';
+    } else if (status >= 500) {
+      errorType = 'SERVER_ERROR';
+      userMessage = 'A backend server error occurred. Please try again later.';
+    } else {
+      errorType = 'UNKNOWN';
+      userMessage = serverDetail || `Unexpected error (HTTP ${status}).`;
+    }
+
+    super(userMessage);
+    this.name = 'ApiError';
+    this.status = status;
+    this.errorType = errorType;
+    this.userMessage = userMessage;
+  }
+}
+
+// ──────────────────────────────────────────────
+// 401 listener registry — notify AuthContext on session expiry
+// ──────────────────────────────────────────────
+type UnauthorizedHandler = () => void;
+const unauthorizedHandlers: Set<UnauthorizedHandler> = new Set();
+
+export function registerUnauthorizedHandler(fn: UnauthorizedHandler): () => void {
+  unauthorizedHandlers.add(fn);
+  return () => unauthorizedHandlers.delete(fn);
+}
+
+function notifyUnauthorized() {
+  unauthorizedHandlers.forEach((fn) => fn());
+}
+
+// ──────────────────────────────────────────────
+// ApiClient
+// ──────────────────────────────────────────────
 class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
@@ -39,30 +98,40 @@ class ApiClient {
     }
   }
 
+  getToken(): string | null {
+    return this.token;
+  }
+
+  clearToken() {
+    this.setToken(null);
+  }
+
   getBaseUrl(): string {
     return this.baseUrl;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  // ──────────────────────────────────────────
+  // Core request — adds Authorization header, handles all error codes
+  // ──────────────────────────────────────────
+  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
     const headers: Record<string, string> = {
       Accept: 'application/json',
       ...((options.headers as Record<string, string>) || {}),
     };
 
+    // Only set Content-Type for non-FormData bodies
     if (!(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
     }
 
+    // Attach Bearer token if present
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
     try {
       const response = await fetch(url, {
@@ -73,95 +142,100 @@ class ApiClient {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`API Error ${response.status}: ${errorBody || response.statusText}`);
+        let detail: string | undefined;
+        try {
+          const body = await response.json();
+          detail = typeof body?.detail === 'string' ? body.detail : undefined;
+        } catch {
+          // ignore parse errors
+        }
+
+        const err = new ApiError(response.status, detail);
+
+        // On 401: clear stored token, notify all registered handlers
+        if (response.status === 401) {
+          this.clearToken();
+          notifyUnauthorized();
+        }
+
+        throw err;
       }
 
       return (await response.json()) as T;
     } catch (err: unknown) {
       clearTimeout(timeoutId);
-      throw err;
+
+      // Re-throw ApiError as-is
+      if (err instanceof ApiError) throw err;
+
+      // Network/timeout errors → status 0
+      throw new ApiError(0);
     }
   }
 
-  // 1. Health check - Calls GET /api/v1/health
-  // Expected response: { "status": "healthy" }
+  // ──────────────────────────────────────────
+  // 1. Health check
+  // ──────────────────────────────────────────
   async health(): Promise<HealthResponse> {
-    const response = await this.request<HealthResponse>('/health', {
-      method: 'GET',
+    return this.request<HealthResponse>('/health', { method: 'GET' });
+  }
+
+  // ──────────────────────────────────────────
+  // 2. Authentication — NO mock fallback
+  // ──────────────────────────────────────────
+
+  /**
+   * POST /auth/register
+   * Backend returns: { access_token: string } as UserResponse
+   * Note: the register endpoint (backend/foundation) returns UserResponse, not a token.
+   * We store no token from register — user must login after registration.
+   */
+  async register(payload: {
+    email: string;
+    password: string;
+    full_name?: string;
+  }): Promise<User> {
+    return this.request<User>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
-    return response;
   }
 
-  // 2. Authentication
-  async register(payload: { email: string; password: string; full_name?: string }): Promise<User> {
-    try {
-      return await this.request<User>('/auth/register', {
+  /**
+   * POST /auth/login
+   * Backend returns: { access_token: string }
+   * Store token, then fetch current user.
+   */
+  async login(payload: {
+    email: string;
+    password: string;
+  }): Promise<{ token: string; user: User }> {
+    const res = await this.request<{ access_token: string; user?: User }>(
+      '/auth/login',
+      {
         method: 'POST',
         body: JSON.stringify(payload),
-      });
-    } catch {
-      // Mock fallback
-      const mockUser: User = {
-        id: 'usr-' + Math.random().toString(36).substring(2, 9),
-        email: payload.email,
-        full_name: payload.full_name || payload.email.split('@')[0],
-        role: 'security_auditor',
-        created_at: new Date().toISOString(),
-      };
-      return mockUser;
-    }
+      }
+    );
+    this.setToken(res.access_token);
+    const user = res.user ?? (await this.getCurrentUser());
+    return { token: res.access_token, user };
   }
 
-  async login(payload: { email: string; password: string }): Promise<{ token: string; user: User }> {
-    try {
-      const res = await this.request<{ access_token: string; user?: User }>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-      this.setToken(res.access_token);
-      const user = res.user || (await this.getCurrentUser());
-      return { token: res.access_token, user };
-    } catch {
-      // Mock fallback token
-      const mockToken = 'mock_jwt_' + Math.random().toString(36).substring(2);
-      this.setToken(mockToken);
-      const mockUser: User = {
-        id: 'usr-admin-01',
-        email: payload.email,
-        full_name: 'Security Officer',
-        role: 'admin',
-        created_at: '2026-01-01 00:00:00 UTC',
-      };
-      return { token: mockToken, user: mockUser };
-    }
-  }
-
+  /**
+   * GET /auth/me
+   * Requires Bearer token.
+   */
   async getCurrentUser(): Promise<User> {
-    try {
-      return await this.request<User>('/auth/me', {
-        method: 'GET',
-      });
-    } catch {
-      return {
-        id: 'usr-admin-01',
-        email: 'analyst@pqc-sentinel.local',
-        full_name: 'Lead PQC Cryptographer',
-        role: 'admin',
-        created_at: '2026-01-01 00:00:00 UTC',
-      };
-    }
+    return this.request<User>('/auth/me', { method: 'GET' });
   }
 
-  // 3. Projects
+  // ──────────────────────────────────────────
+  // 3. Projects — NO mock fallback
+  // ──────────────────────────────────────────
+
   async getProjects(): Promise<Project[]> {
-    try {
-      return await this.request<Project[]>('/projects', {
-        method: 'GET',
-      });
-    } catch {
-      return [...localProjects];
-    }
+    return this.request<Project[]>('/projects', { method: 'GET' });
   }
 
   async createProject(payload: {
@@ -169,43 +243,20 @@ class ApiClient {
     description: string;
     repository_url?: string;
   }): Promise<Project> {
-    try {
-      const project = await this.request<Project>('/projects', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-      localProjects = [project, ...localProjects];
-      return project;
-    } catch {
-      // Offline fallback: create local project
-      const newProj: Project = {
-        id: `proj-${String(localProjects.length + 1).padStart(3, '0')}`,
-        name: payload.name,
-        description: payload.description,
-        repository_url: payload.repository_url || 'https://github.com/internal/' + payload.name.toLowerCase(),
-        branch: 'main',
-        created_at: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
-        updated_at: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
-        findings_count: { critical: 0, high: 0, medium: 0, low: 0 },
-      };
-      localProjects = [newProj, ...localProjects];
-      return newProj;
-    }
+    return this.request<Project>('/projects', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   }
 
   async getProject(id: string): Promise<Project> {
-    try {
-      return await this.request<Project>(`/projects/${id}`, {
-        method: 'GET',
-      });
-    } catch {
-      const found = localProjects.find((p) => p.id === id);
-      if (!found) throw new Error(`Project ${id} not found`);
-      return found;
-    }
+    return this.request<Project>(`/projects/${id}`, { method: 'GET' });
   }
 
-  // 4. Ingestion / Repository Upload
+  // ──────────────────────────────────────────
+  // 4. Uploads — NO mock fallback
+  // ──────────────────────────────────────────
+
   async uploadRepository(
     file: File,
     onProgress?: (percent: number) => void
@@ -213,173 +264,74 @@ class ApiClient {
     const formData = new FormData();
     formData.append('file', file);
 
-    try {
-      if (onProgress) onProgress(35);
-      const res = await this.request<{ upload_id: string; file_name: string; size_bytes: number }>(
-        '/uploads',
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
-      if (onProgress) onProgress(100);
-      return res;
-    } catch {
-      // Offline fallback simulation
-      if (onProgress) {
-        onProgress(30);
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        onProgress(75);
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        onProgress(100);
-      }
-      return {
-        upload_id: 'upload-' + Math.random().toString(36).substring(2, 9),
-        file_name: file.name,
-        size_bytes: file.size,
-      };
-    }
+    if (onProgress) onProgress(10);
+    const res = await this.request<{
+      upload_id: string;
+      file_name: string;
+      size_bytes: number;
+    }>('/uploads', {
+      method: 'POST',
+      body: formData,
+    });
+    if (onProgress) onProgress(100);
+    return res;
   }
 
-  // 5. Scans
+  // ──────────────────────────────────────────
+  // 5. Scans — NO mock fallback
+  // ──────────────────────────────────────────
+
   async createScan(payload: {
     project_id: string;
+    upload_id: string;
     file_name?: string;
     file_size?: string;
   }): Promise<Scan> {
-    try {
-      const scan = await this.request<Scan>('/scans', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-      localScans = [scan, ...localScans];
-      return scan;
-    } catch {
-      const targetProj = localProjects.find((p) => p.id === payload.project_id) || localProjects[0];
-      const scanNum = localScans.length + 1;
-      const newScan: Scan = {
-        id: `SCAN-${String(scanNum).padStart(3, '0')}`,
-        project_id: targetProj.id,
-        project_name: targetProj.name,
-        repository_name: payload.file_name || `${targetProj.name.toLowerCase()}.zip`,
-        branch: targetProj.branch,
-        status: 'QUEUED',
-        created_at: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC',
-        file_name: payload.file_name || 'repository.zip',
-        file_size: payload.file_size || '12.4 MB',
-        total_findings: 0,
-        critical_count: 0,
-        high_count: 0,
-        medium_count: 0,
-        low_count: 0,
-        pqc_readiness_score: 50,
-        progress_percent: 0,
-      };
-
-      // Update project scan status
-      targetProj.last_scan_id = newScan.id;
-      targetProj.last_scan_status = 'QUEUED';
-      targetProj.last_scan_at = newScan.created_at;
-
-      localScans = [newScan, ...localScans];
-      return newScan;
-    }
+    return this.request<Scan>('/scans', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   }
 
   async getScans(): Promise<Scan[]> {
-    try {
-      return await this.request<Scan[]>('/scans', {
-        method: 'GET',
-      });
-    } catch {
-      return [...localScans];
-    }
+    return this.request<Scan[]>('/scans', { method: 'GET' });
   }
 
   async getScan(id: string): Promise<Scan> {
-    try {
-      return await this.request<Scan>(`/scans/${id}`, {
-        method: 'GET',
-      });
-    } catch {
-      const found = localScans.find((s) => s.id === id);
-      if (!found) throw new Error(`Scan ${id} not found`);
-      return found;
-    }
+    return this.request<Scan>(`/scans/${id}`, { method: 'GET' });
   }
 
-  async cancelScan(id: string): Promise<{ success: boolean; scan_id: string; status: string }> {
-    try {
-      return await this.request<{ success: boolean; scan_id: string; status: string }>(
-        `/scans/${id}/cancel`,
-        {
-          method: 'POST',
-        }
-      );
-    } catch {
-      const scan = localScans.find((s) => s.id === id);
-      if (scan && (scan.status === 'QUEUED' || scan.status === 'INGESTING' || scan.status === 'ANALYZING' || scan.status === 'PROCESSING')) {
-        scan.status = 'CANCELLED';
-      }
-      return { success: true, scan_id: id, status: 'CANCELLED' };
-    }
+  async cancelScan(id: string): Promise<Scan> {
+    return this.request<Scan>(`/scans/${id}/cancel`, { method: 'POST' });
   }
 
-  // 6. Findings
+  // ──────────────────────────────────────────
+  // 6. Findings — NO mock fallback
+  // ──────────────────────────────────────────
+
   async getFindings(params?: {
     scan_id?: string;
     severity?: string;
     category?: string;
   }): Promise<Finding[]> {
-    try {
-      const query = new URLSearchParams();
-      if (params?.scan_id) query.append('scan_id', params.scan_id);
-      if (params?.severity) query.append('severity', params.severity);
-      if (params?.category) query.append('category', params.category);
-      const qs = query.toString() ? `?${query.toString()}` : '';
-
-      return await this.request<Finding[]>(`/findings${qs}`, {
-        method: 'GET',
-      });
-    } catch {
-      let filtered = [...localFindings];
-      if (params?.scan_id) {
-        filtered = filtered.filter((f) => f.scan_id === params.scan_id);
-      }
-      if (params?.severity && params.severity !== 'ALL') {
-        filtered = filtered.filter((f) => f.severity === params.severity);
-      }
-      if (params?.category && params.category !== 'ALL') {
-        filtered = filtered.filter((f) => f.category === params.category);
-      }
-      return filtered;
-    }
+    const query = new URLSearchParams();
+    if (params?.scan_id) query.append('scan_id', params.scan_id);
+    if (params?.severity) query.append('severity', params.severity);
+    if (params?.category) query.append('category', params.category);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+    return this.request<Finding[]>(`/findings${qs}`, { method: 'GET' });
   }
 
   async getFinding(id: string): Promise<Finding> {
-    try {
-      return await this.request<Finding>(`/findings/${id}`, {
-        method: 'GET',
-      });
-    } catch {
-      const found = localFindings.find((f) => f.id === id);
-      if (!found) throw new Error(`Finding ${id} not found`);
-      return found;
-    }
+    return this.request<Finding>(`/findings/${id}`, { method: 'GET' });
   }
 
-  // 7. Reports
+  // ──────────────────────────────────────────
+  // 7. Reports — NO mock fallback
+  // ──────────────────────────────────────────
+
   async getReport(scanId: string): Promise<Report> {
-    try {
-      return await this.request<Report>(`/reports/${scanId}`, {
-        method: 'GET',
-      });
-    } catch {
-      return {
-        ...mockReport,
-        scan_id: scanId,
-      };
-    }
+    return this.request<Report>(`/reports/${scanId}`, { method: 'GET' });
   }
 }
 

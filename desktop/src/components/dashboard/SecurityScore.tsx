@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldCheck, Atom } from 'lucide-react';
+import { MockDataBadge } from '../pqc/MockDataBadge';
 
 interface SecurityScoreProps {
   securityScore?: number;
@@ -16,11 +17,14 @@ export const SecurityScore: React.FC<SecurityScoreProps> = ({
   return (
     <div className="glass-panel p-5 rounded-2xl">
       <div className="mb-4">
-        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#29384D', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-          Security Posture & Quantum Resilience Baseline
-        </h3>
-        <p style={{ fontSize: '12.5px', color: '#687587', marginTop: '2px' }}>
-          Composite evaluation across SAST vulnerability rules, cryptographic inventory, and NIST FIPS 203/204 readiness.
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#29384D', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
+            Security Posture & Quantum Resilience Baseline
+          </h3>
+          <MockDataBadge size="xs" label="DEVELOPMENT / MOCK DATA" />
+        </div>
+        <p style={{ fontSize: '12.5px', color: '#687587', marginTop: '4px' }}>
+          Development examples — not generated from an actual scan. Composite evaluation across SAST vulnerability rules, cryptographic inventory, and NIST FIPS 203/204 readiness.
         </p>
       </div>
 
@@ -45,9 +49,10 @@ export const SecurityScore: React.FC<SecurityScoreProps> = ({
               <span style={{ fontSize: '14px', fontWeight: 500, color: '#94a3b8' }}>/ 100</span>
             </div>
             <p style={{ fontSize: '11.5px', color: '#687587', lineHeight: 1.45 }}>
-              Based on AST syntax validation, dependency CVEs, and configuration exposure.
+              Development baseline score · AST syntax validation, CVEs, and configuration exposure.
             </p>
           </div>
+
 
           {/* Radial progress ring */}
           <div className="relative w-18 h-18 flex-shrink-0 flex items-center justify-center">
