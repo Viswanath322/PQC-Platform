@@ -8,7 +8,7 @@ from pathlib import Path
 from ingestion.extractor import ExtractionError
 from ingestion.classifier import classify_file
 from ingestion.file_filter import is_excluded
-from ingestion.scan_adapter import ingest_scan_upload
+from ingestion.scan_adapter import ScanNotFoundError, ingest_scan_record, ingest_scan_upload
 from ingestion.summary import ingest_repository
 from ingestion.validator import InvalidArchiveError, ZipLimits
 
@@ -122,6 +122,44 @@ class IngestionTests(unittest.TestCase):
         self.assertEqual(classify_file("settings.unknown", b"API_URL=http://localhost\n"), "config")
         self.assertEqual(classify_file("settings.unknown", b"{\"debug\": true}"), "config")
         self.assertEqual(classify_file("payload.unknown", b"\x00\x01"), "binary")
+
+    def test_scan_record_adapter_loads_repository_path_from_database_model(self):
+        scan_id = "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f"
+        with zipfile.ZipFile(self.archive, "w") as z:
+            z.writestr("src/main.py", "print('ok')")
+
+        class Scan:
+            id = scan_id
+            repository_path = str(self.archive)
+
+        class Session:
+            def __init__(self):
+                self.lookup = None
+
+            def get(self, model, key):
+                self.lookup = (model, key)
+                return Scan()
+
+        db = Session()
+        summary = ingest_scan_record(db, Scan, scan_id, self.root / "storage")
+        self.assertEqual(db.lookup, (Scan, scan_id))
+        self.assertEqual(summary["files_included"], 1)
+
+    def test_scan_record_adapter_reports_missing_scan_and_missing_path(self):
+        class Scan:
+            repository_path = None
+
+        class Session:
+            def __init__(self, record):
+                self.record = record
+
+            def get(self, model, key):
+                return self.record
+
+        with self.assertRaises(ScanNotFoundError):
+            ingest_scan_record(Session(None), Scan, "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f", self.root)
+        with self.assertRaisesRegex(ValueError, "no repository_path"):
+            ingest_scan_record(Session(Scan()), Scan, "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f", self.root)
 
 
 if __name__ == "__main__":

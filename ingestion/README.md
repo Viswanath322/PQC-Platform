@@ -14,15 +14,17 @@ The initial exclusions come from the Day 1 guide and common generated/dependency
 
 ## Scan API integration
 
-The Aakash scan API stores the uploaded ZIP in `Scan.repository_path` and uses a UUID string for `Scan.id`. A worker can call the adapter with those values and the backend storage root:
+The scan API stores the uploaded ZIP in `Scan.repository_path` and uses a UUID string for `Scan.id`. Since the API response no longer exposes the file path, the ingestion worker should use its database session and the shared Scan ORM model to load the row:
 
 ```python
-from ingestion import ingest_scan_upload
+from ingestion import ingest_scan_record
 
-summary = ingest_scan_upload(scan.repository_path, scan.id, "backend/storage")
+summary = ingest_scan_record(db, Scan, scan_id, "backend/storage")
 ```
 
-This creates `backend/storage/scans/<scan-id>/repository/` and writes `ingestion-summary.json` beside it. The adapter validates the scan UUID before using it in a path. The scan route currently only queues the scan; the worker/orchestration code should invoke this adapter when it handles that queue item.
+`db` is the SQLAlchemy session configured for the application database (MySQL in the integrated deployment); `Scan` is the same ORM model used by the scan API. The adapter loads the row with `db.get(Scan, scan_id)` and reads `repository_path` from that database record. It never depends on the path being returned by the API. A missing scan raises `ScanNotFoundError`; a missing stored path raises `ValueError`.
+
+Ingestion creates `backend/storage/scans/<scan-id>/repository/` and writes `ingestion-summary.json` beside it. The adapter validates the scan UUID before using it in a path. The scan route currently queues scans; the scan-processing worker should invoke this adapter when it handles that queue item.
 
 Run the requested cases with `python -m pytest ingestion/tests`. Tests use `unittest` assertions and can also run without pytest via `python -m unittest discover -s ingestion/tests`.
 
