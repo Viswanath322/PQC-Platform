@@ -46,7 +46,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                   )}
                 >
                   {/* ID */}
-                  <td className="py-3 px-3.5 font-mono font-medium text-primary">
+                  <td className="py-3 px-3.5 font-mono font-semibold text-purple-700">
                     {f.id}
                   </td>
 

@@ -37,6 +37,11 @@
 
   --radius: 0.75rem;
 
+  /* Purple accent tokens (matching signature badge) */
+  --accent-purple: 271 81% 53%;
+  --accent-purple-light: 270 95% 96%;
+  --accent-purple-border: 270 80% 88%;
+
   /* Font variables */
   --font-sans: "Inter", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Geist Mono Variable", ui-monospace, monospace;
@@ -182,6 +187,35 @@ body {
 .section-sub {
   font-size: 13px;
   color: hsl(var(--muted-foreground));
+}
+
+.text-purple-accent {
+  color: #7e22ce;
+}
+
+.pill-purple {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.375rem;
+  background-color: rgba(243, 232, 255, 0.75);
+  border: 1px solid rgba(233, 213, 255, 0.85);
+  color: #7e22ce;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  box-shadow: 0 1px 2px rgba(126, 34, 206, 0.04);
+}
+
+.badge-purple {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  background-color: rgba(243, 232, 255, 0.75);
+  border: 1px solid rgba(233, 213, 255, 0.85);
+  color: #7e22ce;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(126, 34, 206, 0.04);
 }
 
 /* ═══════════════════════════════════════════════════════

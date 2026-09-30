@@ -45,14 +45,17 @@ export const ScanTable: React.FC<ScanTableProps> = ({
                   onClick={() => onViewScan(scan)}
                 >
                   {/* Scan ID */}
-                  <td className="py-3.5 px-4 font-mono font-semibold text-primary">
+                  <td className="py-3.5 px-4 font-mono font-semibold text-purple-700 group-hover:text-purple-900 transition-colors">
                     {scan.id}
                   </td>
 
                   {/* Project */}
                   <td className="py-3.5 px-4 min-w-[160px]">
                     <div className="font-medium text-slate-900">{scan.project_name}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">branch: {scan.branch}</div>
+                    <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
+                      <span>branch:</span>
+                      <span className="rounded bg-purple-100/70 border border-purple-200/80 px-1.5 font-mono text-[10.5px] text-purple-700 font-semibold">{scan.branch}</span>
+                    </div>
                   </td>
 
                   {/* Repository / File */}

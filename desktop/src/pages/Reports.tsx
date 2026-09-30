@@ -167,7 +167,7 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
             <div className="mt-4 pt-3 border-t border-slate-200/60 text-[12px] text-slate-500 space-y-1">
               <div>Files: <strong className="text-slate-900 tabular">{mockProjectMetadata.totalFilesScanned}</strong></div>
               <div>Timestamp: <strong className="text-slate-900">{mockProjectMetadata.lastScanTimestamp}</strong></div>
-              <div>Ruleset: <strong className="text-primary font-mono">{mockProjectMetadata.scanEngineVersion}</strong></div>
+              <div>Ruleset: <strong className="text-purple-700 font-mono font-semibold">{mockProjectMetadata.scanEngineVersion}</strong></div>
             </div>
           </div>
 
@@ -196,11 +196,11 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
           {/* 3. PQC Risk Summary */}
           <div className="card p-5 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2 text-primary text-[11px] font-semibold uppercase tracking-wider mb-2">
+              <div className="flex items-center gap-2 text-purple-700 text-[11px] font-semibold uppercase tracking-wider mb-2">
                 <Atom className="h-4 w-4" />
                 <span>PQC Risk Summary</span>
               </div>
-              <div className="tabular text-[36px] font-semibold text-primary leading-none tracking-tight">
+              <div className="tabular text-[36px] font-semibold text-purple-700 leading-none tracking-tight">
                 {mockRiskSummary.readinessPercentage}%
               </div>
               <div className="text-[12px] text-slate-500 mt-2">
@@ -230,7 +230,7 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
             </div>
             <div className="mt-4 pt-3 border-t border-slate-200/60 text-[11.5px] flex items-center justify-between tabular">
               <span className="text-critical font-medium">Vulnerable: 13</span>
-              <span className="text-primary font-medium">Candidates: 7</span>
+              <span className="text-purple-700 font-semibold">Candidates: 7</span>
             </div>
           </div>
         </div>
@@ -243,13 +243,13 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[13px]">
             <div className="p-4 rounded-xl bg-white/60 border border-slate-200/60">
-              <div className="font-semibold text-primary mb-1">NIST FIPS 203 / 204 / 205</div>
+              <div className="font-semibold text-purple-700 mb-1">NIST FIPS 203 / 204 / 205</div>
               <p className="text-slate-600 leading-relaxed text-[12px]">
                 Standardizes ML-KEM (Kyber) and ML-DSA (Dilithium) replacement of classical RSA and ECC mechanisms.
               </p>
             </div>
             <div className="p-4 rounded-xl bg-white/60 border border-slate-200/60">
-              <div className="font-semibold text-primary mb-1">CycloneDX CBOM Specification</div>
+              <div className="font-semibold text-purple-700 mb-1">CycloneDX CBOM Specification</div>
               <p className="text-slate-600 leading-relaxed text-[12px]">
                 Industry standard format for inventorying algorithms, key sizes, quantum vulnerability, and implementations.
               </p>

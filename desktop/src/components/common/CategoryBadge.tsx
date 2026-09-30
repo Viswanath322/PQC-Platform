@@ -23,7 +23,7 @@ export const CategoryBadge: React.FC<CategoryBadgeProps> = ({
     CRYPTO: {
       label: 'Cryptographic',
       icon: KeyRound,
-      styles: 'bg-violet-500/10 text-violet-700 ring-violet-500/25',
+      styles: 'bg-purple-100/70 text-purple-700 ring-purple-300/60',
     },
     DEPENDENCY: {
       label: 'Dependency',

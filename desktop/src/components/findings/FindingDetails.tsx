@@ -35,7 +35,7 @@ export const FindingDetails: React.FC<FindingDetailsProps> = ({
       {/* Drawer Top Header */}
       <div className="px-6 py-4 border-b border-slate-200/60 flex items-center justify-between gap-3 bg-white/40">
         <div className="flex items-center gap-2.5">
-          <span className="font-mono text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded ring-1 ring-primary/25">
+          <span className="font-mono text-[11px] font-semibold text-purple-700 bg-purple-100/70 border border-purple-200/80 px-2 py-0.5 rounded shadow-xs">
             {finding.id}
           </span>
           <SeverityBadge severity={finding.severity} size="sm" />
@@ -128,7 +128,7 @@ export const FindingDetails: React.FC<FindingDetailsProps> = ({
           </div>
           <div className="rounded-lg border border-slate-200/60 bg-white/60 p-3">
             <span className="text-[10px] uppercase font-medium tracking-wider text-slate-500">Weakness Classification</span>
-            <div className="font-mono font-medium text-primary mt-1">
+            <div className="font-mono font-semibold text-purple-700 mt-1">
               {finding.cwe_id || 'CWE-327 / FIPS 203'}
             </div>
           </div>

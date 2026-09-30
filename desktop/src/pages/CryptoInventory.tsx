@@ -64,11 +64,11 @@ export const CryptoInventory: React.FC = () => {
           <div className="card p-5">
             <div className="flex items-center justify-between">
               <span className="eyebrow">Total Cryptographic Assets</span>
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 ring-1 ring-primary/25">
-                <Shield className="h-4 w-4 text-primary" />
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-purple-100/70 border border-purple-200/80">
+                <Shield className="h-4 w-4 text-purple-700" />
               </span>
             </div>
-            <div className="mt-3 tabular text-[36px] font-semibold tracking-tight text-foreground leading-none">
+            <div className="mt-3 tabular text-[36px] font-semibold tracking-tight text-purple-700 leading-none">
               {total}
             </div>
             <p className="mt-3 truncate text-[13px] text-muted-foreground">

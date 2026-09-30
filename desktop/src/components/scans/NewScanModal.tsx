@@ -103,7 +103,7 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
                 Scan Scheduled Successfully!
               </h3>
               <p className="text-[13px] text-slate-500 mb-2">
-                Scan ID: <span className="font-mono text-primary font-semibold">{createdScan.id}</span>
+                Scan ID: <span className="font-mono text-purple-700 font-semibold">{createdScan.id}</span>
               </p>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-medium/10 text-medium ring-1 ring-medium/25 mb-4">
                 Status: {createdScan.status}

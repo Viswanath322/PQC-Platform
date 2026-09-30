@@ -45,7 +45,7 @@ export const ScanStatusBadge: React.FC<ScanStatusBadgeProps> = ({
     },
     ANALYZING: {
       label: 'Analyzing',
-      styles: 'bg-violet-500/10 text-violet-700 ring-violet-500/25',
+      styles: 'bg-purple-100/70 text-purple-700 ring-1 ring-purple-300/60',
       icon: Loader2,
       spin: true,
     },
@@ -57,7 +57,7 @@ export const ScanStatusBadge: React.FC<ScanStatusBadgeProps> = ({
     },
     AI_ANALYSIS: {
       label: 'AI Verification',
-      styles: 'bg-primary/10 text-primary ring-primary/25',
+      styles: 'bg-purple-100/80 text-purple-700 ring-1 ring-purple-300/70',
       icon: Sparkles,
       spin: true,
     },

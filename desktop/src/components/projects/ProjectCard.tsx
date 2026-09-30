@@ -38,9 +38,10 @@ export function ProjectCard({
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-[16px] font-semibold tracking-tight text-slate-900">{name}</h3>
-          <p className="mt-0.5 flex items-center gap-1.5 font-mono text-[12px] text-slate-500">
-            <GitBranch className="h-3.5 w-3.5" /> {branch}
-          </p>
+          <div className="mt-1 flex items-center gap-1.5 font-mono text-[12px] text-slate-500">
+            <GitBranch className="h-3.5 w-3.5 text-purple-700" />
+            <span className="rounded bg-purple-100/70 border border-purple-200/80 px-1.5 font-mono text-[11px] text-purple-700 font-semibold">{branch}</span>
+          </div>
         </div>
         <span className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-medium capitalize ring-1", status[state] || status.completed)}>
           {state}

@@ -140,7 +140,7 @@ export function Dashboard() {
               {currentScan ? currentScan.status : "Queued"}
             </span>
           </div>
-          <div className="mt-3 font-mono text-[22px] font-semibold tracking-tight text-slate-900">
+          <div className="mt-3 font-mono text-[22px] font-semibold tracking-tight text-purple-700">
             {currentScan ? currentScan.id : "SCAN-001"}
           </div>
           <p className="mt-1 truncate font-mono text-[12px] text-slate-500">
@@ -174,7 +174,7 @@ export function Dashboard() {
         <Panel
           title="PQC readiness index"
           sub="NIST FIPS 203 / 204 readiness."
-          right={<span className="tabular font-medium text-primary">58% quantum safe</span>}
+          right={<span className="tabular font-semibold text-purple-700">58% quantum safe</span>}
         >
           <SegmentBar
             segments={[
@@ -223,7 +223,7 @@ export function Dashboard() {
         <Panel
           title="Post-quantum cryptographic risk"
           sub="Components classified against Shor and Grover threats."
-          right="25 components"
+          right={<span className="tabular font-semibold text-purple-700">25 components</span>}
           footer={
             <button
               onClick={() => navigate("/pqc")}

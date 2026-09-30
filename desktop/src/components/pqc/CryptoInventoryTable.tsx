@@ -214,7 +214,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                   {/* Algorithm */}
                   <td className="py-3 px-4 font-medium text-foreground">
                     <div className="flex flex-col">
-                      <span className="font-mono text-[13px]">{item.algorithm}</span>
+                      <span className="font-mono text-[13px] font-semibold text-purple-700">{item.algorithm}</span>
                       {item.curveOrKeySize && (
                         <span className="text-[11px] text-muted-foreground font-mono">
                           {item.curveOrKeySize}
@@ -238,7 +238,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                   {/* Location */}
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-1.5">
-                      <code className="font-mono text-[11.5px] text-primary bg-surface-2 px-1.5 py-0.5 rounded break-all max-w-[300px] truncate">
+                      <code className="font-mono text-[11.5px] text-purple-700 bg-purple-50/70 border border-purple-200/60 px-1.5 py-0.5 rounded break-all max-w-[300px] truncate">
                         {item.location}
                       </code>
                       <button

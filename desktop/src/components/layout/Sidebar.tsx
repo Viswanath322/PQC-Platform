@@ -46,7 +46,7 @@ export function Sidebar() {
                 cn(
                   "group relative flex h-9 items-center justify-center gap-3 rounded-xl text-[13.5px] transition-all duration-200 ease-out border lg:justify-start lg:px-3",
                   isActive
-                    ? "border-white/95 bg-white/90 text-slate-950 shadow-[inset_0_1px_1px_#fff,0_4px_14px_-4px_hsl(var(--primary)/0.35),0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-xl font-medium before:absolute before:left-0 before:top-2 before:h-5 before:w-0.5 before:rounded-full before:bg-primary"
+                    ? "border-white/95 bg-white/90 text-slate-950 shadow-[inset_0_1px_1px_#fff,0_4px_14px_-4px_hsl(var(--primary)/0.35),0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-xl font-medium before:absolute before:left-0 before:top-2 before:h-5 before:w-0.5 before:rounded-full before:bg-gradient-to-b before:from-purple-600 before:to-primary"
                     : "border-transparent text-slate-600 hover:border-white/90 hover:bg-white/60 hover:text-slate-950 hover:backdrop-blur-md hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.95),0_4px_12px_-2px_rgba(41,56,77,0.06),0_1px_2px_rgba(41,56,77,0.02)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
                 )
               }
