@@ -1,8 +1,17 @@
 """Canonical finding model shared by analysis engines and API adapters."""
 
 from dataclasses import dataclass
-from enum import StrEnum
+import sys
 from uuid import UUID
+
+# StrEnum was added in Python 3.11; provide a compatible fallback for 3.10.
+if sys.version_info >= (3, 11):
+    from enum import StrEnum
+else:
+    from enum import Enum
+
+    class StrEnum(str, Enum):  # type: ignore[no-redef]
+        """Minimal StrEnum backport: members compare equal to their string values."""
 
 
 class EngineName(StrEnum):
@@ -26,6 +35,11 @@ class Finding:
     ``is_development`` lets consumers distinguish fixtures from real findings;
     it defaults to false so production engines cannot accidentally mark every
     result as a fixture.
+
+    ``explanation`` is an optional human-readable description of why the
+    finding matters; engines may populate it directly. It maps to the
+    ``explanation`` column in the findings database table and to the
+    ``FindingOut.explanation`` API field.
     """
 
     finding_id: str
@@ -38,6 +52,7 @@ class Finding:
     evidence: str
     confidence: float
     recommendation: str
+    explanation: str | None = None
     is_development: bool = False
 
     def __post_init__(self) -> None:
@@ -76,3 +91,5 @@ class Finding:
             raise ValueError("confidence must be a number between 0 and 1")
         if not isinstance(self.is_development, bool):
             raise ValueError("is_development must be a boolean")
+        if self.explanation is not None and not isinstance(self.explanation, str):
+            raise ValueError("explanation must be a string or None")

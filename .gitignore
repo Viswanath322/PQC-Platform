@@ -69,3 +69,10 @@ storage/uploads/*.zip
 # OS files
 .DS_Store
 Thumbs.db
+
+# Test fixtures — regenerate with: python tests/fixtures/create_demo_zip.py
+tests/fixtures/demo-banking.zip
+
+# pytest cache
+.pytest_cache/
+

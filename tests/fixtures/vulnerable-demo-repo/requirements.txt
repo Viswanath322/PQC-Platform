@@ -1,0 +1,6 @@
+# ⚠️ INTENTIONALLY VULNERABLE TEST FIXTURE — DO NOT INSTALL IN PRODUCTION
+# These package versions are intentionally outdated for testing purposes.
+flask==0.12.4
+requests==2.6.0
+pycryptodome==3.9.0
+sqlalchemy==1.2.0
