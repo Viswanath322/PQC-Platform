@@ -62,7 +62,7 @@ export function Topbar({
         <button
           onClick={() => navigate('/profile')}
           title={`Profile: ${profile.fullName} (@${profile.name}) - Click to view and edit`}
-          className="grid h-9 w-9 place-items-center rounded-full bg-primary/10 text-[12px] font-semibold text-primary ring-1 ring-primary/25 backdrop-blur-md transition-all duration-200 hover:ring-2 hover:ring-primary/45 hover:bg-primary/20 hover:scale-105 hover:shadow-[0_2px_12px_rgba(42,157,143,0.3)] active:scale-95 cursor-pointer"
+          className="grid h-8.5 w-8.5 place-items-center rounded-lg bg-gradient-to-br from-purple-100 to-teal-50 text-[11.5px] font-bold text-purple-700 ring-1 ring-purple-200/80 backdrop-blur-md transition-all duration-150 hover:ring-2 hover:ring-purple-300 hover:scale-105 active:scale-95 cursor-pointer shadow-2xs"
         >
           {profile.avatarInitials}
         </button>
