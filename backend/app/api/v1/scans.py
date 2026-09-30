@@ -1,24 +1,26 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.api.v1.routes.auth import get_current_user, get_user_organization_id
 from app.models import Project, Scan, User
 from app.schemas.common import UUID_PATTERN
-from app.schemas.scan import ScanCreate, ScanOut
+from app.schemas.scan import FINAL_STATUSES, ScanCreate, ScanOut, ScanStatus
 from app.services.redis_service import dequeue_scan, enqueue_scan
 from app.services.storage_service import get_upload_path
 
 router = APIRouter(prefix="/scans", tags=["scans"])
-FINAL_STATES = {"COMPLETED", "FAILED", "CANCELLED"}
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 @router.post("", response_model=ScanOut, status_code=201)
 def create_scan(
     body: ScanCreate,
-    response: Response,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -31,11 +33,16 @@ def create_scan(
     if project is None:
         raise HTTPException(404, "Project not found")
     zip_path = get_upload_path(body.upload_id, organization_id=organization_id)
-    scan = Scan(project_id=body.project_id, status="QUEUED", repository_path=str(zip_path))
+    scan = Scan(project_id=body.project_id, status=ScanStatus.QUEUED.value, repository_path=str(zip_path))
     db.add(scan)
     db.commit()
     db.refresh(scan)
-    response.headers["X-Queue-Status"] = "enqueued" if enqueue_scan(scan.id) else "deferred"
+    if not enqueue_scan(scan.id):
+        # Never report QUEUED for a scan that is not in the queue: keep the row as FAILED and tell the caller.
+        scan.status = ScanStatus.FAILED.value
+        scan.completed_at = _utcnow()
+        db.commit()
+        raise HTTPException(503, "Scan queue is unavailable; the scan was not queued. Please retry.")
     return scan
 
 
@@ -48,7 +55,7 @@ def list_scans(
     query = db.query(Scan).join(Project).filter(Project.organization_id == get_user_organization_id(user))
     if project_id is not None:
         query = query.filter(Scan.project_id == project_id)
-    return query.order_by(Scan.created_at.desc()).all()
+    return query.order_by(Scan.created_at.desc(), Scan.id.desc()).all()
 
 
 @router.get("/{scan_id}", response_model=ScanOut)
@@ -74,10 +81,10 @@ def cancel_scan(scan_id: str, db: Session = Depends(get_db), user: User = Depend
     )
     if scan is None:
         raise HTTPException(404, "Scan not found")
-    if scan.status in FINAL_STATES:
+    if ScanStatus(scan.status) in FINAL_STATUSES:
         raise HTTPException(409, f"Scan already {scan.status}")
-    scan.status = "CANCELLED"
-    scan.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    scan.status = ScanStatus.CANCELLED.value
+    scan.completed_at = _utcnow()
     db.commit()
     db.refresh(scan)
     dequeue_scan(scan.id)

@@ -110,7 +110,31 @@ def redis_up() -> bool:
         return False
 
 
-requires_redis = pytest.mark.skipif(not redis_up(), reason="Redis/Memurai not running")
+FAKE_QUEUE: list[str] = []
+
+
+@pytest.fixture
+def real_queue():
+    """Ask for this fixture to use the real enqueue/dequeue code instead of the in-memory fake."""
+
+
+@pytest.fixture
+def real_redis(real_queue):
+    if not redis_up():
+        pytest.skip("Redis/Memurai not running")
+    return get_redis()
+
+
+@pytest.fixture(autouse=True)
+def fake_queue(request, monkeypatch):
+    """Scan creation now fails with 503 when Redis is down, so use an in-memory queue unless a test needs real Redis."""
+    if "real_queue" in request.fixturenames:
+        return
+    from app.api.v1 import scans as scans_module
+
+    FAKE_QUEUE.clear()
+    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid: FAKE_QUEUE.append(sid) or True)
+    monkeypatch.setattr(scans_module, "dequeue_scan", lambda sid: sid in FAKE_QUEUE and FAKE_QUEUE.remove(sid) or True)
 
 
 @pytest.fixture(scope="module")
@@ -192,7 +216,8 @@ def test_full_flow_project_upload_scan(alice):
     assert r.status_code == 201, r.text
     scan = r.json()
     assert scan["status"] == "QUEUED" and scan["project_id"] == p["id"]
-    assert r.headers["X-Queue-Status"] in {"enqueued", "deferred"}
+    assert scan["id"] in FAKE_QUEUE
+    assert scan["upload_id"] == up["upload_id"]      # safe reference instead of the server path
     assert "repository_path" not in scan and "storage" not in str(scan).lower()
     with SessionLocal() as db:  # saved for ingestion, just not exposed
         assert Path(db.get(Scan, scan["id"]).repository_path).exists()
@@ -285,28 +310,72 @@ def test_cancel_then_cancel_again_409(alice):
     assert client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice).status_code == 409
 
 
-def test_queue_header_deferred_when_redis_down(alice, monkeypatch):
-    monkeypatch.setenv("REDIS_URL", "redis://127.0.0.1:1/0")
+def test_redis_failure_returns_503_and_scan_is_marked_failed(alice, monkeypatch):
+    from app.api.v1 import scans as scans_module
+
+    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid: False)
+    p = create_project(alice)
+    r = create_scan(alice, p["id"], upload_zip(alice)["upload_id"])
+    assert r.status_code == 503
+    assert "QUEUED" not in r.text
+    with SessionLocal() as db:  # nothing may be left saying QUEUED
+        rows = db.query(Scan).filter(Scan.project_id == p["id"]).all()
+        assert len(rows) == 1 and rows[0].status == "FAILED" and rows[0].completed_at is not None
+    listed = client.get(f"{API}/scans", params={"project_id": p["id"]}, headers=alice).json()
+    assert [x["status"] for x in listed] == ["FAILED"]
+
+
+def test_unreachable_redis_returns_503(alice, real_queue, monkeypatch):
+    monkeypatch.setenv("REDIS_URL", "redis://127.0.0.1:1/0")  # nothing listens here
     r = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"])
-    assert r.status_code == 201 and r.json()["status"] == "QUEUED"
-    assert r.headers["X-Queue-Status"] == "deferred"
+    assert r.status_code == 503
 
 
-@requires_redis
-def test_enqueue_header_and_cancel_dequeues(alice):
-    rc = get_redis()
-    scan_resp = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"])
-    scan = scan_resp.json()
+def test_cancel_removes_scan_from_queue(alice):
+    scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+    assert scan["id"] in FAKE_QUEUE
+    assert client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice).status_code == 200
+    assert scan["id"] not in FAKE_QUEUE
+
+
+def test_real_redis_enqueue_and_cancel_dequeue(alice, real_redis):
+    scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
     try:
-        assert scan_resp.headers["X-Queue-Status"] == "enqueued"
-        assert scan["id"] in rc.lrange(QUEUE_KEY, 0, -1)
+        assert scan["id"] in real_redis.lrange(QUEUE_KEY, 0, -1)
         assert client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice).status_code == 200
-        assert scan["id"] not in rc.lrange(QUEUE_KEY, 0, -1)
+        assert scan["id"] not in real_redis.lrange(QUEUE_KEY, 0, -1)
     finally:
-        rc.lrem(QUEUE_KEY, 0, scan["id"])
+        real_redis.lrem(QUEUE_KEY, 0, scan["id"])
 
 
-@requires_redis
-def test_redis_ping_endpoint():
+def test_real_redis_ping_endpoint(real_redis):
     r = client.get(f"{API}/redis/ping")
     assert r.status_code == 200 and r.json()["redis"] == "ok"
+
+
+# ---------- QA items 13, 14, 31, 32 ----------
+def test_scan_status_is_a_fixed_enum(alice):
+    from pydantic import ValidationError
+    from app.schemas.scan import ScanOut, ScanStatus
+
+    assert {s.value for s in ScanStatus} == {
+        "QUEUED", "INGESTING", "ANALYZING", "PROCESSING", "AI_ANALYSIS", "COMPLETED", "FAILED", "CANCELLED"}
+    scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+    assert scan["status"] in {s.value for s in ScanStatus}
+    base = {"id": "x", "project_id": "y", "created_at": datetime.now()}
+    with pytest.raises(ValidationError):
+        ScanOut.model_validate({**base, "status": "WHATEVER"})
+
+
+def test_nosniff_header_on_all_responses(alice):
+    assert client.get(f"{API}/health").headers["X-Content-Type-Options"] == "nosniff"
+    assert client.get(f"{API}/projects").headers["X-Content-Type-Options"] == "nosniff"      # 401
+    assert client.get(f"{API}/projects", headers=alice).headers["X-Content-Type-Options"] == "nosniff"
+
+
+def test_lists_are_newest_first_with_stable_tiebreak(alice):
+    for i in range(3):
+        create_project(alice, f"Order {i}")
+    rows = client.get(f"{API}/projects", headers=alice).json()
+    keys = [(x["created_at"], x["id"]) for x in rows]
+    assert keys == sorted(keys, reverse=True)

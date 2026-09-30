@@ -26,7 +26,7 @@ def list_projects(db: Session = Depends(get_db), user: User = Depends(get_curren
     return (
         db.query(Project)
         .filter(Project.organization_id == organization_id)
-        .order_by(Project.created_at.desc())
+        .order_by(Project.created_at.desc(), Project.id.desc())
         .all()
     )
 
