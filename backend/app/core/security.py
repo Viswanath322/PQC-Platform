@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
+import jwt
 from pwdlib import PasswordHash
+from pwdlib.exceptions import UnknownHashError
 
 from app.core.config import get_settings
 
@@ -13,7 +14,11 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, password_hash: str) -> bool:
-    return password_hasher.verify(password, password_hash)
+    try:
+        return password_hasher.verify(password, password_hash)
+    except UnknownHashError:
+        # An unsupported legacy hash is simply not valid here.
+        return False
 
 
 def create_access_token(subject: str) -> str:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
+from jwt import InvalidTokenError, decode
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.core.config import get_settings
@@ -46,11 +46,11 @@ def me(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        claims = jwt.decode(credentials.credentials, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        claims = decode(credentials.credentials, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
         subject = claims.get("sub")
         if not isinstance(subject, str):
             raise ValueError("Invalid token subject")
-    except (JWTError, TypeError, ValueError):
+    except (InvalidTokenError, TypeError, ValueError):
         raise unauthorized from None
 
     user = db.get(User, subject)
