@@ -96,7 +96,7 @@ export const ScanStatusBadge: React.FC<ScanStatusBadgeProps> = ({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full font-medium ring-1',
+        'status-badge inline-flex items-center rounded-full font-medium ring-1',
         item.styles,
         sizeClasses
       )}

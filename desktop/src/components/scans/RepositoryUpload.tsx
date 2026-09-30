@@ -137,7 +137,7 @@ export const RepositoryUpload: React.FC<RepositoryUploadProps> = ({
       >
         {!selectedFile ? (
           <div className="flex flex-col items-center justify-center gap-2">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 ring-1 ring-primary/25 text-primary mb-1">
+            <div className="icon-tile grid h-10 w-10 place-items-center rounded-lg bg-primary/10 ring-1 ring-primary/25 text-primary mb-1">
               <Upload className="h-5 w-5" />
             </div>
             <div className="text-[14px] font-semibold text-slate-900">
@@ -162,7 +162,7 @@ export const RepositoryUpload: React.FC<RepositoryUploadProps> = ({
         ) : (
           <div className="flex items-center justify-between gap-4 text-left">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary shrink-0">
+              <div className="icon-tile grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary shrink-0">
                 <FileArchive className="h-5 w-5" />
               </div>
               <div className="min-w-0">

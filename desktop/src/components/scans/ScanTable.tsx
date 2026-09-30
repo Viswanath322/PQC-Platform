@@ -15,9 +15,9 @@ export const ScanTable: React.FC<ScanTableProps> = ({
   onCancelScan,
 }) => {
   return (
-    <div className="glass-strong w-full overflow-hidden rounded-xl">
+    <div className="scan-table-shell w-full">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse text-[13px]">
+        <table className="scan-table w-full text-left border-collapse text-[13px]">
           <thead>
             <tr className="border-b border-slate-200/60 bg-slate-50/70 text-[11px] font-medium uppercase tracking-[0.08em] text-slate-500">
               <th className="py-3 px-4">Scan ID</th>

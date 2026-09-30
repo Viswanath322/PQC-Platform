@@ -13,6 +13,7 @@ interface ProjectsProps {
 
 export function Projects({ projects: externalProjects }: ProjectsProps) {
   const [internalProjects, setInternalProjects] = useState<Project[]>([]);
+  const [scansById, setScansById] = useState<Record<string, Scan>>({});
   const [isLoading, setIsLoading] = useState(!externalProjects);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -22,8 +23,9 @@ export function Projects({ projects: externalProjects }: ProjectsProps) {
   const loadProjects = async () => {
     setIsLoading(true);
     try {
-      const data = await api.getProjects();
+      const [data, scans] = await Promise.all([api.getProjects(), api.getScans()]);
       setInternalProjects(data);
+      setScansById(Object.fromEntries(scans.map((scan) => [scan.id, scan])));
     } catch (err) {
       console.error("Failed to load projects:", err);
     } finally {
@@ -47,6 +49,7 @@ export function Projects({ projects: externalProjects }: ProjectsProps) {
   };
 
   const handleScanCreated = (scan: Scan) => {
+    setScansById((prev) => ({ ...prev, [scan.id]: scan }));
     setInternalProjects((prev) =>
       prev.map((p) =>
         p.id === scan.project_id
@@ -127,7 +130,7 @@ export function Projects({ projects: externalProjects }: ProjectsProps) {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="card flex flex-col items-center justify-center p-12 text-center">
+        <div className="empty-state card flex flex-col items-center justify-center p-12 text-center">
           <div className="grid h-12 w-12 place-items-center rounded-xl bg-surface-2 text-muted-foreground">
             <FolderGit2 className="h-6 w-6" />
           </div>
@@ -142,23 +145,27 @@ export function Projects({ projects: externalProjects }: ProjectsProps) {
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
           {filtered.map((p) => {
-            const rawStatus = (p.last_scan_status?.toLowerCase() || "completed") as "queued" | "completed" | "analyzing";
-            const counts = {
-              crit: p.findings_count?.critical ?? 1,
-              high: p.findings_count?.high ?? 3,
-              med: p.findings_count?.medium ?? 8,
-              low: p.findings_count?.low ?? 4,
-            };
-            const date = p.last_scan_at ? new Date(p.last_scan_at).toLocaleDateString() : "Sep 29, 2026";
+            const rawStatus = p.last_scan_status?.toLowerCase() || "unscanned";
+            const counts = p.findings_count ? {
+              crit: p.findings_count.critical,
+              high: p.findings_count.high,
+              med: p.findings_count.medium,
+              low: p.findings_count.low,
+            } : undefined;
+            const scan = p.last_scan_id ? scansById[p.last_scan_id] : undefined;
+            const parsedDate = p.last_scan_at ? new Date(p.last_scan_at) : null;
+            const date = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toLocaleDateString() : undefined;
             return (
               <ProjectCard
                 key={p.id || p.name}
                 name={p.name}
                 branch={p.branch || "main"}
-                description={p.description || "Air-gapped repository target"}
+                repositoryUrl={p.repository_url}
+                description={p.description || "No project description provided."}
                 state={rawStatus}
                 counts={counts}
                 date={date}
+                readiness={scan?.status === "COMPLETED" ? scan.pqc_readiness_score : undefined}
                 onScan={() => handleStartScan(p)}
               />
             );

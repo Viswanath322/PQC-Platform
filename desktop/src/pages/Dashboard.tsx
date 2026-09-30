@@ -6,15 +6,17 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { Panel } from "@/components/dashboard/Panel";
 import { SegmentBar } from "@/components/dashboard/SegmentBar";
 import { ScoreRing } from "@/components/dashboard/ScoreRing";
+import { ScanPipelineCard } from "@/components/dashboard/ScanPipelineCard";
 import { NewScanModal } from "@/components/scans/NewScanModal";
+import { SeverityBadge } from "@/components/common/SeverityBadge";
 import { api } from "@/services/api";
 import type { Project, Scan, Finding } from "@/types";
 
 const activity = [
-  { t: "Scan SCAN-001 queued for AST ingestion", when: "10 min ago" },
-  { t: "Scan SCAN-002 completed (18 findings detected)", when: "2 hours ago" },
-  { t: "CBOM export generated for Core-Services", when: "5 hours ago" },
-  { t: "AST Analyzer ruleset updated to FIPS 203", when: "1 day ago" },
+  { title: "SCAN-001 queued", detail: "for AST ingestion", when: "10 min ago" },
+  { title: "SCAN-002 completed", detail: "18 findings detected", when: "2 hours ago" },
+  { title: "CBOM export generated", detail: "Core-Services", when: "5 hours ago" },
+  { title: "AST Analyzer ruleset updated", detail: "FIPS 203", when: "1 day ago" },
 ];
 
 export function Dashboard() {
@@ -55,13 +57,17 @@ export function Dashboard() {
   };
 
   // Severity counts
-  const criticalCount = findings.filter((f) => f.severity === "CRITICAL").length || 5;
-  const highCount = findings.filter((f) => f.severity === "HIGH").length || 4;
-  const mediumCount = findings.filter((f) => f.severity === "MEDIUM").length || 3;
-  const lowCount = findings.filter((f) => f.severity === "LOW").length || 2;
+  const criticalCount = findings.filter((f) => f.severity === "critical").length || 5;
+  const highCount = findings.filter((f) => f.severity === "high").length || 4;
+  const mediumCount = findings.filter((f) => f.severity === "medium").length || 3;
+  const lowCount = findings.filter((f) => f.severity === "low").length || 2;
   const totalFindings = criticalCount + highCount + mediumCount + lowCount;
 
   const currentScan = scans.find((s) => s.status === "QUEUED" || s.status === "ANALYZING") || scans[0];
+  const severityRank: Record<Finding["severity"], number> = { critical: 0, high: 1, medium: 2, low: 3 };
+  const topSecurityRisks = [...findings]
+    .sort((a, b) => severityRank[a.severity] - severityRank[b.severity])
+    .slice(0, 3);
 
   return (
     <>
@@ -89,8 +95,8 @@ export function Dashboard() {
       />
 
       {/* 5 Equal KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="cursor-pointer" onClick={() => navigate("/findings?severity=CRITICAL")}>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="cursor-pointer" onClick={() => navigate("/findings?severity=critical")}>
           <StatCard
             level="critical"
             label="Critical"
@@ -101,7 +107,7 @@ export function Dashboard() {
             icon={AlertOctagon}
           />
         </div>
-        <div className="cursor-pointer" onClick={() => navigate("/findings?severity=HIGH")}>
+        <div className="cursor-pointer" onClick={() => navigate("/findings?severity=high")}>
           <StatCard
             level="high"
             label="High"
@@ -112,7 +118,7 @@ export function Dashboard() {
             icon={AlertTriangle}
           />
         </div>
-        <div className="cursor-pointer" onClick={() => navigate("/findings?severity=MEDIUM")}>
+        <div className="cursor-pointer" onClick={() => navigate("/findings?severity=medium")}>
           <StatCard
             level="medium"
             label="Medium"
@@ -122,7 +128,7 @@ export function Dashboard() {
             icon={AlertCircle}
           />
         </div>
-        <div className="cursor-pointer" onClick={() => navigate("/findings?severity=LOW")}>
+        <div className="cursor-pointer" onClick={() => navigate("/findings?severity=low")}>
           <StatCard
             level="low"
             label="Low"
@@ -133,30 +139,9 @@ export function Dashboard() {
             icon={Info}
           />
         </div>
-        <div className="card min-w-0 border-purple-200/80 bg-gradient-to-br from-purple-100/50 via-white/70 to-sky-100/40 p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-2">
-            <span className="eyebrow text-purple-700 font-semibold">Active assessment</span>
-            <span className="rounded-full bg-purple-100/70 border border-purple-200/70 px-2 py-0.5 text-[11px] font-medium text-purple-700">
-              {currentScan ? currentScan.status : "Queued"}
-            </span>
-          </div>
-          <div className="mt-3 font-mono text-[22px] font-semibold tracking-tight text-slate-900">
-            {currentScan ? currentScan.id : "SCAN-001"}
-          </div>
-          <p className="mt-1 truncate font-mono text-[12px] text-slate-500">
-            {currentScan ? currentScan.repository_name : "core-services.zip"}
-          </p>
-          <div className="mt-3 flex items-center justify-between text-[13px]">
-            <span className="text-slate-500">Queue position #1</span>
-            <button
-              onClick={() => navigate("/scans")}
-              className="cursor-pointer font-medium text-purple-700 hover:text-purple-900 hover:underline bg-transparent border-0 p-0"
-            >
-              View all →
-            </button>
-          </div>
-        </div>
       </div>
+
+      <ScanPipelineCard scan={currentScan} onViewScan={() => navigate("/scans")} />
 
       {/* Row 1: [Security score | PQC readiness] */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -171,19 +156,44 @@ export function Dashboard() {
             <ScoreRing value={74} />
           </div>
         </Panel>
-        <Panel
-          title="PQC readiness index"
-          sub="NIST FIPS 203 / 204 readiness."
-          right={<span className="tabular font-medium text-primary">58% quantum safe</span>}
-        >
-          <SegmentBar
-            segments={[
-              { label: "Resistant · AES-256 / SHA-384", value: 58, color: "bg-primary" },
-              { label: "Shor at-risk · RSA / ECC", value: 42, color: "bg-critical" },
-            ]}
-            cols={1}
-          />
-        </Panel>
+        <section className="pqc-readiness-widget">
+          <div className="pqc-widget-topline">
+            <div className="pqc-widget-kicker"><span className="pqc-widget-mark">◈</span> POST-QUANTUM INTELLIGENCE</div>
+            <span className="pqc-standard-badge">NIST FIPS <strong>203 / 204</strong></span>
+          </div>
+          <div className="pqc-widget-heading">
+            <div>
+              <h2>PQC Readiness Index</h2>
+              <p>Quantum exposure across cryptographic assets</p>
+            </div>
+            <span className="pqc-widget-context">PQC READINESS</span>
+          </div>
+          <div className="pqc-widget-content">
+            <div className="pqc-readiness-ring" aria-label="58 percent quantum safe">
+              <div className="pqc-readiness-ring-inner">
+                <strong>58<span>%</span></strong>
+                <span>quantum safe</span>
+              </div>
+            </div>
+            <div className="pqc-readiness-breakdown">
+              <div className="pqc-readiness-stat pqc-resistant-stat">
+                <span className="pqc-stat-dot" />
+                <div className="pqc-stat-copy"><span>Resistant algorithms</span><strong>AES-256 <i>/</i> SHA-384</strong></div>
+                <b className="pqc-stat-percent">58%</b>
+              </div>
+              <div className="pqc-readiness-stat pqc-risk-stat">
+                <span className="pqc-stat-dot" />
+                <div className="pqc-stat-copy"><span>Shor-at-risk algorithms</span><strong>RSA <i>/</i> ECC</strong></div>
+                <b className="pqc-stat-percent">42%</b>
+              </div>
+            </div>
+          </div>
+          <div className="pqc-exposure-meter" role="img" aria-label="Quantum exposure: 58 percent resistant, 42 percent at risk">
+            <div className="pqc-meter-safe" />
+            <div className="pqc-meter-risk" />
+          </div>
+          <div className="pqc-meter-labels"><span><i className="safe-key" />RESISTANT</span><span>QUANTUM EXPOSURE<i className="risk-key" />AT RISK</span></div>
+        </section>
       </div>
 
       {/* Row 2: [Findings by severity | Findings by category] */}
@@ -218,6 +228,43 @@ export function Dashboard() {
         </Panel>
       </div>
 
+      <section className="top-security-risks mt-6" aria-labelledby="top-security-risks-title">
+        <div className="top-risks-header">
+          <div>
+            <span className="top-risks-eyebrow">SECURITY PRIORITIES</span>
+            <h2 id="top-security-risks-title">Top Security Risks</h2>
+          </div>
+          <button type="button" onClick={() => navigate("/findings")} className="top-risks-view-all">
+            View all <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        {topSecurityRisks.length > 0 ? (
+          <ul className="top-risks-list">
+            {topSecurityRisks.map((finding) => (
+              <li key={finding.finding_id}>
+                <button
+                  type="button"
+                  className="top-risk-row"
+                  onClick={() => navigate("/findings", { state: { selectedFindingId: finding.finding_id } })}
+                  aria-label={`Open ${finding.finding_id}: ${finding.title}`}
+                >
+                  <span className="top-risk-id">{finding.finding_id}</span>
+                  <span className="top-risk-main">
+                    <span className="top-risk-title">{finding.title}</span>
+                    <span className="top-risk-path">{finding.file_path}</span>
+                  </span>
+                  {finding.category && <span className="top-risk-category">{finding.category}</span>}
+                  <SeverityBadge severity={finding.severity} size="sm" />
+                  <ArrowRight className="top-risk-arrow h-4 w-4" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="top-risks-empty">No findings available.</div>
+        )}
+      </section>
+
       {/* Row 3: [Post-quantum risk | Recent scan activity] */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel
@@ -243,29 +290,46 @@ export function Dashboard() {
           />
         </Panel>
         <Panel
-          title="Recent scan activity"
+          title="Activity"
           sub="Audit trail of scans, pipeline runs and CBOM events."
-          right="Live"
-          footer={
+          right={
             <button
               onClick={() => navigate("/scans")}
-              className="inline-flex cursor-pointer items-center gap-1 font-medium text-primary hover:underline bg-transparent border-0 p-0 text-[13px]"
+              className="activity-view-all"
             >
-              View scan history <ArrowRight className="h-3.5 w-3.5" />
+              View all <ArrowRight className="h-3.5 w-3.5" />
             </button>
           }
         >
-          <ul className="space-y-3">
-            {activity.map((a) => (
-              <li key={a.t} className="flex items-center justify-between gap-4 text-[13px]">
-                <span className="flex min-w-0 items-center gap-2.5">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                  <span className="truncate">{a.t}</span>
-                </span>
-                <span className="shrink-0 text-[12px] text-muted-foreground">{a.when}</span>
+          <ol className="activity-timeline">
+            {activity.map((item) => {
+              const lowerTitle = item.title.toLowerCase();
+              const scanId = item.title.match(/SCAN-\d+/)?.[0];
+              const relatedProject = scanId ? scans.find((scan) => scan.id === scanId)?.project_name : undefined;
+              const activityDetail = [relatedProject, item.detail].filter(Boolean).join(" · ");
+              const activityStatus = lowerTitle.includes('queued')
+                ? 'Queued'
+                : lowerTitle.includes('completed')
+                  ? 'Completed'
+                  : lowerTitle.includes('export generated')
+                    ? 'Exported'
+                    : 'Updated';
+              return (
+              <li key={item.title} className={`activity-timeline-item activity-${activityStatus.toLowerCase()}`}>
+                <span className="activity-timeline-rail" aria-hidden="true" />
+                <span className="activity-timeline-node" aria-hidden="true" />
+                <div className="activity-timeline-body">
+                  <div className="activity-timeline-meta">
+                    <time>{item.when}</time>
+                    <span className="activity-status-tag">{activityStatus}</span>
+                  </div>
+                  <p>{item.title}</p>
+                  <span className="activity-timeline-detail">{activityDetail}</span>
+                </div>
               </li>
-            ))}
-          </ul>
+              );
+            })}
+          </ol>
         </Panel>
       </div>
 

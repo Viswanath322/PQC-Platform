@@ -61,7 +61,7 @@ export const RiskCard: React.FC<RiskCardProps> = ({
       <div>
         <div className="flex items-center justify-between">
           <span className="eyebrow">{label}</span>
-          <span className={cn('grid h-8 w-8 place-items-center rounded-lg ring-1', config.bg, config.ring)}>
+          <span className={cn('icon-tile grid h-8 w-8 place-items-center rounded-lg ring-1', config.bg, config.ring)}>
             <Icon className={cn('h-4 w-4', config.text)} aria-hidden />
           </span>
         </div>

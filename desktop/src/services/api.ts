@@ -326,31 +326,33 @@ class ApiClient {
   }
 
   // 6. Findings
+  async getLiveFindings(params?: {
+    severity?: string;
+    category?: string;
+  }): Promise<Finding[]> {
+    const query = new URLSearchParams();
+    if (params?.severity && params.severity !== 'all') query.append('severity', params.severity);
+    if (params?.category && params.category !== 'all') query.append('category', params.category);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+
+    return this.request<Finding[]>(`/findings${qs}`, {
+      method: 'GET',
+    });
+  }
+
   async getFindings(params?: {
-    scan_id?: string;
     severity?: string;
     category?: string;
   }): Promise<Finding[]> {
     try {
-      const query = new URLSearchParams();
-      if (params?.scan_id) query.append('scan_id', params.scan_id);
-      if (params?.severity) query.append('severity', params.severity);
-      if (params?.category) query.append('category', params.category);
-      const qs = query.toString() ? `?${query.toString()}` : '';
-
-      return await this.request<Finding[]>(`/findings${qs}`, {
-        method: 'GET',
-      });
+      return await this.getLiveFindings(params);
     } catch {
       let filtered = [...localFindings];
-      if (params?.scan_id) {
-        filtered = filtered.filter((f) => f.scan_id === params.scan_id);
+      if (params?.severity && params.severity !== 'all') {
+        filtered = filtered.filter((finding) => finding.severity === params.severity);
       }
-      if (params?.severity && params.severity !== 'ALL') {
-        filtered = filtered.filter((f) => f.severity === params.severity);
-      }
-      if (params?.category && params.category !== 'ALL') {
-        filtered = filtered.filter((f) => f.category === params.category);
+      if (params?.category && params.category !== 'all') {
+        filtered = filtered.filter((finding) => finding.engine === params.category);
       }
       return filtered;
     }
@@ -362,7 +364,7 @@ class ApiClient {
         method: 'GET',
       });
     } catch {
-      const found = localFindings.find((f) => f.id === id);
+      const found = localFindings.find((f) => f.finding_id === id);
       if (!found) throw new Error(`Finding ${id} not found`);
       return found;
     }

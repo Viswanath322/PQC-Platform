@@ -17,9 +17,16 @@ import { Info, X } from 'lucide-react';
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
+  const [darkMode, setDarkMode] = useState(() => window.localStorage.getItem('pqc-sentinel-theme') === 'dark');
   const [isOnline, setIsOnline] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    document.documentElement.style.colorScheme = darkMode ? 'dark' : 'light';
+    window.localStorage.setItem('pqc-sentinel-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,14 +101,14 @@ const AppLayout: React.FC = () => {
         <Route path="/inventory" element={<CryptoInventory />} />
         <Route path="/crypto-inventory" element={<CryptoInventory />} />
         <Route path="/reports" element={<Reports onShowToast={showToast} />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={<Settings darkMode={darkMode} onToggleDarkMode={() => setDarkMode((current) => !current)} />} />
         <Route path="/profile" element={<Profile onShowToast={showToast} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3 text-[13px] text-foreground shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150">
+        <div role="status" aria-live="polite" className="app-toast fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3 text-[13px] text-foreground shadow-2xl">
           <Info className="h-4 w-4 shrink-0 text-primary" />
           <span>{toastMessage}</span>
           <button

@@ -11,12 +11,12 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
   submessage,
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center">
-      <div className="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-4">
-        <Loader2 className="w-6 h-6 text-teal-400 animate-spin" />
+    <div className="loading-state flex flex-col items-center justify-center p-12 text-center">
+      <div className="icon-tile mb-4 flex h-11 w-11 items-center justify-center border border-primary/20 bg-primary/8">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
-      <h3 className="text-sm font-semibold text-slate-200">{message}</h3>
-      {submessage && <p className="text-xs text-slate-400 mt-1 max-w-sm">{submessage}</p>}
+      <h3 className="text-sm font-semibold text-slate-800">{message}</h3>
+      {submessage && <p className="mt-1 max-w-sm text-xs text-slate-500">{submessage}</p>}
     </div>
   );
 };

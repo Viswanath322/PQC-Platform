@@ -8,9 +8,9 @@ export type ScanStatus =
   | 'FAILED'
   | 'CANCELLED';
 
-export type FindingSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+export type FindingSeverity = 'critical' | 'high' | 'medium' | 'low';
 
-export type FindingCategory = 'SAST' | 'CRYPTO' | 'DEPENDENCY' | 'CONFIGURATION';
+export type FindingCategory = 'sast' | 'crypto' | 'dependency' | 'configuration';
 
 export type ConfidenceLevel = 'HIGH' | 'MEDIUM' | 'LOW';
 
@@ -114,20 +114,18 @@ export interface Scan {
 }
 
 export interface Finding {
-  id: string;
+  finding_id: string;
   scan_id: string;
+  engine: FindingCategory;
+  category: string | null;
   severity: FindingSeverity;
-  category: FindingCategory;
   title: string;
-  file: string;
-  line: number;
-  confidence: ConfidenceLevel;
-  explanation: string;
-  recommendation: string;
-  evidence: string;
-  cwe_id?: string;
-  detected_at?: string;
-  status?: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'SUPPRESSED';
+  file_path: string;
+  line_number: number | null;
+  evidence: string | null;
+  explanation?: string | null;
+  confidence: string | null;
+  recommendation: string | null;
 }
 
 export interface CryptoComponent {

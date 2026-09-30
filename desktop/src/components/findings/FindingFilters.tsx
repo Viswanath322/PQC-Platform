@@ -25,25 +25,25 @@ export const FindingFilters: React.FC<FindingFiltersProps> = ({
   onReset,
 }) => {
   const severities = [
-    { label: 'All Severities', value: 'ALL' },
-    { label: 'Critical', value: 'CRITICAL' },
-    { label: 'High', value: 'HIGH' },
-    { label: 'Medium', value: 'MEDIUM' },
-    { label: 'Low', value: 'LOW' },
+    { label: 'All Severities', value: 'all' },
+    { label: 'Critical', value: 'critical' },
+    { label: 'High', value: 'high' },
+    { label: 'Medium', value: 'medium' },
+    { label: 'Low', value: 'low' },
   ];
 
   const categories = [
-    { label: 'All Categories', value: 'ALL' },
-    { label: 'SAST Code', value: 'SAST' },
-    { label: 'Cryptographic', value: 'CRYPTO' },
-    { label: 'Dependency', value: 'DEPENDENCY' },
-    { label: 'Configuration', value: 'CONFIGURATION' },
+    { label: 'All Categories', value: 'all' },
+    { label: 'SAST', value: 'sast' },
+    { label: 'Crypto', value: 'crypto' },
+    { label: 'Dependency', value: 'dependency' },
+    { label: 'Configuration', value: 'configuration' },
   ];
 
-  const hasActiveFilters = searchQuery !== '' || selectedSeverity !== 'ALL' || selectedCategory !== 'ALL';
+  const hasActiveFilters = searchQuery !== '' || selectedSeverity !== 'all' || selectedCategory !== 'all';
 
   return (
-    <div className="glass flex flex-col gap-3 rounded-xl p-4">
+    <div className="findings-filterbar glass flex flex-col gap-3 rounded-xl p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Search Input */}
         <div className="relative flex-1 min-w-[240px]">

@@ -6,11 +6,24 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
+  CloudOff,
+  HardDrive,
+  LockKeyhole,
+  Server,
+  Activity,
+  Check,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { api, API_BASE_URL } from '@/services/api';
 
-export const Settings: React.FC = () => {
+interface SettingsProps {
+  darkMode: boolean;
+  onToggleDarkMode: () => void;
+}
+
+export const Settings: React.FC<SettingsProps> = ({ darkMode, onToggleDarkMode }) => {
   const [apiUrl, setApiUrl] = useState(API_BASE_URL);
   const [isPinging, setIsPinging] = useState(false);
   const [pingResult, setPingResult] = useState<{
@@ -43,6 +56,9 @@ export const Settings: React.FC = () => {
     }
   };
 
+  const connectionState = pingResult === null ? 'warning' : pingResult.success ? 'connected' : 'offline';
+  const connectionLabel = pingResult === null ? 'Warning · Not tested' : pingResult.success ? 'Connected' : 'Offline';
+
   return (
     <>
       <PageHeader
@@ -50,156 +66,119 @@ export const Settings: React.FC = () => {
         description="Configure on-premises scanner engine parameters, air-gapped security rules, and backend API integration."
       />
 
-      <div className="flex flex-col gap-6 max-w-4xl">
-        {/* Backend API Connectivity Card */}
-        <div className="card p-6 flex flex-col gap-5">
-          <div className="flex items-center justify-between pb-3 border-b border-border">
-            <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 ring-1 ring-primary/25 text-primary">
-                <Wifi className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="section-title">Backend API & health monitoring</h3>
-                <p className="section-sub mt-0.5">
-                  FastAPI service endpoint configuration (GET /api/v1/health)
-                </p>
-              </div>
-            </div>
+      <div className="settings-console flex flex-col gap-6 max-w-5xl">
+        <section className="settings-section" aria-labelledby="connectivity-heading">
+          <div className="settings-section-heading">
+            <span>01</span><h2 id="connectivity-heading">Connectivity</h2>
+            <p>Backend endpoint and service health</p>
           </div>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="eyebrow">
-                API Base URL (Environment Configured)
-              </label>
-              <div className="flex items-center gap-3">
+          <div className="settings-panel settings-connectivity-panel">
+            <div className="settings-panel-title">
+              <div className="settings-icon-tile"><Wifi className="h-[18px] w-[18px]" /></div>
+              <div><h3>Backend API</h3><p>FastAPI service · GET /api/v1/health</p></div>
+              <span className={`settings-state settings-state-${connectionState}`}><i />{connectionLabel}</span>
+            </div>
+            <div className="settings-api-form">
+              <div className="settings-field">
+                <label htmlFor="settings-api-url">API base URL <span>ENVIRONMENT CONFIGURED</span></label>
                 <input
+                  id="settings-api-url"
                   type="text"
                   value={apiUrl}
                   onChange={(e) => setApiUrl(e.target.value)}
-                  className="flex-1 h-9 rounded-lg border border-white/80 bg-white/70 px-3.5 text-[13px] font-mono text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                  className="font-mono"
                 />
-                <button
-                  type="button"
-                  onClick={handleTestConnection}
-                  disabled={isPinging}
-                  className="btn-primary"
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${isPinging ? 'animate-spin' : ''}`} />
-                  <span>{isPinging ? 'Testing…' : 'Test connection'}</span>
-                </button>
+                <p>Configured via <code>VITE_API_URL</code>. Defaults to <code>http://127.0.0.1:8000/api/v1</code>.</p>
               </div>
-              <p className="text-[12px] text-muted-foreground">
-                Configured via <code className="font-mono text-primary text-[11px]">VITE_API_URL</code>. Defaults to{' '}
-                <code className="font-mono text-primary text-[11px]">http://127.0.0.1:8000/api/v1</code>.
-              </p>
+              <button type="button" onClick={handleTestConnection} disabled={isPinging} className="btn-primary settings-test-button">
+                <RefreshCw className={`h-3.5 w-3.5 ${isPinging ? 'animate-spin' : ''}`} />
+                <span>{isPinging ? 'Testing…' : 'Test connection'}</span>
+              </button>
             </div>
-
             {pingResult && (
-              <div
-                className={`p-4 rounded-xl border text-[13px] flex items-start gap-3 ${
-                  pingResult.success
-                    ? 'bg-success/10 border-success/30 text-success'
-                    : 'bg-critical/10 border-critical/30 text-critical'
-                }`}
-              >
-                {pingResult.success ? (
-                  <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                )}
-                <div>
-                  <div className="font-semibold">
-                    {pingResult.success ? 'Backend Health Verified' : 'Backend Offline / Unreachable'}
-                  </div>
-                  <div className="text-[12px] mt-1 font-mono opacity-90">
-                    {pingResult.message}
-                  </div>
-                </div>
+              <div className={`settings-health-result ${pingResult.success ? 'is-connected' : 'is-offline'}`}>
+                {pingResult.success ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertCircle className="h-4 w-4 shrink-0" />}
+                <div><strong>{pingResult.success ? 'Backend Health Verified' : 'Backend Offline / Unreachable'}</strong><p>{pingResult.message}</p></div>
               </div>
             )}
           </div>
-        </div>
+        </section>
 
-        {/* Scanner Engine Configuration */}
-        <div className="card p-6 flex flex-col gap-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-border">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-500/10 ring-1 ring-violet-500/25 text-violet-600">
-              <Cpu className="h-5 w-5" />
+        <section className="settings-section" aria-labelledby="scanner-heading">
+          <div className="settings-section-heading">
+            <span>02</span><h2 id="scanner-heading">Scanner engine</h2>
+            <p>Detection engine and compliance baseline</p>
+          </div>
+          <div className="settings-panel settings-engine-grid">
+            <div className="settings-info-block">
+              <div className="settings-info-icon is-pqc"><Cpu /></div>
+              <div><span>ENGINE VERSION</span><strong>PQC-Sentinel AST Analyzer v0.8.4</strong><p>Post-quantum cryptographic detection and AST parsing engine</p></div>
+              <b className="settings-state settings-state-active"><i />Active</b>
             </div>
-            <div>
-              <h3 className="section-title">Scanner engine configuration</h3>
-              <p className="section-sub mt-0.5">
-                Post-quantum cryptographic detection and AST parsing engine
-              </p>
+            <div className="settings-info-block">
+              <div className="settings-info-icon"><Shield /></div>
+              <div><span>FIPS BASELINE</span><strong>FIPS 203 / 204 / 205</strong><p>Baseline enabled for cryptographic assessment</p></div>
+              <b className="settings-state settings-state-enforced"><i />Enforced</b>
             </div>
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[13px]">
-            <div className="p-4 rounded-xl bg-white/60 border border-slate-200/60">
-              <span className="eyebrow">Active Engine Version</span>
-              <div className="font-semibold text-slate-900 mt-1">
-                PQC-Sentinel AST Analyzer v0.8.4
-              </div>
-              <div className="text-[12px] text-primary mt-1 font-mono">
-                FIPS 203 / 204 / 205 baseline enabled
-              </div>
+        <section className="settings-section" aria-labelledby="airgap-heading">
+          <div className="settings-section-heading">
+            <span>03</span><h2 id="airgap-heading">Air-gapped security</h2>
+            <p>Local data handling and isolation controls</p>
+          </div>
+          <div className="settings-panel settings-airgap-panel">
+            <div className="settings-telemetry-banner">
+              <div className="settings-info-icon is-secure"><CloudOff /></div>
+              <div><span>TELEMETRY MODE</span><strong>Air-Gapped Offline Mode</strong><p>Zero external SaaS telemetry</p></div>
+              <span className="settings-state settings-state-enforced"><i />Enforced</span>
             </div>
-
-            <div className="p-4 rounded-xl bg-white/60 border border-slate-200/60">
-              <span className="eyebrow">Data Telemetry Mode</span>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary ring-1 ring-primary/25">
-                  Air-Gapped Offline Mode
-                </span>
+            <div className="settings-control-grid">
+              <div className="settings-control-row">
+                <div className="settings-info-icon is-secure"><LockKeyhole /></div>
+                <div><strong>Zero Cloud Telemetry</strong><p>ASTs, vulnerabilities, and CBOM components remain within the local environment.</p></div>
+                <span className="settings-state settings-state-enforced"><i />Enforced</span>
               </div>
-              <div className="text-[12px] text-slate-500 mt-1">
-                Zero external SaaS exfiltration
+              <div className="settings-control-row">
+                <div className="settings-info-icon"><HardDrive /></div>
+                <div><strong>Local Archive Sandbox</strong><p>Repository archives are validated locally and extracted inside an ephemeral sandbox.</p></div>
+                <span className="settings-state settings-state-enforced"><i />Enforced</span>
+              </div>
+              <div className="settings-control-row">
+                <div className="settings-info-icon"><Shield /></div>
+                <div><strong>Isolation controls</strong><p>Outbound data handling remains restricted to the local environment.</p></div>
+                <span className="settings-state settings-state-enforced"><i />Enforced</span>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Air-Gapped Security Controls */}
-        <div className="card p-6 flex flex-col gap-4">
-          <div className="flex items-center gap-3 pb-3 border-b border-border">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 ring-1 ring-primary/25 text-primary">
-              <Shield className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="section-title">Air-gapped isolation controls</h3>
-              <p className="section-sub mt-0.5">
-                Defense-grade policies preventing outbound network exfiltration
-              </p>
-            </div>
+        <section className="settings-section" aria-labelledby="system-status-heading">
+          <div className="settings-section-heading">
+            <span>04</span><h2 id="system-status-heading">System status</h2>
+            <p>Current platform control state</p>
           </div>
-
-          <div className="space-y-3 text-[13px]">
-            <div className="flex items-center justify-between p-4 rounded-xl bg-white/60 border border-slate-200/60">
-              <div>
-                <div className="font-medium text-foreground">Zero Cloud Telemetry</div>
-                <div className="text-muted-foreground text-[12px] mt-0.5">
-                  All ASTs, vulnerabilities, and CBOM components remain strictly within local environment memory.
-                </div>
-              </div>
-              <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-[11px] font-medium text-success ring-1 ring-success/25 shrink-0 ml-4">
-                Enforced
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-4 rounded-xl bg-white/60 border border-slate-200/60">
-              <div>
-                <div className="font-medium text-foreground">Local Archive Sandbox</div>
-                <div className="text-muted-foreground text-[12px] mt-0.5">
-                  Uploaded repository zip archives are validated in memory and extracted inside ephemeral sandbox containers.
-                </div>
-              </div>
-              <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-[11px] font-medium text-success ring-1 ring-success/25 shrink-0 ml-4">
-                Enforced
-              </span>
-            </div>
+          <div className="settings-system-status">
+            <div><Server /><span>Backend API</span><strong className={`settings-state settings-state-${connectionState}`}><i />{connectionLabel}</strong></div>
+            <div><Activity /><span>Scanner engine</span><strong className="settings-state settings-state-active"><i />Active</strong></div>
+            <div><Shield /><span>FIPS baseline</span><strong className="settings-state settings-state-enforced"><i /><Check />Enforced</strong></div>
+            <div><CloudOff /><span>Air-gapped policy</span><strong className="settings-state settings-state-enforced"><i /><Check />Enforced</strong></div>
           </div>
-        </div>
+          <div className="settings-appearance-row">
+            <div className="settings-info-icon is-pqc">{darkMode ? <Moon /> : <Sun />}</div>
+            <div><strong>Appearance</strong><p>Use the persisted light or dark workspace theme.</p></div>
+            <span className="settings-appearance-value">{darkMode ? 'Dark mode' : 'Light mode'}</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={darkMode}
+              aria-label="Enable dark mode"
+              onClick={onToggleDarkMode}
+              className={`settings-theme-switch ${darkMode ? 'is-on' : ''}`}
+            ><i /></button>
+          </div>
+        </section>
       </div>
     </>
   );

@@ -60,7 +60,7 @@ export const SeverityBadge: React.FC<SeverityBadgeProps> = ({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full font-medium ring-1',
+        'severity-badge inline-flex items-center rounded-full font-medium ring-1',
         styles.classes,
         sizeClasses
       )}

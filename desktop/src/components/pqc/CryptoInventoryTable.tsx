@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Copy, Check, ShieldAlert, AlertTriangle, ShieldCheck, X } from 'lucide-react';
+import { Search, Filter, Copy, Check, ShieldAlert, AlertTriangle, ShieldCheck, X, ChevronDown, ChevronRight, FileCode } from 'lucide-react';
 import type { CryptoComponent, RiskLevel } from '../../types/pqc';
 
 interface CryptoInventoryTableProps {
@@ -20,6 +20,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
   const [selectedAlgoGroup, setSelectedAlgoGroup] = useState<string>('ALL');
   const [selectedLibrary, setSelectedLibrary] = useState<string>('ALL');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const algorithmFamilies = useMemo(() => {
     const families = new Set<string>();
@@ -62,36 +63,52 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
 
   const handleCopyLocation = (e: React.MouseEvent, id: string, text: string) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId((current) => current === id ? null : current), 1600);
+    }).catch((error: unknown) => {
+      console.warn('Could not copy cryptographic asset location.', error);
+    });
   };
 
-  const renderRiskBadge = (risk: RiskLevel) => {
-    switch (risk) {
-      case 'HIGH':
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-critical/10 text-critical ring-1 ring-critical/25">
-            <ShieldAlert className="h-3 w-3" />
-            <span>High</span>
-          </span>
-        );
-      case 'MEDIUM':
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-medium/10 text-medium ring-1 ring-medium/25">
-            <AlertTriangle className="h-3 w-3" />
-            <span>Medium</span>
-          </span>
-        );
-      case 'LOW':
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium bg-low/10 text-low ring-1 ring-low/25">
-            <ShieldCheck className="h-3 w-3" />
-            <span>Low</span>
-          </span>
-        );
-    }
+  const renderRiskBadge = (risk: RiskLevel, quantumVulnerable: boolean) => {
+    const RiskIcon = risk === 'HIGH' ? ShieldAlert : risk === 'MEDIUM' ? AlertTriangle : ShieldCheck;
+    const riskClass = risk.toLowerCase();
+    const PostureIcon = quantumVulnerable ? ShieldAlert : ShieldCheck;
+
+    return (
+      <div className="crypto-risk-stack">
+        <span className={`crypto-posture-badge ${quantumVulnerable ? 'is-vulnerable' : 'is-resistant'}`}>
+          <PostureIcon className="h-3.5 w-3.5" />
+          {quantumVulnerable ? 'Quantum vulnerable' : 'Quantum resistant'}
+        </span>
+        <span className={`crypto-risk-level is-${riskClass}`}>
+          <RiskIcon className="h-3 w-3" /> {riskClass} risk
+        </span>
+      </div>
+    );
   };
+
+  const getAlgorithmFamily = (algorithm: string) => {
+    const normalized = algorithm.toUpperCase();
+    if (normalized.includes('DIFFIE-HELLMAN')) return 'Diffie-Hellman';
+    if (normalized.includes('CURVE25519')) return 'Curve25519';
+    if (normalized.includes('ED25519')) return 'Ed25519';
+    if (normalized.includes('ECDSA')) return 'ECDSA';
+    if (normalized.includes('ECDH')) return 'ECDH';
+    if (normalized.includes('RSA')) return 'RSA';
+    if (normalized.includes('CHACHA20')) return 'ChaCha20';
+    if (normalized.includes('BLOWFISH')) return 'Blowfish';
+    if (normalized.includes('AES')) return 'AES';
+    if (normalized.includes('PBKDF2')) return 'PBKDF2';
+    if (normalized.includes('HKDF')) return 'HKDF';
+    if (normalized.includes('HMAC')) return 'HMAC';
+    if (normalized.includes('SHA3')) return 'SHA-3';
+    if (normalized.includes('SHA')) return 'SHA';
+    return algorithm.split(/[- ]/)[0];
+  };
+
+  const toggleExpanded = (id: string) => setExpandedId((current) => current === id ? null : id);
 
   return (
     <div className="card w-full overflow-hidden flex flex-col">
@@ -184,15 +201,15 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
 
       {/* Table Container */}
       <div className="overflow-x-auto w-full">
-        <table className="w-full border-collapse text-left text-[13px]">
+        <table className="crypto-flow-table w-full border-collapse text-left text-[13px]">
           <thead>
             <tr className="border-b border-border bg-surface-2/50 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-              <th className="py-3 px-4 w-44">Algorithm</th>
-              <th className="py-3 px-4 w-36">Library</th>
-              <th className="py-3 px-4 w-24">Version</th>
-              <th className="py-3 px-4 min-w-[220px]">Location</th>
-              <th className="py-3 px-4 w-40">Usage</th>
-              <th className="py-3 px-4 w-28">Risk</th>
+              <th className="py-3 px-4 w-44"><span>Algorithm <ChevronRight /></span></th>
+              <th className="py-3 px-4 w-36"><span>Library <ChevronRight /></span></th>
+              <th className="py-3 px-4 w-24"><span>Version <ChevronRight /></span></th>
+              <th className="py-3 px-4 min-w-[220px]"><span>Source location <ChevronRight /></span></th>
+              <th className="py-3 px-4 w-40"><span>Usage <ChevronRight /></span></th>
+              <th className="py-3 px-4 w-48">Quantum risk</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border text-foreground">
@@ -204,22 +221,39 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
               </tr>
             ) : (
               filteredData.map((item) => (
+                <React.Fragment key={item.id}>
                 <tr
-                  key={item.id}
-                  onClick={() => onItemSelect && onItemSelect(item)}
-                  className={`transition-colors ${
-                    onItemSelect ? 'cursor-pointer hover:bg-surface-2/60' : 'hover:bg-surface-2/30'
-                  }`}
+                  onClick={() => {
+                    onItemSelect?.(item);
+                    toggleExpanded(item.id);
+                  }}
+                  aria-expanded={expandedId === item.id}
+                  className={`crypto-inventory-row ${expandedId === item.id ? 'is-expanded' : ''}`}
                 >
                   {/* Algorithm */}
                   <td className="py-3 px-4 font-medium text-foreground">
-                    <div className="flex flex-col">
-                      <span className="font-mono text-[13px]">{item.algorithm}</span>
-                      {item.curveOrKeySize && (
-                        <span className="text-[11px] text-muted-foreground font-mono">
-                          {item.curveOrKeySize}
-                        </span>
-                      )}
+                    <div className="crypto-algorithm-cell">
+                      <div className="flex min-w-0 flex-col">
+                        <span className="font-mono text-[13px]">{item.algorithm}</span>
+                        {item.curveOrKeySize && (
+                          <span className="text-[11px] text-muted-foreground font-mono">
+                            {item.curveOrKeySize}
+                          </span>
+                        )}
+                        <span className="crypto-family-badge">{getAlgorithmFamily(item.algorithm)}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="crypto-expand-button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          toggleExpanded(item.id);
+                        }}
+                        aria-label={`${expandedId === item.id ? 'Collapse' : 'Expand'} details for ${item.algorithm}`}
+                        title={expandedId === item.id ? 'Hide algorithm details' : 'Show algorithm details'}
+                      >
+                        {expandedId === item.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </button>
                     </div>
                   </td>
 
@@ -237,15 +271,16 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
 
                   {/* Location */}
                   <td className="py-3 px-4">
-                    <div className="flex items-center gap-1.5">
+                    <div className="crypto-location-cell">
+                      <FileCode className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <code className="font-mono text-[11.5px] text-primary bg-surface-2 px-1.5 py-0.5 rounded break-all max-w-[300px] truncate">
                         {item.location}
                       </code>
                       <button
                         onClick={(e) => handleCopyLocation(e, item.id, item.location)}
-                        title="Copy file path"
-                        className="text-muted-foreground hover:text-foreground p-1 rounded"
-                        aria-label="Copy file path"
+                        title={copiedId === item.id ? 'Source path copied' : 'Copy source path'}
+                        className="crypto-copy-path"
+                        aria-label={`${copiedId === item.id ? 'Copied' : 'Copy'} source path for ${item.algorithm}`}
                       >
                         {copiedId === item.id ? (
                           <Check className="h-3.5 w-3.5 text-success" />
@@ -267,8 +302,21 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                   </td>
 
                   {/* Risk */}
-                  <td className="py-3 px-4">{renderRiskBadge(item.risk)}</td>
+                  <td className="py-3 px-4">{renderRiskBadge(item.risk, item.quantumVulnerable)}</td>
                 </tr>
+                {expandedId === item.id && (
+                  <tr className="crypto-expanded-row">
+                    <td colSpan={6}>
+                      <div className="crypto-expanded-details">
+                        {item.curveOrKeySize && <div><span>Key / curve detail</span><strong>{item.curveOrKeySize}</strong></div>}
+                        <div><span>Purpose</span><strong>{item.purpose || item.usage}</strong></div>
+                        <div><span>Quantum posture</span><strong className={item.quantumVulnerable ? 'text-critical' : 'text-success'}>{item.quantumVulnerable ? 'Shor-vulnerable' : 'Quantum-resistant'}</strong></div>
+                        {item.status && <div><span>Status</span><strong>{item.status}</strong></div>}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </React.Fragment>
               ))
             )}
           </tbody>

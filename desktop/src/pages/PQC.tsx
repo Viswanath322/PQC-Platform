@@ -7,6 +7,7 @@ import {
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RiskCard } from '@/components/pqc/RiskCard';
 import { RiskDistribution } from '@/components/pqc/RiskDistribution';
+import { QuantumRiskHeatmap } from '@/components/pqc/QuantumRiskHeatmap';
 import { CryptoInventoryTable } from '@/components/pqc/CryptoInventoryTable';
 import { CBOMTable } from '@/components/pqc/CBOMTable';
 import { MigrationCandidates } from '@/components/pqc/MigrationCandidates';
@@ -117,6 +118,9 @@ export const PQC: React.FC<PQCPageProps> = ({
 
         {/* 2. Risk Distribution Chart */}
         <RiskDistribution summary={mockRiskSummary} selectedRisk={selectedRiskFilter} />
+
+        {/* Quantum exposure by detected cryptographic family */}
+        <QuantumRiskHeatmap data={mockCryptoInventory} />
 
         {/* 3. Migration Candidates */}
         <MigrationCandidates

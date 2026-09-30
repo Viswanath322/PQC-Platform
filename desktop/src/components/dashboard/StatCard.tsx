@@ -32,7 +32,7 @@ export function StatCard({
     <div className="card card-hover min-w-0 p-5">
       <div className="flex items-center justify-between">
         <span className="eyebrow">{label}</span>
-        <span className={cn("grid h-8 w-8 place-items-center rounded-lg ring-1", t.bg, t.ring)}>
+        <span className={cn("icon-tile grid h-8 w-8 place-items-center rounded-lg ring-1", t.bg, t.ring)}>
           <Icon className={cn("h-4 w-4", t.text)} aria-hidden />
         </span>
       </div>

@@ -160,7 +160,7 @@ export const Scans: React.FC = () => {
             ))}
           </div>
         ) : filteredScans.length === 0 ? (
-          <div className="card flex flex-col items-center justify-center p-12 text-center">
+          <div className="empty-state card flex flex-col items-center justify-center p-12 text-center">
             <div className="grid h-12 w-12 place-items-center rounded-xl bg-surface-2 text-muted-foreground">
               <ScanIcon className="h-6 w-6" />
             </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Layers, Binary, Hash, Shield } from 'lucide-react';
+import { Lock, Layers, Hash, Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { CryptoInventoryTable } from '@/components/pqc/CryptoInventoryTable';
 import { CBOMTable } from '@/components/pqc/CBOMTable';
@@ -10,20 +10,27 @@ export const CryptoInventory: React.FC = () => {
 
   // Quick stats
   const total = mockCryptoInventory.length;
-  const asymmetricCount = mockCryptoInventory.filter(
-    (c) =>
-      c.algorithm.includes('RSA') ||
-      c.algorithm.includes('ECD') ||
-      c.algorithm.includes('Ed25519') ||
-      c.algorithm.includes('Diffie')
-  ).length;
+  const vulnerableCount = mockCryptoInventory.filter((component) => component.quantumVulnerable).length;
+  const resistantCount = total - vulnerableCount;
   const symmetricCount = mockCryptoInventory.filter(
     (c) =>
       c.algorithm.includes('AES') ||
       c.algorithm.includes('ChaCha') ||
       c.algorithm.includes('Blowfish')
   ).length;
-  const hashCount = total - asymmetricCount - symmetricCount;
+  const hashCount = mockCryptoInventory.filter(
+    (component) => /SHA|HMAC|PBKDF2|HKDF/i.test(component.algorithm)
+  ).length;
+  const vulnerableShare = total === 0 ? 0 : (vulnerableCount / total) * 100;
+  const resistantShare = total === 0 ? 0 : (resistantCount / total) * 100;
+
+  const postureMetrics = [
+    { label: 'Total assets', value: total, tone: 'neutral', icon: Shield },
+    { label: 'Shor-vulnerable', value: vulnerableCount, tone: 'risk', icon: ShieldAlert },
+    { label: 'Quantum-resistant', value: resistantCount, tone: 'secure', icon: ShieldCheck },
+    { label: 'Symmetric primitives', value: symmetricCount, tone: 'crypto', icon: Lock },
+    { label: 'Hashes & digests', value: hashCount, tone: 'crypto', icon: Hash },
+  ] as const;
 
   return (
     <>
@@ -59,68 +66,36 @@ export const CryptoInventory: React.FC = () => {
       />
 
       <div className="flex flex-col gap-6">
-        {/* KPI Row */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="card p-5">
-            <div className="flex items-center justify-between">
-              <span className="eyebrow">Total Cryptographic Assets</span>
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 ring-1 ring-primary/25">
-                <Shield className="h-4 w-4 text-primary" />
-              </span>
+        <section className="crypto-posture card" aria-labelledby="crypto-posture-heading">
+          <div className="crypto-posture-heading">
+            <div>
+              <span className="crypto-posture-eyebrow">INVENTORY SUMMARY</span>
+              <h2 id="crypto-posture-heading">Cryptographic posture</h2>
             </div>
-            <div className="mt-3 tabular text-[36px] font-semibold tracking-tight text-foreground leading-none">
-              {total}
-            </div>
-            <p className="mt-3 truncate text-[13px] text-muted-foreground">
-              Unique primitives detected
-            </p>
+            <span className="crypto-posture-count">{total} assets assessed</span>
           </div>
 
-          <div className="card p-5">
-            <div className="flex items-center justify-between">
-              <span className="eyebrow">Asymmetric Cryptography</span>
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-critical/10 ring-1 ring-critical/25">
-                <Binary className="h-4 w-4 text-critical" />
-              </span>
-            </div>
-            <div className="mt-3 tabular text-[36px] font-semibold tracking-tight text-critical leading-none">
-              {asymmetricCount}
-            </div>
-            <p className="mt-3 truncate text-[13px] text-muted-foreground">
-              Shor-vulnerable (RSA, ECC, DH)
-            </p>
+          <div className="crypto-posture-metrics">
+            {postureMetrics.map(({ label, value, tone, icon: Icon }) => (
+              <div className={`crypto-posture-metric tone-${tone}`} key={label}>
+                <span className="crypto-posture-icon"><Icon className="h-4 w-4" /></span>
+                <div className="crypto-posture-metric-copy">
+                  <span>{label}</span>
+                  <strong className="tabular">{value}</strong>
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="card p-5">
-            <div className="flex items-center justify-between">
-              <span className="eyebrow">Symmetric Ciphers</span>
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-low/10 ring-1 ring-low/25">
-                <Lock className="h-4 w-4 text-low" />
-              </span>
-            </div>
-            <div className="mt-3 tabular text-[36px] font-semibold tracking-tight text-low leading-none">
-              {symmetricCount}
-            </div>
-            <p className="mt-3 truncate text-[13px] text-muted-foreground">
-              AES-256 / ChaCha20 primitives
-            </p>
+          <div className="crypto-posture-distribution" role="img" aria-label={`${vulnerableCount} quantum-vulnerable and ${resistantCount} quantum-resistant assets out of ${total}`}>
+            <div className="crypto-posture-risk-segment" style={{ width: `${vulnerableShare}%` }} />
+            <div className="crypto-posture-safe-segment" style={{ width: `${resistantShare}%` }} />
           </div>
-
-          <div className="card p-5">
-            <div className="flex items-center justify-between">
-              <span className="eyebrow">Hashes & Digests</span>
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-medium/10 ring-1 ring-medium/25">
-                <Hash className="h-4 w-4 text-medium" />
-              </span>
-            </div>
-            <div className="mt-3 tabular text-[36px] font-semibold tracking-tight text-medium leading-none">
-              {hashCount}
-            </div>
-            <p className="mt-3 truncate text-[13px] text-muted-foreground">
-              SHA-2, SHA-3, MAC functions
-            </p>
+          <div className="crypto-posture-legend">
+            <span><i className="is-vulnerable" />Quantum-vulnerable <strong>{vulnerableCount}</strong></span>
+            <span><i className="is-resistant" />Quantum-resistant <strong>{resistantCount}</strong></span>
           </div>
-        </div>
+        </section>
 
         {/* Tab Content */}
         {activeTab === 'inventory' ? (

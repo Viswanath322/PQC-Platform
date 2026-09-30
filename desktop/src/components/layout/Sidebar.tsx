@@ -1,95 +1,108 @@
-import { LayoutDashboard, FolderGit2, ScanLine, Bug, ShieldCheck, KeyRound, FileText, Settings, Shield } from "lucide-react";
+import {
+  Activity,
+  Bug,
+  FileText,
+  FolderGit2,
+  KeyRound,
+  LayoutDashboard,
+  ScanLine,
+  Settings,
+  Shield,
+  ShieldCheck,
+} from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/context/UserContext";
 
-const nav = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/projects", label: "Projects", icon: FolderGit2 },
-  { to: "/scans", label: "Scans", icon: ScanLine },
-  { to: "/findings", label: "Findings", icon: Bug },
-  { to: "/pqc", label: "PQC Assessment", icon: ShieldCheck, badge: "PQC" },
-  { to: "/inventory", label: "Crypto Inventory", icon: KeyRound },
-  { to: "/reports", label: "Reports", icon: FileText },
-  { to: "/settings", label: "Settings", icon: Settings },
+const sections = [
+  {
+    label: "WORKSPACE",
+    links: [
+      { to: "/", label: "Overview", icon: LayoutDashboard },
+      { to: "/projects", label: "Projects", icon: FolderGit2 },
+      { to: "/scans", label: "Scans", icon: ScanLine },
+      { to: "/findings", label: "Findings", icon: Bug },
+    ],
+  },
+  {
+    label: "INTELLIGENCE",
+    links: [
+      { to: "/pqc", label: "PQC Assessment", icon: ShieldCheck, badge: "PQC" },
+      { to: "/inventory", label: "Crypto Inventory", icon: KeyRound },
+      { to: "/reports", label: "Reports", icon: FileText },
+    ],
+  },
+  {
+    label: "SYSTEM",
+    links: [
+      { to: "/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
 
 export function Sidebar() {
   const { profile } = useUser();
 
   return (
-    <aside className="flex h-full shrink-0 flex-col justify-between rounded-2xl border border-white/80 bg-white/60 p-3 shadow-[0_8px_32px_rgba(41,56,77,0.06)] backdrop-blur-2xl backdrop-saturate-150 lg:p-3.5 w-16 lg:w-[240px]">
-      <div className="flex flex-col gap-5">
-        {/* Brand */}
-        <div className="flex items-center gap-3 px-1.5 lg:px-2 py-1 rounded-xl transition-all duration-200 border border-transparent hover:border-white/70 hover:bg-white/40 hover:backdrop-blur-md cursor-default">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/25 shadow-sm transition-transform duration-200 hover:scale-105">
-            <Shield className="h-5 w-5 text-primary" />
+    <aside className="app-sidebar flex h-full w-[70px] shrink-0 flex-col justify-between overflow-hidden rounded-2xl px-2.5 py-3.5 lg:w-[252px] lg:px-3.5">
+      <div className="flex min-h-0 flex-col">
+        <div className="brand-lockup mb-7 flex items-center gap-3 px-1.5 py-1.5">
+          <div className="brand-mark grid h-10 w-10 shrink-0 place-items-center rounded-xl">
+            <Shield className="h-[21px] w-[21px]" strokeWidth={1.8} />
           </div>
-          <div className="hidden leading-tight lg:block">
-            <div className="text-[15px] font-semibold tracking-tight text-slate-900">PQC Sentinel</div>
-            <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
-              <span className="rounded bg-purple-100/80 text-purple-700 font-semibold px-1 py-0.2 border border-purple-200/70 text-[10px]">v0.8.4</span>
-              <span>Security Assessment</span>
+          <div className="hidden min-w-0 leading-tight lg:block">
+            <div className="text-[15px] font-semibold tracking-[-0.03em] text-white">PQC Sentinel</div>
+            <div className="mt-1 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400">
+              <Activity className="h-3 w-3 text-teal-400" /> Security platform
             </div>
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex flex-1 flex-col gap-1">
-          {nav.map(({ to, label, icon: Icon, badge }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === "/"}
-              aria-label={label}
-              className={({ isActive }) =>
-                cn(
-                  "group relative flex h-9 items-center justify-center gap-3 rounded-xl text-[13.5px] transition-all duration-200 ease-out border lg:justify-start lg:px-3",
-                  isActive
-                    ? "border-white/95 bg-white/90 text-slate-950 shadow-[inset_0_1px_1px_#fff,0_4px_14px_-4px_hsl(var(--primary)/0.35),0_1px_2px_rgba(0,0,0,0.04)] backdrop-blur-xl font-medium before:absolute before:left-0 before:top-2 before:h-5 before:w-0.5 before:rounded-full before:bg-primary"
-                    : "border-transparent text-slate-600 hover:border-white/90 hover:bg-white/60 hover:text-slate-950 hover:backdrop-blur-md hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.95),0_4px_12px_-2px_rgba(41,56,77,0.06),0_1px_2px_rgba(41,56,77,0.02)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
-                )
-              }
-            >
-              <Icon className="h-4 w-4 shrink-0 transition-colors duration-150 group-hover:text-primary" />
-              <span className="hidden flex-1 lg:block">{label}</span>
-              {badge && (
-                <span className="hidden rounded-md bg-purple-100/80 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 ring-1 ring-purple-300/60 lg:block group-hover:bg-purple-200/70 transition-colors shadow-xs">
-                  {badge}
-                </span>
-              )}
-            </NavLink>
+        <nav aria-label="Primary navigation" className="flex min-h-0 flex-col gap-5 overflow-y-auto">
+          {sections.map((section) => (
+            <div key={section.label}>
+              <div className="nav-section-label mb-2 hidden px-3 text-[9px] font-semibold tracking-[0.16em] lg:block">
+                {section.label}
+              </div>
+              <div className="flex flex-col gap-1">
+                {section.links.map(({ to, label, icon: Icon, badge }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={to === "/"}
+                    aria-label={label}
+                    title={label}
+                    className={({ isActive }) =>
+                      cn("app-nav-link group relative flex h-10 items-center justify-center gap-3 rounded-lg border px-2.5 text-[12px] transition-all duration-150 lg:justify-start lg:px-3", isActive && "is-active")
+                    }
+                  >
+                    <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+                    <span className="hidden min-w-0 flex-1 truncate lg:block">{label}</span>
+                    {badge && <span className="nav-badge hidden lg:inline-flex">{badge}</span>}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
       </div>
 
-      {/* User Profile Card Button */}
-      <NavLink
-        to="/profile"
-        title="Open and edit auditor profile"
-        className={({ isActive }) =>
-          cn(
-            "flex items-center justify-center gap-3 rounded-xl p-2 transition-all duration-200 border lg:justify-start lg:p-2.5 group cursor-pointer",
-            isActive
-              ? "border-white/95 bg-white/90 shadow-[inset_0_1px_1px_#fff,0_4px_14px_-4px_hsl(var(--primary)/0.25)] ring-1 ring-primary/30 backdrop-blur-xl"
-              : "border-white/70 bg-white/50 backdrop-blur-md shadow-sm hover:border-white/95 hover:bg-white/75 hover:backdrop-blur-xl hover:shadow-[inset_0_1px_1px_#fff,0_6px_20px_-4px_rgba(41,56,77,0.08)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
-          )
-        }
-      >
-        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary ring-1 ring-primary/25 transition-transform duration-200 group-hover:scale-105 group-hover:ring-primary/40">
-          {profile.avatarInitials}
-        </div>
-        <div className="hidden min-w-0 leading-tight lg:block flex-1">
-          <div className="flex items-center justify-between">
-            <span className="truncate text-[13px] font-medium text-slate-900 group-hover:text-primary transition-colors">
-              {profile.name}
-            </span>
-          </div>
-          <div className="truncate text-[11px] text-slate-500">
-            {profile.title}
-          </div>
-        </div>
-      </NavLink>
+      <div className="mt-4 flex flex-col gap-2">
+        <NavLink
+          to="/profile"
+          title="Open and edit auditor profile"
+          className={({ isActive }) => cn("profile-card group flex items-center justify-center gap-2.5 rounded-xl border p-2 transition-colors lg:justify-start lg:px-2.5 lg:py-2.5", isActive && "is-active")}
+        >
+          <span className="profile-avatar grid h-8 w-8 shrink-0 place-items-center rounded-full text-[11px] font-semibold ring-1">
+            {profile.avatarInitials}
+          </span>
+          <span className="hidden min-w-0 flex-1 leading-tight lg:block">
+            <span className="block truncate text-[12px] font-medium text-white">{profile.name}</span>
+            <span className="mt-1 block truncate text-[10px] text-slate-400">{profile.title}</span>
+          </span>
+          <span className="hidden text-[10px] text-slate-500 lg:block">⌘</span>
+        </NavLink>
+      </div>
     </aside>
   );
 }

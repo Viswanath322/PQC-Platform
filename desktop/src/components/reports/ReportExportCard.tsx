@@ -36,7 +36,7 @@ export const ReportExportCard: React.FC<ReportExportCardProps> = ({ option, onEx
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className={`grid h-11 w-11 place-items-center rounded-xl ring-1 ${formatConfig.iconBg}`}>
+            <div className={`icon-tile grid h-11 w-11 place-items-center rounded-lg ring-1 ${formatConfig.iconBg}`}>
               {formatConfig.icon}
             </div>
             <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${formatConfig.badge}`}>
