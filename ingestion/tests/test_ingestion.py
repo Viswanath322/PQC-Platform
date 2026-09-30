@@ -47,6 +47,13 @@ class IngestionTests(unittest.TestCase):
             ingest_repository(self.archive, self.destination)
         self.assertFalse(self.destination.exists())
 
+    def test_absolute_paths_are_rejected(self):
+        with zipfile.ZipFile(self.archive, "w") as z:
+            z.writestr("/etc/passwd", "unsafe")
+        with self.assertRaisesRegex(ExtractionError, "Unsafe ZIP member"):
+            ingest_repository(self.archive, self.destination)
+        self.assertFalse(self.destination.exists())
+
     def test_scan_adapter_uses_scan_specific_directory_and_saves_json(self):
         scan_id = "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f"
         with zipfile.ZipFile(self.archive, "w") as z:
@@ -122,6 +129,24 @@ class IngestionTests(unittest.TestCase):
         self.assertEqual(classify_file("settings.unknown", b"API_URL=http://localhost\n"), "config")
         self.assertEqual(classify_file("settings.unknown", b"{\"debug\": true}"), "config")
         self.assertEqual(classify_file("payload.unknown", b"\x00\x01"), "binary")
+
+    def test_additional_config_and_source_file_types(self):
+        # Issue #22: .pem should be config, .html should be source
+        self.assertEqual(classify_file("cert.pem"), "config")
+        self.assertEqual(classify_file("key.pem"), "config")
+        self.assertEqual(classify_file("index.html"), "source")
+        self.assertEqual(classify_file("page.htm"), "source")
+
+    def test_manifest_file_variations(self):
+        # Issue #41.3: requirements-*.txt, Pipfile, Gemfile, setup.py recognition
+        self.assertEqual(classify_file("requirements.txt"), "manifest")
+        self.assertEqual(classify_file("requirements-dev.txt"), "manifest")
+        self.assertEqual(classify_file("requirements-test.txt"), "manifest")
+        self.assertEqual(classify_file("Pipfile"), "manifest")
+        self.assertEqual(classify_file("Pipfile.lock"), "manifest")
+        self.assertEqual(classify_file("Gemfile"), "manifest")
+        self.assertEqual(classify_file("Gemfile.lock"), "manifest")
+        self.assertEqual(classify_file("setup.py"), "manifest")
 
     def test_scan_record_adapter_loads_repository_path_from_database_model(self):
         scan_id = "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f"

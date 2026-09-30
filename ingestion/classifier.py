@@ -8,6 +8,7 @@ _MANIFEST_NAMES = {
     "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "requirements.txt",
     "pyproject.toml", "poetry.lock", "cargo.lock", "go.sum", "go.mod",
     "pom.xml", "build.gradle", "gemfile.lock", "composer.lock",
+    "pipfile", "pipfile.lock", "gemfile", "setup.py",
 }
 _DOCS = {".md", ".rst", ".txt", ".adoc"}
 _DATA = {".csv", ".tsv", ".sql", ".db", ".sqlite"}
@@ -15,12 +16,13 @@ _CONFIG_NAMES = {
     ".env", ".editorconfig", ".gitignore", ".dockerignore", ".npmrc", ".nvmrc",
     "dockerfile", "makefile", "cmakelists.txt", "docker-compose", "docker-compose.yml",
 }
-_CONFIG_EXTENSIONS = {".env", ".conf", ".config", ".properties", ".ini", ".cfg", ".service", ".desktop", ".tf"}
+_CONFIG_EXTENSIONS = {".env", ".conf", ".config", ".properties", ".ini", ".cfg", ".service", ".desktop", ".tf", ".pem"}
 _BINARY = {".exe", ".dll", ".so", ".dylib", ".bin", ".class", ".jar", ".pdf", ".png", ".jpg", ".jpeg", ".gif", ".zip", ".tar", ".gz"}
 _SOURCE = {
     ".c", ".h", ".cc", ".cpp", ".cxx", ".hpp", ".cs", ".go", ".java", ".js", ".jsx",
     ".mjs", ".ts", ".tsx", ".py", ".rb", ".php", ".rs", ".swift", ".kt", ".kts",
     ".scala", ".sh", ".bash", ".ps1", ".pl", ".lua", ".r", ".dart", ".ex", ".exs",
+    ".html", ".htm",
 }
 _GENERATED_DIRS = {"generated", "gen", "vendor", "dist", "build", "coverage"}
 
@@ -28,6 +30,9 @@ _GENERATED_DIRS = {"generated", "gen", "vendor", "dist", "build", "coverage"}
 def classify_file(path: str | Path, sample: bytes | None = None) -> str:
     p = Path(path)
     name, suffix = p.name.lower(), p.suffix.lower()
+    # Check for requirements-*.txt pattern
+    if name.startswith("requirements") and name.endswith(".txt"):
+        return "manifest"
     if name in _MANIFEST_NAMES or name.endswith(".lock"):
         return "manifest"
     if name in _CONFIG_NAMES or name.startswith(".env.") or suffix in _CONFIG_EXTENSIONS or name.endswith(".config"):
