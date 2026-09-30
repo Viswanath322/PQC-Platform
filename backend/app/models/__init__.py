@@ -1,30 +1,20 @@
-"""
-Core SQLAlchemy Models Package for FastAPI backend
-Maintained by Vamsi (Database Workstream)
-"""
+"""Expose the shared SQLAlchemy models used by the API."""
 
 import sys
-import os
+from pathlib import Path
 
-# Ensure the root is on Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+repository_root = str(Path(__file__).resolve().parents[3])
+if repository_root not in sys.path:
+    sys.path.insert(0, repository_root)
 
-from database.models import (
+from database.models import (  # noqa: E402
     Base,
+    Finding,
     Organization,
-    User,
     Project,
     Scan,
     ScanFile,
-    Finding,
+    User,
 )
 
-__all__ = [
-    "Base",
-    "Organization",
-    "User",
-    "Project",
-    "Scan",
-    "ScanFile",
-    "Finding",
-]
+__all__ = ["Base", "Finding", "Organization", "Project", "Scan", "ScanFile", "User"]

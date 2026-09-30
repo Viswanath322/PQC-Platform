@@ -1,0 +1,31 @@
+from datetime import datetime, timedelta, timezone
+
+import jwt
+from pwdlib import PasswordHash
+from pwdlib.exceptions import UnknownHashError
+
+from app.core.config import get_settings
+
+password_hasher = PasswordHash.recommended()
+
+
+def hash_password(password: str) -> str:
+    return password_hasher.hash(password)
+
+
+def verify_password(password: str, password_hash: str) -> bool:
+    try:
+        return password_hasher.verify(password, password_hash)
+    except UnknownHashError:
+        # An unsupported legacy hash is simply not valid here.
+        return False
+
+
+def create_access_token(subject: str) -> str:
+    settings = get_settings()
+    expires = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
+    return jwt.encode(
+        {"sub": subject, "exp": expires},
+        settings.jwt_secret_key,
+        algorithm=settings.jwt_algorithm,
+    )

@@ -1,39 +1,21 @@
-"""
-FastAPI Database Session and Engine Configuration
-Prepared by: Vamsi (Database Engineer) for Amrutha (Backend Foundation)
-"""
-
-import os
-from dotenv import load_dotenv
+from collections.abc import Generator
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
-load_dotenv()
+from app.core.config import get_settings
+from app.models import Base
 
-# Defaults to local PostgreSQL, with fallback to environment configuration
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg2://postgres@localhost:5432/pqc_security"
-)
-
+settings = get_settings()
 engine = create_engine(
-    DATABASE_URL,
+    settings.database_url,
     pool_pre_ping=True,
     pool_recycle=3600,
-    echo=False
+    echo=False,
 )
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
-def get_db():
-    """
-    FastAPI dependency that provides a transactional database session.
-    Usage in FastAPI router:
-        @router.get('/scans')
-        def list_scans(db: Session = Depends(get_db)):
-            ...
-    """
+def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db

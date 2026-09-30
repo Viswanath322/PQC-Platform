@@ -97,6 +97,8 @@ MySQL runs on `3306` (database `pqc_security`) and Redis on `6379`. The credenti
 
 ### 2. Run the backend
 
+See [`backend/README.md`](backend/README.md) for backend configuration and authentication endpoint details.
+
 ```bash
 cd backend
 python -m venv .venv
