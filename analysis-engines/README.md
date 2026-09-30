@@ -7,18 +7,18 @@ This package defines the common contract for deterministic analysis engines. It 
 - `AnalysisEngine` exposes a stable `name` and an `analyze(files)` method.
 - `EngineName` is one of `sast`, `crypto`, `dependency`, or `configuration`.
 - `Severity` is one of `critical`, `high`, `medium`, or `low`.
-- `Finding` normalizes the fields used by the Day 1 Finding API contract and validates required values, severity, line number, and confidence.
+- `Finding` normalizes the fields used by the Day 1 Finding API contract, requires a canonical UUID finding ID, and validates required values, severity, line number, and confidence.
+- `confidence` is a numeric value from 0 to 1. `is_development` is boolean metadata, defaulting to false; development fixtures should not be persisted or surfaced as real security findings.
 - `AnalysisResult` contains findings, a non-negative `files_processed` count, and any error messages.
 
 ## Development engine
 
 `DummyEngine` demonstrates the interface. It returns one synthetic low-severity finding with `is_development=True`; this fixture does not describe a real vulnerability and must not be used for security decisions.
 
-Because the requested directory is named `analysis-engines` (with a hyphen), add that directory to `PYTHONPATH` and import its modules from the repository root, for example:
+The source directory follows the team guide's `analysis-engines/` name. The repository-root `analysis_engines` package makes the code importable with a valid Python module name:
 
 ```powershell
-$env:PYTHONPATH = "analysis-engines"
-python -c "from dummy_engine import DummyEngine; from pathlib import Path; print(DummyEngine().analyze([Path('example.py')]))"
+python -c "from pathlib import Path; from analysis_engines import DummyEngine; print(DummyEngine().analyze([Path('example.py')]))"
 ```
 
 ## Adding an engine
@@ -29,4 +29,6 @@ python -c "from dummy_engine import DummyEngine; from pathlib import Path; print
 4. Keep engine-specific detection and errors inside the engine; use the shared `Finding` fields and severity values at its boundary.
 5. Mark fixtures with `is_development=True` and label their evidence clearly. Do not represent fixtures as real findings.
 
-Run checks from the repository root with `PYTHONPATH=analysis-engines python -m pytest analysis-engines/` once tests are added.
+Run checks from the repository root with `python -m pytest analysis-engines/`.
+
+Integration note: the Day 1 MySQL schema currently stores `confidence` as text and has no `is_development` column. Keep the engine/API contract numeric and filter development fixtures before persistence; if a future flow needs to persist these fields, update storage and API contracts together rather than silently changing their types.

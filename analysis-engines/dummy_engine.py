@@ -2,10 +2,11 @@
 
 from pathlib import Path
 from typing import Iterable
+from uuid import NAMESPACE_URL, uuid5
 
-from base.analyzer import AnalysisEngine
-from base.finding import EngineName, Finding, Severity
-from base.result import AnalysisResult
+from .base.analyzer import AnalysisEngine
+from .base.finding import EngineName, Finding, Severity
+from .base.result import AnalysisResult
 
 
 class DummyEngine(AnalysisEngine):
@@ -18,9 +19,9 @@ class DummyEngine(AnalysisEngine):
     def analyze(self, files: Iterable[Path]) -> AnalysisResult:
         processed_files = tuple(files)
         finding = Finding(
-            finding_id="dummy-development-001",
+            finding_id=str(uuid5(NAMESPACE_URL, "pqc-platform/dummy-engine/development-fixture")),
             engine=self.name,
-            category="development",
+            category="sast",
             severity=Severity.LOW,
             title="Development fixture: DummyEngine is connected",
             file_path="<development-fixture>",

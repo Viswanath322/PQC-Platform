@@ -1,0 +1,43 @@
+services:
+  mysql:
+    image: mysql:8.0.36
+    container_name: pqc_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: pqc_security
+      MYSQL_USER: pqc
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change_me_locally}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_change_me_locally}
+    ports:
+      # Bound to localhost (127.0.0.1) only for security in air-gapped/desktop environment
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "pqc", "-p${MYSQL_PASSWORD:-change_me_locally}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2.4-alpine
+    container_name: pqc_redis
+    restart: always
+    ports:
+      # Bound to localhost (127.0.0.1) only
+      - "127.0.0.1:6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_change_me_locally}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_change_me_locally}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+  redis_data:

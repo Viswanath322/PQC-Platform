@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import StrEnum
+from uuid import UUID
 
 
 class EngineName(StrEnum):
@@ -51,6 +52,13 @@ class Finding:
             value = getattr(self, field_name)
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"{field_name} must be a non-empty string")
+
+        try:
+            parsed_id = UUID(self.finding_id)
+        except (AttributeError, TypeError, ValueError) as exc:
+            raise ValueError("finding_id must be a canonical UUID string") from exc
+        if str(parsed_id) != self.finding_id:
+            raise ValueError("finding_id must be a canonical lowercase UUID string")
 
         if not isinstance(self.engine, EngineName):
             raise ValueError(f"engine must be one of: {', '.join(item.value for item in EngineName)}")
