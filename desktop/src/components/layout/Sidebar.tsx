@@ -51,10 +51,10 @@ export function Sidebar() {
   const { profile } = useUser();
 
   return (
-    <aside className="flex h-full shrink-0 flex-col justify-between rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_4px_24px_rgba(0,0,0,0.04)] backdrop-blur-xl lg:p-3.5 w-16 lg:w-[230px] select-none">
-      <div className="flex flex-col gap-4">
+    <aside className="flex h-full shrink-0 flex-col justify-between rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_4px_24px_rgba(0,0,0,0.04)] backdrop-blur-xl lg:p-3.5 w-16 lg:w-[236px] select-none">
+      <div className="flex flex-col gap-3.5">
         {/* Brand */}
-        <div className="flex items-center gap-2.5 px-1 py-1">
+        <div className="flex items-center gap-2.5 px-1 py-1 border-b border-slate-200/70 pb-3">
           <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-900 text-white shadow-xs">
             <Shield className="h-4.5 w-4.5 text-teal-400" />
           </div>
@@ -73,73 +73,76 @@ export function Sidebar() {
           </div>
         </div>
 
-        {/* Navigation Groups */}
+        {/* Navigation Sections */}
         <nav className="flex flex-1 flex-col gap-3">
           {navGroups.map((group, gIdx) => (
-            <div key={gIdx} className="flex flex-col gap-0.5">
+            <div key={gIdx} className="flex flex-col gap-1.5">
               {group.title && (
-                <div className="hidden lg:block px-2.5 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  {group.title}
+                <div className="hidden lg:flex items-center justify-between px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  <span>{group.title}</span>
                 </div>
               )}
-              {group.items.map(({ to, label, icon: Icon, badge }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={to === "/"}
-                  aria-label={label}
-                  className={({ isActive }) =>
-                    cn(
-                      "group flex h-8.5 items-center justify-center gap-2.5 rounded-lg px-2.5 text-[13px] font-medium transition-all duration-150 lg:justify-start",
-                      isActive
-                        ? "bg-white text-slate-950 font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.06)] ring-1 ring-slate-900/5"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-900/[0.04]"
-                    )
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <Icon
-                        className={cn(
-                          "h-4 w-4 shrink-0 transition-colors",
-                          isActive
-                            ? "text-purple-700"
-                            : "text-slate-400 group-hover:text-slate-700"
-                        )}
-                      />
-                      <span className="hidden flex-1 truncate lg:block">
-                        {label}
-                      </span>
-                      {badge && (
-                        <span
+              {/* Section Bordered Container */}
+              <div className="flex flex-col gap-0.5 rounded-xl border border-slate-200/75 bg-white/50 p-1 shadow-2xs backdrop-blur-xs">
+                {group.items.map(({ to, label, icon: Icon, badge }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={to === "/"}
+                    aria-label={label}
+                    className={({ isActive }) =>
+                      cn(
+                        "group flex h-8 items-center justify-center gap-2.5 rounded-lg px-2 text-[13px] font-medium transition-all duration-150 lg:justify-start",
+                        isActive
+                          ? "bg-white text-slate-950 font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.06)] ring-1 ring-slate-900/5"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-900/[0.04]"
+                      )
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <Icon
                           className={cn(
-                            "hidden rounded bg-purple-100/80 px-1.5 py-0.2 font-mono text-[10px] font-semibold text-purple-700 ring-1 ring-purple-200/80 lg:block",
-                            isActive && "bg-purple-100 ring-purple-300"
+                            "h-4 w-4 shrink-0 transition-colors",
+                            isActive
+                              ? "text-purple-700"
+                              : "text-slate-400 group-hover:text-slate-700"
                           )}
-                        >
-                          {badge}
+                        />
+                        <span className="hidden flex-1 truncate lg:block">
+                          {label}
                         </span>
-                      )}
-                    </>
-                  )}
-                </NavLink>
-              ))}
+                        {badge && (
+                          <span
+                            className={cn(
+                              "hidden rounded bg-purple-100/80 px-1.5 py-0.2 font-mono text-[10px] font-semibold text-purple-700 ring-1 ring-purple-200/80 lg:block",
+                              isActive && "bg-purple-100 ring-purple-300"
+                            )}
+                          >
+                            {badge}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
             </div>
           ))}
         </nav>
       </div>
 
       {/* User Profile Card Button */}
-      <div className="pt-2 border-t border-slate-200/60">
+      <div className="pt-2.5 border-t border-slate-200/70">
         <NavLink
           to="/profile"
           title="Open and edit auditor profile"
           className={({ isActive }) =>
             cn(
-              "flex items-center justify-center gap-2.5 rounded-xl p-1.5 transition-all duration-150 lg:justify-start lg:p-2 group cursor-pointer",
+              "flex items-center justify-center gap-2.5 rounded-xl border border-slate-200/75 bg-white/50 p-1.5 transition-all duration-150 shadow-2xs lg:justify-start lg:p-2 group cursor-pointer",
               isActive
-                ? "bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] ring-1 ring-slate-900/5"
-                : "hover:bg-slate-900/[0.04]"
+                ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] ring-1 ring-slate-900/5 border-slate-300/80"
+                : "hover:bg-white/80 hover:border-slate-300/80"
             )
           }
         >
