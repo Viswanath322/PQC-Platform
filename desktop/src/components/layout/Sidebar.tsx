@@ -84,7 +84,7 @@ export function Sidebar() {
               )}
             >
               {group.title && (
-                <div className="hidden lg:flex items-center justify-between px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                <div className="hidden lg:flex items-center justify-between px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-950">
                   <span>{group.title}</span>
                 </div>
               )}
