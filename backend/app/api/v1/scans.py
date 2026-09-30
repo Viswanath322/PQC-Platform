@@ -1,19 +1,19 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.scan import Project, Scan
 from app.schemas.common import UUID_PATTERN
 from app.schemas.scan import ScanCreate, ScanOut
 from app.services.storage_service import get_upload_path
-from app.services.redis_service import enqueue_scan
+from app.services.redis_service import enqueue_scan, dequeue_scan
 
 router = APIRouter(prefix="/scans", tags=["scans"])
 FINAL_STATES = {"COMPLETED", "FAILED", "CANCELLED"}
 
 
 @router.post("", response_model=ScanOut, status_code=201)
-def create_scan(body: ScanCreate, db: Session = Depends(get_db)):
+def create_scan(body: ScanCreate, response: Response, db: Session = Depends(get_db)):
     if not db.get(Project, body.project_id):
         raise HTTPException(404, "Project not found")
     zip_path = get_upload_path(body.upload_id)
@@ -22,7 +22,8 @@ def create_scan(body: ScanCreate, db: Session = Depends(get_db)):
     db.add(scan)
     db.commit()
     db.refresh(scan)
-    enqueue_scan(scan.id)
+    # scan is saved either way; the header tells the caller whether the Redis push worked
+    response.headers["X-Queue-Status"] = "enqueued" if enqueue_scan(scan.id) else "deferred"
     return scan
 
 
@@ -53,4 +54,5 @@ def cancel_scan(scan_id: str, db: Session = Depends(get_db)):
     scan.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
     db.refresh(scan)
+    dequeue_scan(scan.id)
     return scan

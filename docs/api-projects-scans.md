@@ -1,95 +1,95 @@
-# Projects, Upload and Scan APIs (Day 1)
+# Projects, Upload and Scan APIs
 
-Owner: Aakash | Branch: `backend/aakash-scan` | Base URL: `http://127.0.0.1:8000/api/v1`
+Owner: Aakash | Base URL: `http://127.0.0.1:8000/api/v1` | Swagger: `/docs`
 
-Auth is not enforced on these endpoints on Day 1.
+All ids are UUID strings (`CHAR(36)`). Example values below are illustrative.
+Auth is not enforced on these routes in the standalone branch. Login/organization scoping is being agreed with the foundation branch.
 
-## Run locally
+## Run locally (standalone branch)
 ```
 cd backend
 python -m venv .venv
 .venv\Scripts\activate
-python -m pip install fastapi uvicorn sqlalchemy pymysql pydantic-settings python-multipart redis
+python -m pip install fastapi uvicorn sqlalchemy pymysql cryptography pydantic-settings python-multipart redis
 python -m uvicorn dev_main:app --reload
 ```
-Swagger: http://127.0.0.1:8000/docs
 
-Env vars (optional): `DATABASE_URL` (default `sqlite:///./dev.db`), `REDIS_URL` (default `redis://127.0.0.1:6379/0`), `UPLOAD_DIR` (default `storage/uploads`).
-MySQL example: `mysql+pymysql://pqc:change_me_locally@127.0.0.1:3306/pqc_security`
+| Env var | Default | Notes |
+|---|---|---|
+| `DATABASE_URL` | `sqlite:///./dev.db` | MySQL: `mysql+pymysql://pqc:change_me_locally@127.0.0.1:3306/pqc_security` (schema comes from `database/schema.sql`; tables are only auto-created on SQLite) |
+| `REDIS_URL` | `redis://127.0.0.1:6379/0` | With the compose password: `redis://:change_me_locally@127.0.0.1:6379/0`. Memurai on Windows also works. |
+| `UPLOAD_DIR` | `storage/uploads` | ZIPs are stored on disk, never in MySQL |
 
 ## Projects
 
 ### POST /projects
-Request:
 ```json
 {"name": "Demo Banking Application", "description": "test"}
 ```
-Response `201`:
+`201`:
 ```json
-{"id": 1, "name": "Demo Banking Application", "description": "test", "created_at": "2026-09-29T07:36:47.994612"}
+{"id": "1eab70da-be6e-431f-a44f-e8bf2a04f107", "name": "Demo Banking Application", "description": "test", "created_at": "2026-09-30T09:50:10.304997"}
 ```
+Rules: `name` is trimmed, 1-255 chars (else `422`); `description` max 10,000 chars.
 
 ### GET /projects
-Response `200`: list of project objects, newest first.
+`200`: list of projects, newest first.
 
-### GET /projects/{id}
-Response `200`: one project. `404` if not found.
+### GET /projects/{project_id}
+`200` project. `422` if the id is not a UUID, `404` if it does not exist.
 
 ## Upload
 
 ### POST /uploads
-`multipart/form-data` with a field named `file` (a `.zip`, max 200 MB).
+`multipart/form-data`, field name `file`, a `.zip` up to 200 MB.
 
-Response `201`:
+`201`:
 ```json
-{"upload_id": "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f", "filename": "aakash-backend-files.zip", "size_bytes": 6723}
+{"upload_id": "d9752a19-855b-445b-a6b3-5c5e82545e14", "filename": "test-repo.zip", "size_bytes": 130}
 ```
-Errors: `400` not a .zip or invalid ZIP, `413` too large.
-
-The ZIP is stored on disk at `storage/uploads/{upload_id}.zip` (never in MySQL).
+`filename` is sanitized (basename only, harmless characters, max 100 chars); the raw client filename is never echoed.
+Errors: `400` not a `.zip` or not a valid ZIP, `413` too large.
 
 ## Scans
 
 ### POST /scans
-Request:
 ```json
-{"project_id": 1, "upload_id": "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f"}
+{"project_id": "1eab70da-be6e-431f-a44f-e8bf2a04f107", "upload_id": "d9752a19-855b-445b-a6b3-5c5e82545e14"}
 ```
-Response `201`:
+`201`:
 ```json
 {
-  "id": "0d522be1-3f0d-4098-9695-c43923de94e8",
-  "project_id": 1,
+  "id": "01f62f10-e8c6-4f3e-88de-65af165b33a7",
+  "project_id": "1eab70da-be6e-431f-a44f-e8bf2a04f107",
   "status": "QUEUED",
-  "repository_path": "C:\\...\\backend\\storage\\uploads\\a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f.zip",
-  "created_at": "2026-09-29T07:52:02.389114",
+  "created_at": "2026-09-30T09:50:10.837998",
   "started_at": null,
   "completed_at": null
 }
 ```
-Errors: `404` project or upload not found, `400` invalid `upload_id`.
-The scan id is also pushed to the Redis list `pqc:scan_queue` (skipped silently if Redis is down).
+- The server-side ZIP path is **not** returned. It is saved in `scans.repository_path` in MySQL for ingestion to read.
+- Response header `X-Queue-Status`: `enqueued` when the scan id was pushed to the Redis list `pqc:scan_queue`, or `deferred` when Redis was unreachable. The scan is saved and `QUEUED` either way (the database is the source of truth), and the failure is logged as a warning by `pqc.queue`. A worker should also pick up `QUEUED` scans from the database on startup.
+- Errors: `422` project_id is not a UUID, `404` project or upload not found, `400` invalid `upload_id`.
 
 ### GET /scans
-Optional query: `?project_id=1`. Response `200`: list of scans, newest first.
+Optional `?project_id=<uuid>` (`422` if not a UUID). Newest first.
 
 ### GET /scans/{scan_id}
-Response `200`: scan object. `404` if not found.
+`200` scan, `404` if not found.
 
 ### POST /scans/{scan_id}/cancel
-Sets status to `CANCELLED` and fills `completed_at`.
+Sets `CANCELLED`, fills `completed_at`, and removes the scan id from the Redis queue.
 Errors: `404` not found, `409` if already `COMPLETED`, `FAILED` or `CANCELLED`.
 
 ## Redis test
 
 ### GET /redis/ping
-Response `200`:
-```json
-{"redis": "ok", "queue_length": 1}
-```
-`503` if Redis is unreachable.
+`200`: `{"redis": "ok", "queue_length": 1}`. `503` if Redis is unreachable or the password is wrong.
 
-## Notes for teammates
-- Scan `id` is a UUID string. Project `id` is an integer.
-- `repository_path` is the stored ZIP path; ingestion reads from it.
-- Only `QUEUED` is produced on Day 1. Other statuses are reserved for later stages.
+## Tests
+```
+cd backend
+python -m pip install pytest httpx
+python -m pytest tests -v
+```
+Uses a throwaway SQLite DB and upload folder. Redis tests are skipped when Redis is not running.

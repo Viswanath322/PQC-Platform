@@ -26,6 +26,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from dev_main import app
+from app.core.database import SessionLocal
+from app.models.scan import Scan
 from app.services.redis_service import get_redis, QUEUE_KEY
 
 client = TestClient(app)
@@ -58,6 +60,11 @@ def upload_zip(filename="demo-banking.zip") -> dict:
 
 def create_scan(project_id: int, upload_id: str):
     return client.post(f"{API}/scans", json={"project_id": project_id, "upload_id": upload_id})
+
+
+def stored_path(scan_id: str) -> str:
+    with SessionLocal() as db:
+        return db.get(Scan, scan_id).repository_path
 
 
 def redis_up() -> bool:
@@ -136,7 +143,8 @@ def test_create_scan_is_queued_and_retrievable():
     assert scan["project_id"] == p["id"]
     assert scan["started_at"] is None
     assert scan["completed_at"] is None
-    assert Path(scan["repository_path"]).exists()
+    assert "repository_path" not in scan          # absolute server path is not exposed
+    assert Path(stored_path(scan["id"])).exists()  # but it is saved in the DB for ingestion
 
     g = client.get(f"{API}/scans/{scan['id']}")
     assert g.status_code == 200
@@ -257,3 +265,49 @@ def test_non_uuid_project_id_is_422_not_500():
     assert create_scan("not-a-uuid", up["upload_id"]).status_code == 422
     assert create_scan(99999999999999999999, up["upload_id"]).status_code == 422
     assert client.get(f"{API}/scans", params={"project_id": "abc"}).status_code == 422
+
+
+# ---------- audit fixes: no path/filename leaks, queue reporting, cancel dequeues ----------
+def test_scan_responses_never_contain_server_paths():
+    p = create_project()
+    scan = create_scan(p["id"], upload_zip()["upload_id"]).json()
+    for body in (scan, client.get(f"{API}/scans/{scan['id']}").json()):
+        assert "repository_path" not in body
+        assert "storage" not in str(body).lower()
+    assert all("repository_path" not in x for x in client.get(f"{API}/scans").json())
+
+
+@pytest.mark.parametrize("raw", ["../../evil<script>.zip", "..\\..\\win\\evil.zip", "C:\\Users\\x\\my repo.zip"])
+def test_upload_filename_is_sanitized(raw):
+    r = client.post(f"{API}/uploads", files={"file": (raw, make_zip_bytes(), "application/zip")})
+    assert r.status_code == 201
+    name = r.json()["filename"]
+    assert "/" not in name and "\\" not in name and "<" not in name and ".." not in name
+    assert name.lower().endswith(".zip")
+
+
+def test_queue_status_header_deferred_when_redis_down(monkeypatch):
+    monkeypatch.setenv("REDIS_URL", "redis://127.0.0.1:1/0")
+    r = create_scan(create_project()["id"], upload_zip()["upload_id"])
+    assert r.status_code == 201
+    assert r.json()["status"] == "QUEUED"
+    assert r.headers["X-Queue-Status"] == "deferred"
+
+
+@requires_redis
+def test_queue_status_header_enqueued_when_redis_up():
+    rc = get_redis()
+    r = create_scan(create_project()["id"], upload_zip()["upload_id"])
+    try:
+        assert r.headers["X-Queue-Status"] == "enqueued"
+    finally:
+        rc.lrem(QUEUE_KEY, 0, r.json()["id"])
+
+
+@requires_redis
+def test_cancel_removes_scan_from_redis_queue():
+    rc = get_redis()
+    scan = create_scan(create_project()["id"], upload_zip()["upload_id"]).json()
+    assert scan["id"] in rc.lrange(QUEUE_KEY, 0, -1)
+    assert client.post(f"{API}/scans/{scan['id']}/cancel").status_code == 200
+    assert scan["id"] not in rc.lrange(QUEUE_KEY, 0, -1)

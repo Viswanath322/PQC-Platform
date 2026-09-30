@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 import zipfile
 from pathlib import Path
@@ -6,6 +7,13 @@ from fastapi import UploadFile, HTTPException
 
 STORAGE_DIR = Path(os.getenv("UPLOAD_DIR", "storage/uploads"))
 MAX_BYTES = 200 * 1024 * 1024  # 200 MB dev limit
+
+
+def safe_filename(name: str | None) -> str:
+    """Basename only, harmless characters only, max 100 chars (never echo the raw client filename)."""
+    base = re.split(r"[\\/]", name or "")[-1]
+    base = re.sub(r"[^A-Za-z0-9._ -]", "_", base).strip(" .") or "upload.zip"
+    return base[-100:]
 
 
 def save_zip(file: UploadFile) -> dict:
@@ -33,7 +41,7 @@ def save_zip(file: UploadFile) -> dict:
         dest.unlink(missing_ok=True)
         raise HTTPException(400, "File is not a valid ZIP")
 
-    return {"upload_id": upload_id, "filename": file.filename, "size_bytes": size}
+    return {"upload_id": upload_id, "filename": safe_filename(file.filename), "size_bytes": size}
 
 
 def get_upload_path(upload_id: str) -> Path:
