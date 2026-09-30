@@ -15,56 +15,36 @@
 @config "../tailwind.config.ts";
 
 /* ═══════════════════════════════════════════════════════
-   LIGHT THEME DESIGN TOKENS (default)
+   APPLE PRO DARK GLASS DESIGN TOKENS (Default)
    ═══════════════════════════════════════════════════════ */
-:root {
-  --background: 210 40% 98%;
-  --surface: 0 0% 100%;
-  --surface-2: 214 32% 95%;
-  --border: 214 25% 88%;
-  --foreground: 222 47% 11%;
-  --muted-foreground: 215 16% 47%;
+:root, .dark {
+  --background: 240 10% 2.5%;
+  --surface: 240 10% 5%;
+  --surface-2: 240 8% 8%;
+  --border: 240 5% 15%;
+  --foreground: 0 0% 98%;
+  --muted-foreground: 240 5% 65%;
 
-  --primary: 172 76% 30%;
+  --primary: 168 80% 45%;
   --primary-foreground: 0 0% 100%;
-  --ring: 172 76% 36%;
+  --ring: 270 70% 60%;
 
-  --critical: 347 77% 48%;
-  --high: 24 94% 46%;
-  --medium: 38 92% 42%;
-  --low: 201 90% 40%;
-  --success: 152 62% 33%;
-
-  --radius: 0.75rem;
-
-  /* Purple accent tokens (matching signature badge) */
-  --accent-purple: 271 81% 53%;
-  --accent-purple-light: 270 95% 96%;
-  --accent-purple-border: 270 80% 88%;
-
-  /* Font variables */
-  --font-sans: "Inter", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Geist Mono Variable", ui-monospace, monospace;
-}
-
-/* ═══════════════════════════════════════════════════════
-   DARK PALETTE (for future theme toggle)
-   ═══════════════════════════════════════════════════════ */
-.dark {
-  --background: 225 22% 6%;
-  --surface: 225 20% 9%;
-  --surface-2: 225 18% 12%;
-  --border: 225 15% 17%;
-  --foreground: 210 20% 96%;
-  --muted-foreground: 218 12% 64%;
-  --primary: 168 76% 42%;
-  --primary-foreground: 225 30% 6%;
-  --ring: 168 76% 42%;
   --critical: 350 89% 60%;
   --high: 24 94% 58%;
   --medium: 43 96% 56%;
   --low: 199 89% 60%;
   --success: 152 69% 45%;
+
+  --radius: 0.75rem;
+
+  /* Purple accent tokens */
+  --accent-purple: 271 81% 65%;
+  --accent-purple-light: 271 60% 18%;
+  --accent-purple-border: 271 50% 30%;
+
+  /* Font variables */
+  --font-sans: "Inter", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono Variable", ui-monospace, monospace;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -98,46 +78,38 @@
    BASE RESETS
    ═══════════════════════════════════════════════════════ */
 * {
-  border-color: hsl(var(--border));
+  border-color: rgba(255, 255, 255, 0.10);
 }
 
 html {
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
+  color-scheme: dark;
 }
 
-/* Technical font bindings for air-gapped security platform */
 code, kbd, samp, pre {
   font-family: var(--font-mono);
 }
 
 /* ═══════════════════════════════════════════════════════
-   AURORA BACKGROUND
-   Fixed gradient blobs give glass surfaces something
-   colorful to blur against.
+   APPLE PRO DARK AURORA BACKGROUND
+   Deep black base with radiant luminous glow orbs
    ═══════════════════════════════════════════════════════ */
 body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background-color: #030712;
+  color: #f8fafc;
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
   overflow: hidden;
 
-  /* Light aurora — soft ambient gradient glow with light purple / lavender & teal */
   background-image:
-    radial-gradient(850px 580px at 88% -5%, hsl(268 85% 82% / 0.42), transparent 70%),
-    radial-gradient(750px 520px at 55% 10%, hsl(272 80% 86% / 0.28), transparent 68%),
-    radial-gradient(680px 460px at 6% -5%, hsl(172 72% 66% / 0.20), transparent 65%),
-    radial-gradient(660px 480px at 85% 100%, hsl(201 90% 75% / 0.18), transparent 65%),
-    radial-gradient(560px 380px at 0% 100%, hsl(24 90% 80% / 0.14), transparent 65%);
+    radial-gradient(900px 580px at 85% -5%, rgba(126, 34, 206, 0.28), transparent 70%),
+    radial-gradient(850px 520px at 15% 10%, rgba(13, 148, 136, 0.22), transparent 65%),
+    radial-gradient(800px 500px at 50% 105%, rgba(88, 28, 135, 0.25), transparent 70%),
+    radial-gradient(650px 450px at 90% 90%, rgba(14, 165, 233, 0.18), transparent 65%),
+    radial-gradient(550px 380px at 0% 85%, rgba(16, 185, 129, 0.15), transparent 65%);
   background-attachment: fixed;
-}
-
-.dark body {
-  background-image:
-    radial-gradient(900px 400px at 85% -10%, hsl(var(--primary) / 0.08), transparent 60%),
-    radial-gradient(700px 300px at 0% 0%,   hsl(var(--low)     / 0.05), transparent 60%);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -145,11 +117,12 @@ body {
    ═══════════════════════════════════════════════════════ */
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.4), 0 0 0 4px hsl(var(--primary) / 0.1);
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.6), 0 0 0 4px rgba(168, 85, 247, 0.2);
 }
 
 ::selection {
-  background: hsl(var(--primary) / 0.2);
+  background: rgba(168, 85, 247, 0.35);
+  color: #ffffff;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -163,7 +136,7 @@ body {
 }
 
 /* ═══════════════════════════════════════════════════════
-   UTILITY CLASSES
+   UTILITY CLASSES & TYPOGRAPHY
    ═══════════════════════════════════════════════════════ */
 .tabular {
   font-variant-numeric: tabular-nums;
@@ -171,26 +144,26 @@ body {
 
 .eyebrow {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: hsl(var(--muted-foreground));
+  color: #94a3b8;
 }
 
 .section-title {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
-  color: hsl(var(--foreground));
+  color: #f8fafc;
 }
 
 .section-sub {
   font-size: 13px;
-  color: hsl(var(--muted-foreground));
+  color: #94a3b8;
 }
 
 .text-purple-accent {
-  color: #7e22ce;
+  color: #c084fc;
 }
 
 .pill-purple {
@@ -198,12 +171,12 @@ body {
   align-items: center;
   gap: 0.25rem;
   border-radius: 0.375rem;
-  background-color: rgba(243, 232, 255, 0.75);
-  border: 1px solid rgba(233, 213, 255, 0.85);
-  color: #7e22ce;
+  background-color: rgba(147, 51, 234, 0.22);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #c084fc;
   font-weight: 600;
   font-family: var(--font-mono);
-  box-shadow: 0 1px 2px rgba(126, 34, 206, 0.04);
+  box-shadow: 0 1px 4px rgba(147, 51, 234, 0.15);
 }
 
 .badge-purple {
@@ -211,55 +184,36 @@ body {
   align-items: center;
   gap: 0.375rem;
   border-radius: 9999px;
-  background-color: rgba(243, 232, 255, 0.75);
-  border: 1px solid rgba(233, 213, 255, 0.85);
-  color: #7e22ce;
+  background-color: rgba(147, 51, 234, 0.22);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #c084fc;
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(126, 34, 206, 0.04);
+  box-shadow: 0 1px 4px rgba(147, 51, 234, 0.15);
 }
 
 /* ═══════════════════════════════════════════════════════
-   GLASS SYSTEM
-   Rule: never stack more than 2 blur layers.
+   APPLE DARK GLASS SYSTEM
    ═══════════════════════════════════════════════════════ */
 .glass {
-  border: 1px solid hsl(0 0% 100% / 0.70);
-  background-color: hsl(0 0% 100% / 0.60);
-  backdrop-filter: blur(20px) saturate(1.5);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
   box-shadow:
-    0 1px 0 0 hsl(0 0% 100% / 0.90) inset,
-    0 0 0 1px hsl(214 30% 80% / 0.25),
-    0 10px 30px -12px hsl(222 47% 20% / 0.14),
-    0 2px 6px -2px hsl(222 47% 20% / 0.06);
+    0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 12px 36px -12px rgba(0, 0, 0, 0.70);
 }
 
 .glass-strong {
-  border: 1px solid hsl(0 0% 100% / 0.80);
-  background-color: hsl(0 0% 100% / 0.80);
-  backdrop-filter: blur(32px) saturate(1.5);
-  -webkit-backdrop-filter: blur(32px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background-color: rgba(11, 15, 25, 0.65);
+  backdrop-filter: blur(36px) saturate(1.8);
+  -webkit-backdrop-filter: blur(36px) saturate(1.8);
   box-shadow:
-    0 1px 0 0 hsl(0 0% 100% / 1) inset,
-    0 0 0 1px hsl(214 30% 80% / 0.30),
-    0 16px 40px -16px hsl(222 47% 20% / 0.18);
-}
-
-/* Dark overrides */
-.dark .glass,
-.dark .glass-strong {
-  border-color: hsl(0 0% 100% / 0.08);
-  background-color: hsl(0 0% 100% / 0.04);
-  box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.05) inset, 0 8px 24px -12px hsl(0 0% 0% / 0.6);
-}
-
-/* Fallback: no backdrop-filter support → solid white */
-@supports not (backdrop-filter: blur(1px)) {
-  .glass,
-  .glass-strong {
-    background-color: hsl(0 0% 100% / 0.93);
-    backdrop-filter: none;
-  }
+    0 1px 0 0 rgba(255, 255, 255, 0.16) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 20px 48px -12px rgba(0, 0, 0, 0.80);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -267,25 +221,14 @@ body {
    ═══════════════════════════════════════════════════════ */
 .card {
   border-radius: var(--radius-xl);
-  border: 1px solid hsl(0 0% 100% / 0.70);
-  background-color: hsl(0 0% 100% / 0.60);
-  backdrop-filter: blur(20px) saturate(1.5);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background-color: rgba(15, 23, 42, 0.40);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
   box-shadow:
-    0 1px 0 0 hsl(0 0% 100% / 0.90) inset,
-    0 0 0 1px hsl(214 30% 80% / 0.25),
-    0 10px 30px -12px hsl(222 47% 20% / 0.14),
-    0 2px 6px -2px hsl(222 47% 20% / 0.06);
-}
-
-.dark .card {
-  border-color: hsl(0 0% 100% / 0.08);
-  background-color: hsl(0 0% 100% / 0.04);
-  box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.05) inset, 0 8px 24px -12px hsl(0 0% 0% / 0.6);
-}
-
-@supports not (backdrop-filter: blur(1px)) {
-  .card { background-color: hsl(0 0% 100% / 0.93); }
+    0 1px 0 0 rgba(255, 255, 255, 0.10) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 12px 32px -12px rgba(0, 0, 0, 0.70);
 }
 
 .card-hover {
@@ -294,11 +237,11 @@ body {
 
 .card-hover:hover {
   transform: translateY(-2px);
-  border-color: hsl(var(--primary) / 0.30);
-  background-color: hsl(0 0% 100% / 0.75);
+  border-color: rgba(168, 85, 247, 0.40);
+  background-color: rgba(22, 30, 49, 0.60);
   box-shadow:
-    0 1px 0 0 hsl(0 0% 100% / 1) inset,
-    0 18px 40px -16px hsl(var(--primary) / 0.28);
+    0 1px 0 0 rgba(255, 255, 255, 0.20) inset,
+    0 20px 48px -12px rgba(126, 34, 206, 0.30);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -310,24 +253,25 @@ body {
   align-items: center;
   gap: 8px;
   border-radius: 8px;
-  border: 1px solid hsl(0 0% 100% / 0.80);
-  background-color: hsl(0 0% 100% / 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background-color: rgba(255, 255, 255, 0.07);
   padding: 0 14px;
   font-size: 13px;
   font-weight: 500;
-  color: hsl(var(--foreground));
+  color: #f8fafc;
   cursor: pointer;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.95) inset, 0 1px 3px hsl(222 47% 20% / 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.12) inset, 0 2px 6px rgba(0, 0, 0, 0.35);
   transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn:hover {
-  background-color: hsl(0 0% 100% / 0.90);
-  border-color: hsl(0 0% 100% / 1);
-  box-shadow: 0 1px 1px 0 hsl(0 0% 100% / 1) inset, 0 4px 12px -2px hsl(222 47% 20% / 0.10);
+  background-color: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 1px 1px 0 rgba(255, 255, 255, 0.20) inset, 0 4px 14px rgba(0, 0, 0, 0.45);
   transform: translateY(-0.5px);
+  color: #ffffff;
 }
 
 .btn:active {
@@ -340,19 +284,20 @@ body {
   align-items: center;
   gap: 8px;
   border-radius: 8px;
-  background: linear-gradient(to bottom, hsl(var(--primary) / 0.90), hsl(var(--primary)));
+  background: linear-gradient(to bottom, #14b8a6, #0d9488);
   padding: 0 14px;
   font-size: 13px;
   font-weight: 500;
-  color: hsl(var(--primary-foreground));
+  color: #ffffff;
   cursor: pointer;
-  border: none;
-  box-shadow: 0 1px 0 0 hsl(0 0% 100% / 0.35) inset, 0 8px 20px -8px hsl(var(--primary) / 0.55);
-  transition: filter 150ms ease;
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.35) inset, 0 8px 20px -6px rgba(13, 148, 136, 0.60);
+  transition: filter 150ms ease, transform 150ms ease;
 }
 
 .btn-primary:hover {
   filter: brightness(1.1);
+  transform: translateY(-0.5px);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -361,7 +306,7 @@ body {
 .skeleton {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   border-radius: 6px;
-  background-color: hsl(214 32% 88% / 0.70);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -377,10 +322,105 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--border));
+  background: rgba(255, 255, 255, 0.16);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.4);
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* ═══════════════════════════════════════════════════════
+   GLOBAL APPLE DARK GLASS OVERRIDES
+   ═══════════════════════════════════════════════════════ */
+html.dark,
+.dark {
+  color-scheme: dark;
+}
+
+.dark .text-slate-900,
+.dark .text-slate-950 {
+  color: #f8fafc !important;
+}
+
+.dark .text-slate-800,
+.dark .text-slate-700 {
+  color: #e2e8f0 !important;
+}
+
+.dark .text-slate-600 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-slate-500 {
+  color: #64748b !important;
+}
+
+.dark .text-purple-700 {
+  color: #c084fc !important;
+}
+
+.dark .bg-purple-100\/70,
+.dark .bg-purple-100\/80,
+.dark .bg-purple-100 {
+  background-color: rgba(147, 51, 234, 0.22) !important;
+}
+
+.dark .border-purple-200\/80,
+.dark .border-purple-200\/70,
+.dark .border-purple-200 {
+  border-color: rgba(168, 85, 247, 0.35) !important;
+}
+
+.dark .bg-purple-50,
+.dark .bg-purple-50\/80 {
+  background-color: rgba(147, 51, 234, 0.16) !important;
+}
+
+.dark .border-slate-200\/60,
+.dark .border-slate-200\/70,
+.dark .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark .divide-slate-200\/60 {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark .bg-slate-100 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .bg-slate-50\/80 {
+  background-color: rgba(15, 23, 42, 0.65) !important;
+}
+
+.dark .bg-white\/40,
+.dark .bg-white\/50,
+.dark .bg-white\/55,
+.dark .bg-white\/60,
+.dark .bg-white\/65,
+.dark .bg-white\/70,
+.dark .bg-white\/75,
+.dark .bg-white\/80 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+}
+
+.dark .border-white\/70,
+.dark .border-white\/80,
+.dark .border-white\/90,
+.dark .border-white\/95,
+.dark .border-white {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark input,
+.dark select {
+  background-color: rgba(15, 23, 42, 0.60) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #f8fafc !important;
+}
+
+.dark input::placeholder {
+  color: #64748b !important;
 }
