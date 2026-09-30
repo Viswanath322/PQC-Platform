@@ -28,8 +28,12 @@ class FindingOut(BaseModel):
         default=None,
         description="Human-readable explanation of why the finding matters",
     )
-    confidence: str | None = None
+    confidence: float | None = Field(default=None, ge=0, le=1)
     recommendation: str | None = None
+    is_development: bool = Field(
+        default=False,
+        description="True for synthetic or development-only findings",
+    )
 
 
 class ReportSeverityCounts(BaseModel):

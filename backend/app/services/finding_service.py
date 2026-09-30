@@ -11,25 +11,30 @@ def list_findings(
     *,
     severity: str | None = None,
     category: str | None = None,
+    engine: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
 ) -> list[FindingOut]:
-    """Return findings, optionally filtered by severity and UI category (engine)."""
+    """Return findings with optional exact filters and bounded pagination."""
     clauses: list[str] = []
-    params: dict[str, str] = {}
+    params: dict[str, str | int] = {"limit": limit, "offset": offset}
     if severity is not None:
         clauses.append("severity = :severity")
-        params["severity"] = severity
+        params["severity"] = severity.lower()
     if category is not None:
-        # Day 1 UI categories are the four analysis engines; the Finding.category
-        # field itself remains the more specific rule/category label (e.g. injection).
-        clauses.append("engine = :category")
+        clauses.append("category = :category")
         params["category"] = category
+    if engine is not None:
+        clauses.append("engine = :engine")
+        params["engine"] = engine.lower()
 
     where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
     rows = db.execute(
         text(
             "SELECT id AS finding_id, scan_id, engine, category, severity, title, "
-            "file_path, line_number, evidence, explanation, confidence, recommendation "
-            "FROM findings" + where + " ORDER BY created_at DESC, id"
+            "file_path, line_number, evidence, explanation, confidence, recommendation, is_development "
+            "FROM findings" + where + " ORDER BY created_at DESC, id DESC "
+            "LIMIT :limit OFFSET :offset"
         ),
         params,
     ).mappings()
@@ -40,7 +45,7 @@ def get_finding(db: Session, finding_id: str) -> FindingOut | None:
     row = db.execute(
         text(
             "SELECT id AS finding_id, scan_id, engine, category, severity, title, "
-            "file_path, line_number, evidence, explanation, confidence, recommendation "
+            "file_path, line_number, evidence, explanation, confidence, recommendation, is_development "
             "FROM findings WHERE id = :finding_id"
         ),
         {"finding_id": finding_id},

@@ -20,28 +20,31 @@ The API uses lower-case enum values to match the MySQL schema. `finding_id` maps
   "line_number": 42,
   "evidence": "query = 'SELECT * FROM users WHERE id=' + user_id",
   "explanation": "An attacker may alter the query through user-controlled input and access records outside their authorization.",
-  "confidence": "medium",
-  "recommendation": "Use a parameterized query."
+  "confidence": 0.92,
+  "recommendation": "Use a parameterized query.",
+  "is_development": false
 }
 ```
 
 The example above is illustrative only; it is not a real finding. Hema can use these field names and types for the Findings UI. The engine values are `sast`, `crypto`, `dependency`, and `configuration`; severity values are `critical`, `high`, `medium`, and `low`.
 
-The database schema currently has no `explanation` column. Before serving stored explanations, apply this additive MySQL change and update the finding writer to populate it:
+The API query requires `explanation TEXT NULL`, `confidence FLOAT NULL`, and `is_development BOOLEAN NOT NULL DEFAULT FALSE` in the findings table. Keep the DDL and SQLAlchemy model in sync before integrating this API against MySQL. For a fresh schema, define those columns directly. For an existing database, add the nullable/flag columns and migrate any nonnumeric confidence values deliberately before changing the confidence type; do not blindly cast qualitative values to floats.
 
 ```sql
-ALTER TABLE findings ADD COLUMN explanation TEXT NULL AFTER evidence;
+ALTER TABLE findings
+  ADD COLUMN explanation TEXT NULL AFTER evidence,
+  ADD COLUMN is_development BOOLEAN NOT NULL DEFAULT FALSE;
 ```
 
-Until that schema change is applied, the API query must not be deployed against the old schema. Day 1 findings can leave `explanation` null; the UI should describe that limitation instead of inferring an explanation from evidence or remediation.
+Also make the schema/model `confidence` a nullable numeric score from 0 to 1. Until the schema changes are applied, the API query must not be deployed against the old schema. Day 1 findings can leave `explanation` null and default `is_development` to false; the UI should describe a missing explanation instead of inferring one from evidence or remediation.
 
 ## Endpoints
 
 ### `GET /findings`
 
-Optional query parameters: `severity` (`critical|high|medium|low`) and `category` (`sast|crypto|dependency|configuration`). The Day 1 UI calls its four analysis groups “categories”; this filter maps to the response `engine` field. The response `category` field is the more specific finding label, such as `injection`. Both filters can be combined. Returns newest first; when no records match, returns `[]`.
+Optional query parameters: `severity` (`critical|high|medium|low`, case-insensitive), `engine` (`sast|crypto|dependency|configuration`, case-insensitive), `finding_category` (exact finding category, such as `injection`), `limit` (1–500, default 100), and `offset` (zero or greater, default 0). Filters can be combined. Results are newest first with a stable ID tie-break; when no records match, returns `[]`. The Day 1 UI called its analysis group filter `category`; that name remains as a deprecated alias for `engine` to avoid breaking the current UI. New consumers should use `engine` for the analysis group and `finding_category` for the response `category` field.
 
-Example: `GET /api/v1/findings?severity=high&category=sast`
+Example: `GET /api/v1/findings?severity=HIGH&engine=sast&limit=50&offset=0`
 
 ### `GET /findings/{finding_id}`
 
