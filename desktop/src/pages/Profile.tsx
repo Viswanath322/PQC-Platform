@@ -111,7 +111,7 @@ export const Profile: React.FC<ProfileProps> = ({ onShowToast }) => {
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
                 {profile.fullName}
               </h2>
-              <span className="font-mono text-[12px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+              <span className="font-mono text-[12px] text-purple-700 bg-purple-100/70 px-2 py-0.5 rounded-md border border-purple-200/80 font-semibold">
                 @{profile.name}
               </span>
               <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary ring-1 ring-primary/20">
@@ -383,7 +383,7 @@ export const Profile: React.FC<ProfileProps> = ({ onShowToast }) => {
                 <KeyRound className="h-3.5 w-3.5 text-primary" />
                 PGP / Enclave Key ID
               </span>
-              <div className="font-mono font-semibold text-slate-900 mt-1 text-[13.5px]">
+              <div className="font-mono font-semibold text-purple-700 mt-1 text-[13.5px]">
                 {profile.pgpKeyId}
               </div>
               <div className="text-[11.5px] text-emerald-600 mt-1 flex items-center gap-1">
@@ -394,7 +394,7 @@ export const Profile: React.FC<ProfileProps> = ({ onShowToast }) => {
 
             <div className="p-4 rounded-xl bg-white/60 border border-slate-200/60">
               <span className="eyebrow">PQC Signature Scheme</span>
-              <div className="font-semibold text-slate-900 mt-1">
+              <div className="font-semibold text-purple-700 mt-1">
                 ML-DSA-65 (FIPS 204 / Dilithium3)
               </div>
               <div className="text-[11.5px] text-slate-500 mt-1">

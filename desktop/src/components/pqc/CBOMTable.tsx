@@ -127,7 +127,7 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
               filteredData.map((item) => (
                 <tr key={item.id} className="hover:bg-surface-2/40 transition-colors">
                   {/* BOM Ref */}
-                  <td className="py-3 px-4 font-mono text-[11.5px] text-primary">
+                  <td className="py-3 px-4 font-mono text-[11.5px] font-semibold text-purple-700">
                     {item.id}
                   </td>
 

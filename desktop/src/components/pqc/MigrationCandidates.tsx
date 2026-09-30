@@ -18,7 +18,7 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
         <div>
           <div className="flex items-center gap-2.5">
             <h3 className="section-title">PQC migration candidates</h3>
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary ring-1 ring-primary/25">
+            <span className="rounded-full bg-purple-100/70 border border-purple-200/80 px-2.5 py-0.5 text-[11px] font-semibold text-purple-700 shadow-xs">
               NIST FIPS 203 / 204
             </span>
           </div>
@@ -59,7 +59,7 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
                   <ArrowRight className="h-4 w-4 text-primary shrink-0 mx-2" />
                   <div className="text-right">
                     <span className="text-[10px] uppercase text-muted-foreground">Target Standard</span>
-                    <div className="font-mono font-semibold text-primary text-[12px] mt-0.5">
+                    <div className="font-mono font-semibold text-purple-700 text-[12px] mt-0.5">
                       {item.nistStandard || 'FIPS 203'}
                     </div>
                   </div>

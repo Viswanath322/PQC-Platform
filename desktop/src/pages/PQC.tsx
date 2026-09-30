@@ -103,7 +103,7 @@ export const PQC: React.FC<PQCPageProps> = ({
             </div>
             <div className="mt-3 flex items-center justify-between gap-4">
               <div>
-                <div className="tabular text-[36px] font-semibold leading-none tracking-tight text-primary">
+                <div className="tabular text-[36px] font-semibold leading-none tracking-tight text-purple-700">
                   {mockRiskSummary.readinessPercentage}%
                 </div>
                 <p className="mt-1 text-[12px] text-muted-foreground">Quantum Safe Readiness</p>
@@ -138,9 +138,9 @@ export const PQC: React.FC<PQCPageProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setActiveTableTab('inventory')}
-                className={`px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${
+                className={`px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors cursor-pointer ${
                   activeTableTab === 'inventory'
-                    ? 'bg-primary/10 text-primary ring-1 ring-primary/25'
+                    ? 'bg-purple-100/70 text-purple-700 ring-1 ring-purple-300/70 font-semibold shadow-xs'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -148,9 +148,9 @@ export const PQC: React.FC<PQCPageProps> = ({
               </button>
               <button
                 onClick={() => setActiveTableTab('cbom')}
-                className={`px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors ${
+                className={`px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors cursor-pointer ${
                   activeTableTab === 'cbom'
-                    ? 'bg-primary/10 text-primary ring-1 ring-primary/25'
+                    ? 'bg-purple-100/70 text-purple-700 ring-1 ring-purple-300/70 font-semibold shadow-xs'
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >

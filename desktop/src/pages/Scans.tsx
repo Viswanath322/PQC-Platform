@@ -194,7 +194,7 @@ export const Scans: React.FC = () => {
             <div className="flex items-center justify-between pb-4 border-b border-border">
               <div>
                 <span className="eyebrow">Scan Telemetry</span>
-                <h3 className="font-mono text-[20px] font-semibold text-primary mt-0.5">
+                <h3 className="font-mono text-[20px] font-semibold text-purple-700 mt-0.5">
                   {selectedScanForDetails.id}
                 </h3>
               </div>
@@ -214,8 +214,9 @@ export const Scans: React.FC = () => {
                   <div className="font-medium text-foreground mt-1">
                     {selectedScanForDetails.project_name}
                   </div>
-                  <div className="font-mono text-[11px] text-muted-foreground mt-0.5">
-                    Branch: {selectedScanForDetails.branch}
+                  <div className="font-mono text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
+                    <span>Branch:</span>
+                    <span className="rounded bg-purple-100/70 border border-purple-200/80 px-1.5 font-mono text-[10.5px] text-purple-700 font-semibold">{selectedScanForDetails.branch}</span>
                   </div>
                 </div>
 
@@ -233,7 +234,7 @@ export const Scans: React.FC = () => {
               <div className="rounded-lg bg-surface-2/60 p-4 border border-border">
                 <span className="text-[11px] text-muted-foreground uppercase">AST Ruleset & Execution Engine</span>
                 <p className="text-[13px] text-muted-foreground mt-1 leading-relaxed">
-                  Scanned repository file <code className="font-mono text-primary text-[12px]">{selectedScanForDetails.repository_name}</code> using local AST static analyzer and NIST FIPS 203 / 204 detection heuristics.
+                  Scanned repository file <code className="font-mono text-purple-700 bg-purple-50/70 border border-purple-200/60 px-1.5 py-0.5 rounded font-semibold text-[12px]">{selectedScanForDetails.repository_name}</code> using local AST static analyzer and NIST FIPS 203 / 204 detection heuristics.
                 </p>
               </div>
 
