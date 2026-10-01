@@ -5,14 +5,19 @@ from pathlib import Path
 
 from .classifier import classify_file
 from .extractor import extract_zip_safely
-from .file_filter import filter_files
+from .file_filter import is_excluded
 from .language_detector import detect_language
 from .validator import DEFAULT_ZIP_LIMITS, ZipLimits
 
 
 def build_summary(files: list[Path], extraction_root: str | Path) -> dict:
     root = Path(extraction_root).resolve()
-    included = filter_files(files)
+    # Filter on relative paths, not absolute paths (issue #1)
+    included = []
+    for path in files:
+        relative = path.relative_to(root)
+        if not is_excluded(relative):
+            included.append(path)
     type_counts: Counter[str] = Counter()
     language_counts: Counter[str] = Counter()
     records = []

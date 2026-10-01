@@ -23,12 +23,15 @@ def ingest_scan_record(
     scan_model: Any,
     scan_id: str,
     storage_root: str | Path,
+    uploads_root: str | Path | None = None,
 ) -> dict:
     """Load a scan row and ingest its persisted ``repository_path``.
 
     ``db`` should be the application's SQLAlchemy session configured for its
     database (MySQL in the team integration). The path is read from the row,
     never from an API response or client-supplied request field.
+    
+    ``uploads_root`` confines the repository_path to the uploads folder (issue #3).
     """
     try:
         normalized_scan_id = str(uuid.UUID(scan_id))
@@ -41,25 +44,45 @@ def ingest_scan_record(
     repository_path = getattr(scan, "repository_path", None)
     if not repository_path:
         raise ValueError(f"Scan has no repository_path: {normalized_scan_id}")
-    return ingest_scan_upload(repository_path, normalized_scan_id, storage_root)
+    return ingest_scan_upload(repository_path, normalized_scan_id, storage_root, uploads_root)
 
 
-def ingest_scan_upload(repository_path: str | Path, scan_id: str, storage_root: str | Path) -> dict:
+def ingest_scan_upload(repository_path: str | Path, scan_id: str, storage_root: str | Path, uploads_root: str | Path | None = None) -> dict:
     """Ingest Aakash's saved upload for one UUID scan and persist its summary.
 
     ``repository_path`` is the scan's uploaded ZIP path (the API's
     ``Scan.repository_path``); ``storage_root`` is the backend storage directory.
     Output is stored at ``<storage_root>/scans/<scan_id>/repository`` and the
     JSON summary at ``<storage_root>/scans/<scan_id>/ingestion-summary.json``.
+    
+    ``uploads_root`` confines the repository_path to the uploads folder (issue #3).
+    If provided, validates that repository_path is inside uploads_root.
     """
     try:
         normalized_scan_id = str(uuid.UUID(scan_id))
     except (ValueError, AttributeError, TypeError) as exc:
         raise ValueError("scan_id must be a valid UUID") from exc
 
+    # Issue #3: Confine repository_path to uploads folder
+    repo_path = Path(repository_path)
+    if repo_path.is_symlink():
+        raise ValueError("Invalid upload path: symlink not allowed")
+    
+    try:
+        repo_path = repo_path.resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise ValueError("Invalid upload path") from exc
+    
+    if uploads_root is not None:
+        try:
+            uploads = Path(uploads_root).resolve(strict=True)
+            repo_path.relative_to(uploads)
+        except (ValueError, OSError, RuntimeError) as exc:
+            raise ValueError("Upload path is outside the uploads folder") from exc
+
     scan_directory = Path(storage_root).resolve() / "scans" / normalized_scan_id
     extracted_directory = scan_directory / "repository"
-    summary = ingest_repository(repository_path, extracted_directory)
+    summary = ingest_repository(repo_path, extracted_directory)
     scan_directory.mkdir(parents=True, exist_ok=True)
     summary_path = scan_directory / "ingestion-summary.json"
     temporary_path = scan_directory / "ingestion-summary.json.tmp"

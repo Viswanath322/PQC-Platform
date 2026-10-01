@@ -58,7 +58,8 @@ class IngestionTests(unittest.TestCase):
         scan_id = "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f"
         with zipfile.ZipFile(self.archive, "w") as z:
             z.writestr("src/main.py", "print('ok')")
-        summary = ingest_scan_upload(self.archive, scan_id, self.root / "storage")
+        # Pass uploads_root=None for backward compatibility
+        summary = ingest_scan_upload(self.archive, scan_id, self.root / "storage", uploads_root=None)
         scan_dir = self.root / "storage" / "scans" / scan_id
         self.assertTrue((scan_dir / "repository/src/main.py").exists())
         self.assertEqual(json.loads((scan_dir / "ingestion-summary.json").read_text()), summary)
@@ -67,7 +68,46 @@ class IngestionTests(unittest.TestCase):
         with zipfile.ZipFile(self.archive, "w") as z:
             z.writestr("main.py", "print('ok')")
         with self.assertRaises(ValueError):
-            ingest_scan_upload(self.archive, "../../outside", self.root / "storage")
+            ingest_scan_upload(self.archive, "../../outside", self.root / "storage", uploads_root=None)
+
+    def test_upload_path_confinement_rejects_path_outside_uploads(self):
+        # Issue #3: repository_path must be inside uploads_root
+        scan_id = "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f"
+        with zipfile.ZipFile(self.archive, "w") as z:
+            z.writestr("main.py", "print('ok')")
+        uploads = self.root / "uploads"
+        uploads.mkdir()
+        outside = self.root / "outside.zip"
+        outside.write_bytes(self.archive.read_bytes())
+        
+        with self.assertRaisesRegex(ValueError, "outside the uploads folder"):
+            ingest_scan_upload(outside, scan_id, self.root / "storage", uploads_root=uploads)
+
+    def test_upload_path_confinement_accepts_path_inside_uploads(self):
+        # Issue #3: Valid upload inside uploads_root should work
+        scan_id = "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f"
+        uploads = self.root / "uploads"
+        uploads.mkdir()
+        valid_upload = uploads / "repo.zip"
+        with zipfile.ZipFile(valid_upload, "w") as z:
+            z.writestr("main.py", "print('ok')")
+        
+        summary = ingest_scan_upload(valid_upload, scan_id, self.root / "storage", uploads_root=uploads)
+        self.assertEqual(summary["files_included"], 1)
+
+    def test_upload_path_confinement_rejects_symlinks(self):
+        # Issue #3: Symlink repository paths should be rejected
+        scan_id = "a9b51b95-3e0b-4ccd-ba85-49fa06a7a43f"
+        with zipfile.ZipFile(self.archive, "w") as z:
+            z.writestr("main.py", "print('ok')")
+        
+        try:
+            link = self.root / "link.zip"
+            link.symlink_to(self.archive)
+            with self.assertRaisesRegex(ValueError, "symlink"):
+                ingest_scan_upload(link, scan_id, self.root / "storage", uploads_root=None)
+        except (OSError, NotImplementedError):
+            self.skipTest("Symlinks not supported on this platform")
 
     def test_expansion_size_limit_rejects_zip_bomb_before_extraction(self):
         with zipfile.ZipFile(self.archive, "w", compression=zipfile.ZIP_DEFLATED) as z:
@@ -78,9 +118,18 @@ class IngestionTests(unittest.TestCase):
         self.assertFalse(self.destination.exists())
 
     def test_compression_ratio_limit_rejects_highly_compressible_member(self):
+        # Issue #2: Only apply ratio to files > 10 MB
         with zipfile.ZipFile(self.archive, "w", compression=zipfile.ZIP_DEFLATED) as z:
-            z.writestr("large.txt", b"A" * 100_000)
-        limits = ZipLimits(max_uncompressed_bytes=200_000, max_compression_ratio=10)
+            # 100 KB highly compressible file should pass now
+            z.writestr("small.txt", b"A" * 100_000)
+        # This should NOT raise because file is < 10 MB
+        result = ingest_repository(self.archive, self.destination)
+        self.assertEqual(result["files_included"], 1)
+        
+        # But a 15 MB highly compressible file should still fail
+        with zipfile.ZipFile(self.archive, "w", compression=zipfile.ZIP_DEFLATED) as z:
+            z.writestr("large.txt", b"A" * 15_000_000)
+        limits = ZipLimits(max_uncompressed_bytes=20_000_000, max_compression_ratio=10)
         with self.assertRaisesRegex(InvalidArchiveError, "compression ratio"):
             ingest_repository(self.archive, self.destination, limits)
 
@@ -110,6 +159,7 @@ class IngestionTests(unittest.TestCase):
             ingest_repository(self.archive, self.destination)
 
     def test_unknown_text_config_and_legitimate_directory_names(self):
+        # Issue #1: Files should not be excluded when storage is under build/dist/vendor
         with zipfile.ZipFile(self.archive, "w") as z:
             z.writestr("out/notes.unknown", "plain notes")
             z.writestr("env/settings.conf", "setting=value")
@@ -123,6 +173,18 @@ class IngestionTests(unittest.TestCase):
         self.assertFalse(is_excluded("out/notes.txt"))
         self.assertFalse(is_excluded("env/settings.conf"))
         self.assertFalse(is_excluded("target/src/main.rs"))
+
+    def test_storage_under_build_does_not_exclude_all_files(self):
+        # Issue #1: Test that extraction under .../build/storage/... doesn't exclude everything
+        build_storage = self.root / "build" / "storage"
+        build_storage.mkdir(parents=True)
+        destination = build_storage / "scan-123"
+        with zipfile.ZipFile(self.archive, "w") as z:
+            z.writestr("src/main.py", "print('ok')")
+            z.writestr("README.md", "demo")
+        result = ingest_repository(self.archive, destination)
+        # Should include both files, not exclude them because path contains 'build'
+        self.assertEqual(result["files_included"], 2)
 
     def test_extensionless_configuration_and_unknown_binary_classification(self):
         self.assertEqual(classify_file("Dockerfile"), "config")
@@ -166,7 +228,8 @@ class IngestionTests(unittest.TestCase):
                 return Scan()
 
         db = Session()
-        summary = ingest_scan_record(db, Scan, scan_id, self.root / "storage")
+        # Pass uploads_root=None for backward compatibility
+        summary = ingest_scan_record(db, Scan, scan_id, self.root / "storage", uploads_root=None)
         self.assertEqual(db.lookup, (Scan, scan_id))
         self.assertEqual(summary["files_included"], 1)
 

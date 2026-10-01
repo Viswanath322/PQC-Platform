@@ -42,12 +42,14 @@ def _check_limits(infos: list[zipfile.ZipInfo], limits: ZipLimits) -> None:
         raise InvalidArchiveError(
             f"ZIP expands to {total_size} bytes; limit is {limits.max_uncompressed_bytes}"
         )
-    if total_size and (total_compressed == 0 or total_size / total_compressed > limits.max_compression_ratio):
+    # Only apply total ratio check if total size is > 10 MB (issue #2)
+    if total_size > 10 * 1024 * 1024 and (total_compressed == 0 or total_size / total_compressed > limits.max_compression_ratio):
         raise InvalidArchiveError(
             f"ZIP compression ratio exceeds limit ({limits.max_compression_ratio:g}:1)"
         )
+    # Only apply ratio check to files larger than 10 MB (issue #2)
     for info in files:
-        if info.file_size and (info.compress_size == 0 or info.file_size / info.compress_size > limits.max_compression_ratio):
+        if info.file_size > 10 * 1024 * 1024 and (info.compress_size == 0 or info.file_size / info.compress_size > limits.max_compression_ratio):
             raise InvalidArchiveError(f"ZIP member compression ratio exceeds limit: {info.filename}")
 
 
@@ -71,7 +73,8 @@ def validate_zip(path: str | Path, limits: ZipLimits = DEFAULT_ZIP_LIMITS) -> Pa
                         total_actual += len(chunk)
                         if total_actual > limits.max_uncompressed_bytes:
                             raise InvalidArchiveError("ZIP expands beyond the configured uncompressed-size limit")
-                        if info.compress_size == 0 or member_actual / info.compress_size > limits.max_compression_ratio:
+                        # Only apply ratio check to files larger than 10 MB (issue #2)
+                        if info.file_size > 10 * 1024 * 1024 and (info.compress_size == 0 or member_actual / info.compress_size > limits.max_compression_ratio):
                             raise InvalidArchiveError(
                                 f"ZIP member compression ratio exceeds limit: {info.filename}"
                             )
