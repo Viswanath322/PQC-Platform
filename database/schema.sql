@@ -2,18 +2,22 @@
 -- PQC Security Assessment Platform - Core Database Schema (Day 1)
 -- Author: Vamsi (Database Engineer)
 -- Target: MySQL 8.0+
--- Database: pqc_security
+-- Database: pqc
 --
 -- Unified Identifier Standard:
 --   - All entities use UUID strings (CHAR(36) / VARCHAR(36)) with DEFAULT (UUID())
 --   - Compatible with air-gapped distributed clients and local desktop agents
 -- =============================================================================
 
+CREATE DATABASE IF NOT EXISTS `pqc`
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
 CREATE DATABASE IF NOT EXISTS `pqc_security`
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
-USE `pqc_security`;
+USE `pqc`;
 
 -- Disable foreign key checks while creating/recreating tables
 SET FOREIGN_KEY_CHECKS = 0;

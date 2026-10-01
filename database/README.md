@@ -2,7 +2,7 @@
 
 **Owner:** Vamsi (Database Engineer)  
 **Target Engine:** MySQL 8.0+  
-**Database Name:** `pqc_security`  
+**Database Name:** `pqc` (with `pqc_security` backwards-compatibility)  
 **Git Branch:** `vamsi`
 
 ---
@@ -115,23 +115,31 @@ The development seed data in `database/seed.sql` pre-populates:
 ## 4. How to Run & Verify
 
 ### Step 1: Configure Environment (.env)
-Create an untracked `.env` in the repository root (or set environment variables):
+Create an untracked `.env` in the repository root (or export environment variables):
 ```ini
-MYSQL_DATABASE=pqc_security
-MYSQL_USER=pqc
-MYSQL_PASSWORD=your_secure_mysql_password
-MYSQL_ROOT_PASSWORD=your_secure_mysql_root_password
-REDIS_PASSWORD=your_secure_redis_password
-DATABASE_URL=mysql+pymysql://pqc:your_secure_mysql_password@127.0.0.1:3306/pqc_security
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=pqc
+DB_USER=pqc_user
+DB_PASSWORD=your_secure_mysql_password
+DATABASE_URL=mysql+pymysql://pqc_user:your_secure_mysql_password@127.0.0.1:3306/pqc
 ```
 
-### Step 2: Start MySQL & Redis with Docker Compose
-```bash
-docker compose up -d mysql redis
+### Step 2: Initialize Database and Application User (Local MySQL)
+In MySQL Workbench or MySQL Shell:
+```sql
+CREATE DATABASE IF NOT EXISTS pqc CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS 'pqc_user'@'localhost' IDENTIFIED BY 'your_secure_mysql_password';
+GRANT ALL PRIVILEGES ON pqc.* TO 'pqc_user'@'localhost';
+FLUSH PRIVILEGES;
 ```
-* **Ports:** Bound strictly to `127.0.0.1` (`3306` for MySQL, `6379` for Redis) for desktop security.
-* **Security:** `MYSQL_ROOT_HOST=localhost`, healthchecks authenticate via environment variables (`MYSQL_PWD`, `REDISCLI_AUTH`) without command-line exposure.
-* **Initialization:** Auto-executes `database/schema.sql` and `database/seed.sql` on first volume creation.
+Then load the schema and seed:
+```bash
+mysql -u pqc_user -p pqc < database/schema.sql
+mysql -u pqc_user -p pqc < database/seed.sql
+```
+
+*(Alternatively, run `docker compose up -d mysql` if using containerized local development.)*
 
 ### Step 3: Run the Verification Script
 ```bash
@@ -145,3 +153,4 @@ Validates:
 * Findings `explanation`, `confidence`, and `is_development` columns.
 * Clean teardown in a `finally` block with zero leftover test rows.
 * Strictly connects to MySQL (exits non-zero if unreachable; no silent fallback).
+

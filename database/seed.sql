@@ -1,9 +1,9 @@
 -- =============================================================================
 -- PQC Security Assessment Platform - Day 1 Development Seed Data
--- Database: pqc_security
+-- Database: pqc
 -- =============================================================================
 
-USE `pqc_security`;
+USE `pqc`;
 
 -- 1. Default Organization (Standardized on 'org-default-001')
 INSERT INTO `organizations` (`id`, `name`, `created_at`, `updated_at`)

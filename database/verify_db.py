@@ -41,19 +41,24 @@ def get_engine():
 
     url = os.environ.get("DATABASE_URL")
     if not url:
-        # Check explicit MySQL environment variables if DATABASE_URL is not directly supplied
-        mysql_password = os.environ.get("MYSQL_PASSWORD")
-        if mysql_password:
-            mysql_user = os.environ.get("MYSQL_USER", "pqc")
-            mysql_host = os.environ.get("MYSQL_HOST", "127.0.0.1")
-            mysql_port = os.environ.get("MYSQL_PORT", "3306")
-            mysql_db = os.environ.get("MYSQL_DATABASE", "pqc_security")
-            url = f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}/{mysql_db}"
+        # Check standard DB_* and legacy MYSQL_* environment variables
+        db_user = os.environ.get("DB_USER") or os.environ.get("MYSQL_USER", "pqc_user")
+        db_password = os.environ.get("DB_PASSWORD") or os.environ.get("MYSQL_PASSWORD")
+        db_host = os.environ.get("DB_HOST") or os.environ.get("MYSQL_HOST", "127.0.0.1")
+        db_port = os.environ.get("DB_PORT") or os.environ.get("MYSQL_PORT", "3306")
+        db_name = os.environ.get("DB_NAME") or os.environ.get("MYSQL_DATABASE", "pqc")
+
+        if db_password is not None:
+            url = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
     if not url:
-        print("[ERROR] DATABASE_URL (or MYSQL_PASSWORD) environment variable is required to connect to MySQL.")
-        print("Please set DATABASE_URL, e.g.:")
-        print("  DATABASE_URL=mysql+pymysql://<user>:<password>@127.0.0.1:3306/pqc_security")
+        print("[ERROR] DATABASE_URL (or DB_PASSWORD / MYSQL_PASSWORD) environment variable is required to connect to MySQL.")
+        print("Please configure .env or export environment variables:")
+        print("  DB_HOST=localhost")
+        print("  DB_PORT=3306")
+        print("  DB_NAME=pqc")
+        print("  DB_USER=pqc_user")
+        print("  DB_PASSWORD=<your-strong-password>")
         sys.exit(1)
 
     try:
@@ -66,6 +71,7 @@ def get_engine():
     except Exception as exc:
         print(f"[ERROR] Live database connection to MySQL failed: {exc}")
         sys.exit(1)
+
 
 
 def run_day1_verification():
