@@ -5,6 +5,9 @@
 **Database Name:** `pqc` (with `pqc_security` backwards-compatibility)  
 **Git Branch:** `vamsi`
 
+> 📘 **Comprehensive Manual Available:**  
+> For the complete step-by-step guide with full SQL schema code, seed data, required vs non-required breakdown, and troubleshooting, see [DATABASE_README.md](file:///d:/Projects/PQC/PQC-Platform/database/DATABASE_README.md).
+
 ---
 
 ## 1. Architecture & Entity-Relationship (ER) Diagram
