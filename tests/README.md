@@ -42,6 +42,7 @@ Configuration is by environment variable:
 | `PQC_API_URL` | `http://127.0.0.1:8000` |
 | `PQC_MYSQL_URL` | `mysql://pqc:change_me_locally@127.0.0.1:3306/pqc_security` |
 | `PQC_REDIS_URL` | `redis://127.0.0.1:6379/0` |
+| `PQC_API_TOKEN` | unset. Bearer token for the API. If unset and the backend has `/auth/login`, the suite logs in as `PQC_TEST_EMAIL` / `PQC_TEST_PASSWORD`, or registers a throwaway `qa-…@example.com` user |
 | `PQC_SCAN_ROOT` | repository root (tree scanned by `tests/security`) |
 | `PQC_INGESTION_ROOT` | unset. Checkout containing `ingestion/`, e.g. `.worktrees/hima`. Without it `tests/ingestion` is Blocked |
 | `PQC_ANALYSIS_ROOT` | unset. Checkout containing `analysis-engines/`, e.g. `.worktrees/harshitha`. Without it `tests/analysis` is Blocked |
@@ -66,6 +67,8 @@ Run these from the root of your own branch (rebase on `main` first so you have `
 | Integration check | Database + backend | `pytest tests/integration -v -rs` |
 
 If your backend runs on a different port, set `PQC_API_URL`, e.g. `PQC_API_URL=http://127.0.0.1:8001`.
+
+Login is automatic: on a backend with auth, the tests register a QA user and send its token, and the "must refuse anonymous calls" checks use a separate client with no token. Registration needs the default organization row from `seed.sql` to exist.
 
 A FAIL in your own area means something to fix before merging. A BLOCKED result means the test is waiting on another teammate's piece, so it isn't yours to fix.
 
