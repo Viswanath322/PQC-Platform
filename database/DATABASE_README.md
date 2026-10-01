@@ -9,6 +9,8 @@
 
 ---
 
+![PQC Database Schema Diagram](schema_diagram.jpg)
+
 ## Table of Contents
 1. [Required vs. Not Required Quick Reference](#1-required-vs-not-required-quick-reference)
 2. [Local MySQL Server Setup (Windows)](#2-local-mysql-server-setup-windows)

@@ -10,6 +10,8 @@
 
 ---
 
+![PQC Database Schema Diagram](schema_diagram.jpg)
+
 ## 1. Architecture & Entity-Relationship (ER) Diagram
 
 ```mermaid
