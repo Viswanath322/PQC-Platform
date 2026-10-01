@@ -312,12 +312,20 @@ class ApiClient {
   async getFindings(params?: {
     scan_id?: string;
     severity?: string;
-    category?: string;
+    engine?: string;
+    finding_category?: string;
+    limit?: number;
+    offset?: number;
   }): Promise<Finding[]> {
     const query = new URLSearchParams();
     if (params?.scan_id) query.append('scan_id', params.scan_id);
     if (params?.severity) query.append('severity', params.severity);
-    if (params?.category) query.append('category', params.category);
+    // BE-18 fix: The API treats engine and finding_category as distinct filters.
+    // NEVER send category= as an alias.
+    if (params?.engine) query.append('engine', params.engine);
+    if (params?.finding_category) query.append('finding_category', params.finding_category);
+    if (params?.limit !== undefined) query.append('limit', String(params.limit));
+    if (params?.offset !== undefined) query.append('offset', String(params.offset));
     const qs = query.toString() ? `?${query.toString()}` : '';
     return this.request<Finding[]>(`/findings${qs}`, { method: 'GET' });
   }

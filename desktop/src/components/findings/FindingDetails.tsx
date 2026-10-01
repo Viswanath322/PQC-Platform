@@ -40,6 +40,11 @@ export const FindingDetails: React.FC<FindingDetailsProps> = ({
           </span>
           <SeverityBadge severity={finding.severity} size="sm" />
           <CategoryBadge category={finding.category} size="sm" />
+          {finding.engine && (
+            <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full font-medium ring-1 bg-slate-100 text-slate-700 ring-slate-300/50">
+              Engine: {finding.engine}
+            </span>
+          )}
         </div>
         <button
           onClick={onClose}

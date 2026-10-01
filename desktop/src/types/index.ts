@@ -118,17 +118,20 @@ export interface Finding {
   id: string;
   scan_id: string;
   severity: FindingSeverity;
-  category: FindingCategory;
+  category: FindingCategory | string;
+  engine?: string;
+  finding_category?: string;
   title: string;
   file: string;
   line: number;
-  confidence: ConfidenceLevel;
+  confidence: ConfidenceLevel | number;
   explanation: string;
   recommendation: string;
   evidence: string;
   cwe_id?: string;
   detected_at?: string;
   status?: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'SUPPRESSED';
+  is_development?: boolean;
 }
 
 export interface CryptoComponent {

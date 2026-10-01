@@ -13,6 +13,8 @@ export const Findings: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { handleUnauthorized } = useAuth();
   const initialSeverity = searchParams.get('severity') || 'ALL';
+  const initialEngine = searchParams.get('engine') || 'ALL';
+  const initialFindingCategory = searchParams.get('finding_category') || 'ALL';
 
   const [findings, setFindings] = useState<Finding[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,7 +23,8 @@ export const Findings: React.FC = () => {
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSeverity, setSelectedSeverity] = useState<string>(initialSeverity);
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [engine, setEngine] = useState<string>(initialEngine);
+  const [findingCategory, setFindingCategory] = useState<string>(initialFindingCategory);
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
 
   const loadFindings = async () => {
@@ -78,22 +81,42 @@ export const Findings: React.FC = () => {
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedSeverity('ALL');
-    setSelectedCategory('ALL');
+    setEngine('ALL');
+    setFindingCategory('ALL');
   };
 
   const filteredFindings = findings.filter((f) => {
-    if (selectedSeverity !== 'ALL' && f.severity !== selectedSeverity) {
+    if (selectedSeverity !== 'ALL' && f.severity?.toUpperCase() !== selectedSeverity.toUpperCase()) {
       return false;
     }
-    if (selectedCategory !== 'ALL' && f.category !== selectedCategory) {
-      return false;
+    if (engine !== 'ALL') {
+      const targetEngine = engine.toLowerCase();
+      const itemEngine = (f.engine || '').toLowerCase();
+      const itemCategory = (f.category || '').toLowerCase();
+      const matchesEngine =
+        itemEngine === targetEngine ||
+        (targetEngine === 'semgrep' && (itemEngine.includes('semgrep') || itemCategory === 'sast')) ||
+        (targetEngine === 'sast' && (itemEngine === 'sast' || itemCategory === 'sast')) ||
+        (targetEngine === 'crypto' && (itemEngine === 'crypto' || itemCategory === 'crypto')) ||
+        (targetEngine === 'dependency' && (itemEngine === 'dependency' || itemCategory === 'dependency')) ||
+        (targetEngine === 'configuration' && (itemEngine === 'configuration' || itemCategory === 'configuration'));
+      if (!matchesEngine) {
+        return false;
+      }
+    }
+    if (findingCategory !== 'ALL') {
+      const targetCat = findingCategory.toLowerCase();
+      const itemFindingCat = (f.finding_category || f.category || '').toLowerCase();
+      if (!itemFindingCat.includes(targetCat) && itemFindingCat !== targetCat) {
+        return false;
+      }
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
         f.id.toLowerCase().includes(q) ||
         f.title.toLowerCase().includes(q) ||
-        f.explanation.toLowerCase().includes(q) ||
+        (f.explanation && f.explanation.toLowerCase().includes(q)) ||
         f.file.toLowerCase().includes(q)
       );
     }
@@ -147,8 +170,17 @@ export const Findings: React.FC = () => {
           onSearchChange={setSearchQuery}
           selectedSeverity={selectedSeverity}
           onSeverityChange={setSelectedSeverity}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
+          engine={engine}
+          onEngineChange={setEngine}
+          findingCategory={findingCategory}
+          onFindingCategoryChange={setFindingCategory}
+          availableCategories={Array.from(
+            new Set(
+              findings
+                .map((f) => f.finding_category || f.category)
+                .filter((c): c is string => Boolean(c))
+            )
+          )}
           totalCount={findings.length}
           filteredCount={filteredFindings.length}
           onReset={handleResetFilters}
@@ -194,7 +226,7 @@ export const Findings: React.FC = () => {
             </div>
             <h3 className="mt-4 text-[16px] font-semibold">No findings matched your criteria</h3>
             <p className="mt-1 text-[13px] text-muted-foreground max-w-sm">
-              Try adjusting your active severity and category filters or clearing the search query.
+              Try adjusting your active severity, engine, or category filters or clearing the search query.
             </p>
             <button onClick={handleResetFilters} className="btn mt-5">
               Reset Filters

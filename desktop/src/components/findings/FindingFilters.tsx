@@ -6,11 +6,17 @@ interface FindingFiltersProps {
   onSearchChange: (q: string) => void;
   selectedSeverity: string;
   onSeverityChange: (s: string) => void;
-  selectedCategory: string;
-  onCategoryChange: (c: string) => void;
+  engine?: string;
+  onEngineChange?: (e: string) => void;
+  findingCategory?: string;
+  onFindingCategoryChange?: (c: string) => void;
+  availableCategories?: string[];
   totalCount: number;
   filteredCount: number;
   onReset: () => void;
+  // Legacy / fallback props
+  selectedCategory?: string;
+  onCategoryChange?: (c: string) => void;
 }
 
 export const FindingFilters: React.FC<FindingFiltersProps> = ({
@@ -18,12 +24,20 @@ export const FindingFilters: React.FC<FindingFiltersProps> = ({
   onSearchChange,
   selectedSeverity,
   onSeverityChange,
-  selectedCategory,
-  onCategoryChange,
+  engine = 'ALL',
+  onEngineChange,
+  findingCategory = 'ALL',
+  onFindingCategoryChange,
+  availableCategories = [],
   totalCount,
   filteredCount,
   onReset,
+  selectedCategory,
+  onCategoryChange,
 }) => {
+  const currentEngine = engine !== 'ALL' ? engine : (selectedCategory && ['SAST', 'CRYPTO', 'DEPENDENCY', 'CONFIGURATION', 'Semgrep'].includes(selectedCategory) ? selectedCategory : 'ALL');
+  const currentCategory = findingCategory !== 'ALL' ? findingCategory : (selectedCategory && !['SAST', 'CRYPTO', 'DEPENDENCY', 'CONFIGURATION', 'Semgrep'].includes(selectedCategory) ? selectedCategory : 'ALL');
+
   const severities = [
     { label: 'All Severities', value: 'ALL' },
     { label: 'Critical', value: 'CRITICAL' },
@@ -32,21 +46,43 @@ export const FindingFilters: React.FC<FindingFiltersProps> = ({
     { label: 'Low', value: 'LOW' },
   ];
 
-  const categories = [
-    { label: 'All Categories', value: 'ALL' },
+  const engines = [
+    { label: 'All Engines', value: 'ALL' },
+    { label: 'Semgrep', value: 'Semgrep' },
     { label: 'SAST Code', value: 'SAST' },
     { label: 'Cryptographic', value: 'CRYPTO' },
-    { label: 'Dependency', value: 'DEPENDENCY' },
+    { label: 'Dependency Check', value: 'DEPENDENCY' },
     { label: 'Configuration', value: 'CONFIGURATION' },
   ];
 
-  const hasActiveFilters = searchQuery !== '' || selectedSeverity !== 'ALL' || selectedCategory !== 'ALL';
+  const baseCategories = [
+    { label: 'All Categories', value: 'ALL' },
+    { label: 'Cryptography', value: 'Cryptography' },
+    { label: 'Key Exchange', value: 'Key Exchange' },
+    { label: 'Cipher Suite', value: 'Cipher Suite' },
+    { label: 'Digital Signature', value: 'Digital Signature' },
+    { label: 'Hardcoded Secret', value: 'Hardcoded Secret' },
+    { label: 'Insecure Deserialization', value: 'Insecure Deserialization' },
+  ];
+
+  // Merge any dynamically available categories without duplicating
+  const extraCategories = availableCategories
+    .filter((c) => c && !baseCategories.some((b) => b.value.toLowerCase() === c.toLowerCase()))
+    .map((c) => ({ label: c, value: c }));
+
+  const categories = [...baseCategories, ...extraCategories];
+
+  const hasActiveFilters =
+    searchQuery !== '' ||
+    selectedSeverity !== 'ALL' ||
+    currentEngine !== 'ALL' ||
+    currentCategory !== 'ALL';
 
   return (
     <div className="glass flex flex-col gap-3 rounded-xl p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Search Input */}
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative flex-1 min-w-[220px]">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
@@ -67,7 +103,7 @@ export const FindingFilters: React.FC<FindingFiltersProps> = ({
         </div>
 
         {/* Severity Selector */}
-        <div className="flex items-center gap-2 text-[13px]">
+        <div className="flex items-center gap-1.5 text-[13px]">
           <span className="text-slate-500">Severity:</span>
           <select
             value={selectedSeverity}
@@ -82,12 +118,36 @@ export const FindingFilters: React.FC<FindingFiltersProps> = ({
           </select>
         </div>
 
-        {/* Category Selector */}
-        <div className="flex items-center gap-2 text-[13px]">
+        {/* Engine Selector */}
+        <div className="flex items-center gap-1.5 text-[13px]">
+          <span className="text-slate-500">Engine:</span>
+          <select
+            value={currentEngine}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (onEngineChange) onEngineChange(val);
+              if (onCategoryChange && !onEngineChange) onCategoryChange(val);
+            }}
+            className="h-9 rounded-lg border border-white/80 bg-white/70 px-2.5 text-[12px] text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+          >
+            {engines.map((eng) => (
+              <option key={eng.value} value={eng.value}>
+                {eng.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Finding Category Selector */}
+        <div className="flex items-center gap-1.5 text-[13px]">
           <span className="text-slate-500">Category:</span>
           <select
-            value={selectedCategory}
-            onChange={(e) => onCategoryChange(e.target.value)}
+            value={currentCategory}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (onFindingCategoryChange) onFindingCategoryChange(val);
+              if (onCategoryChange && !onFindingCategoryChange) onCategoryChange(val);
+            }}
             className="h-9 rounded-lg border border-white/80 bg-white/70 px-2.5 text-[12px] text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
           >
             {categories.map((c) => (
