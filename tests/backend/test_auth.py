@@ -79,9 +79,9 @@ def test_login_validation(api, openapi):
     assert api.post(LOGIN, json={}).status_code == 422
 
 
-def test_me_requires_token(api, openapi):
+def test_me_requires_token(anon_api, openapi):
     require_endpoint(openapi, "get", ME)
-    assert api.get(ME).status_code in (401, 403)
+    assert anon_api.get(ME).status_code in (401, 403)
 
 
 def test_me_rejects_garbage_token(api, openapi):

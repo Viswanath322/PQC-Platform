@@ -12,23 +12,23 @@ NO_AUTH = pytest.mark.xfail(reason="FINDING: no auth enforced yet", strict=False
 @pytest.mark.parametrize("method,path", [("get", "/projects"), ("post", "/projects"),
                                          ("get", "/scans"), ("post", "/scans"),
                                          ("post", "/uploads"), ("get", "/findings")])
-def test_endpoint_requires_authentication(api, openapi, method, path):
+def test_endpoint_requires_authentication(anon_api, openapi, method, path):
     require_endpoint(openapi, method, f"{V1}{path}")
     kw = {"json": {}} if method == "post" and path != "/uploads" else {}
-    r = getattr(api, method)(f"{V1}{path}", **kw)
+    r = getattr(anon_api, method)(f"{V1}{path}", **kw)
     assert r.status_code in (401, 403), f"{method.upper()} {path} unauthenticated -> {r.status_code}"
 
 
 @NO_AUTH
-def test_scan_get_requires_authentication(api, openapi, scan):
-    r = api.get(f"{V1}/scans/{scan['id']}")
+def test_scan_get_requires_authentication(anon_api, openapi, scan):
+    r = anon_api.get(f"{V1}/scans/{scan['id']}")
     assert r.status_code in (401, 403)
 
 
 @NO_AUTH
-def test_redis_ping_requires_authentication(api, openapi):
+def test_redis_ping_requires_authentication(anon_api, openapi):
     require_endpoint(openapi, "get", f"{V1}/redis/ping")
-    assert api.get(f"{V1}/redis/ping").status_code in (401, 403)
+    assert anon_api.get(f"{V1}/redis/ping").status_code in (401, 403)
 
 
 def test_openapi_docs_exposure_documented(api):
