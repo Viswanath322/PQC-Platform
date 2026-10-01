@@ -49,7 +49,9 @@ def get_engine():
         db_name = os.environ.get("DB_NAME") or os.environ.get("MYSQL_DATABASE", "pqc")
 
         if db_password is not None:
-            url = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+            from urllib.parse import quote_plus
+            safe_password = quote_plus(db_password)
+            url = f"mysql+pymysql://{db_user}:{safe_password}@{db_host}:{db_port}/{db_name}"
 
     if not url:
         print("[ERROR] DATABASE_URL (or DB_PASSWORD / MYSQL_PASSWORD) environment variable is required to connect to MySQL.")
