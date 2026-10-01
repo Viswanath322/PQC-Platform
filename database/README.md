@@ -1,4 +1,4 @@
-# PQC Security Assessment Platform — Database (Day 1)
+# PQC Security Assessment Platform — Database
 
 **Owner:** Vamsi (Database Engineer)  
 **Target Engine:** MySQL 8.0+  
@@ -18,20 +18,20 @@ erDiagram
     SCANS ||--o{ FINDINGS : "produces"
 
     ORGANIZATIONS {
-        VARCHAR(36) id PK "UUID / seed: org-default-001, 1"
+        VARCHAR(36) id PK "UUID / seed: org-default-001"
         VARCHAR(255) name
-        DATETIME created_at
-        DATETIME updated_at
+        DATETIME(6) created_at
+        DATETIME(6) updated_at
     }
 
     USERS {
         CHAR(36) id PK "UUID"
         VARCHAR(36) organization_id FK
         VARCHAR(255) email UK
-        VARCHAR(255) password_hash
+        VARCHAR(255) password_hash "Argon2id"
         VARCHAR(50) role
-        DATETIME created_at
-        DATETIME updated_at
+        DATETIME(6) created_at
+        DATETIME(6) updated_at
     }
 
     PROJECTS {
@@ -39,8 +39,8 @@ erDiagram
         VARCHAR(36) organization_id FK "DEFAULT org-default-001"
         VARCHAR(255) name
         TEXT description
-        DATETIME created_at
-        DATETIME updated_at
+        DATETIME(6) created_at
+        DATETIME(6) updated_at
     }
 
     SCANS {
@@ -48,9 +48,10 @@ erDiagram
         VARCHAR(36) project_id FK "REFERENCES projects(id)"
         ENUM status "QUEUED, INGESTING, ANALYZING, PROCESSING, AI_ANALYSIS, COMPLETED, FAILED, CANCELLED"
         VARCHAR(1024) repository_path
-        DATETIME created_at
-        DATETIME started_at
-        DATETIME completed_at
+        TEXT error_message "Failure explanation"
+        DATETIME(6) created_at
+        DATETIME(6) started_at
+        DATETIME(6) completed_at
     }
 
     SCAN_FILES {
@@ -60,7 +61,7 @@ erDiagram
         VARCHAR(100) file_type
         VARCHAR(100) language
         BIGINT size_bytes
-        DATETIME created_at
+        DATETIME(6) created_at
     }
 
     FINDINGS {
@@ -73,9 +74,11 @@ erDiagram
         VARCHAR(1024) file_path
         INT line_number
         TEXT evidence
-        VARCHAR(50) confidence
+        TEXT explanation
+        FLOAT confidence "0.0 - 1.0"
         TEXT recommendation
-        DATETIME created_at
+        BOOLEAN is_development
+        DATETIME(6) created_at
     }
 ```
 
@@ -88,52 +91,57 @@ All entities (`organizations`, `users`, `projects`, `scans`, `scan_files`, `find
 * **Project IDs:** Standard 36-char lowercase UUID string (`VARCHAR(36)`), e.g. `00000000-0000-0000-0001-000000000001`. Validated in FastAPI routes via `UUID_PATTERN`.
 * **Organization IDs:** Standard 36-char string (`VARCHAR(36)`). Standardized on the single default organization `'org-default-001'`. The legacy numeric compatibility row `'1'` has been dropped (resolving DB-11).
 * **Scan & Finding IDs:** Standard 36-char UUID string (`CHAR(36)`).
+* **High-Precision Timestamps:** All `created_at` and `updated_at` columns use `DATETIME(6)` microsecond precision with `CURRENT_TIMESTAMP(6)` to guarantee deterministic and stable sorting for newest-first queries.
+* **Scan Error Reporting:** The `scans` table includes `error_message TEXT NULL` so failed scans capture worker and ingestion failure reasons.
 * **Findings Schema Alignment:** Includes `explanation TEXT NULL` (for API queries), `confidence FLOAT NULL` (0.0 to 1.0, matching analysis engine contract), and `is_development BOOLEAN NOT NULL DEFAULT FALSE` (distinguishing synthetic fixtures).
 
-This guarantees:
-* Client-side offline generation for desktop shells.
-* Seamless multi-agent asynchronous scanning without sequence contention.
-* Zero ID collisions across air-gapped sync nodes.
+---
+
+## 3. Seed Data & Development Credentials
+
+The development seed data in `database/seed.sql` pre-populates:
+1. **Organization:** `org-default-001` ("Default Organization").
+2. **Admin User:**
+   - **ID:** `00000000-0000-0000-0000-000000000001`
+   - **Email:** `admin@pqc.example`
+   - **Password (Dev only):** `dev-admin-password-2026!`
+   - **Hash Scheme:** Argon2id via `pwdlib[argon2]` (`$argon2id$v=19$m=65536,t=3,p=4$M7uTQkr8amx0e06HMfk1ig$gtZiERUEonf1XFq0AvpCmShrVe8nVdDTL27ty6iV5x4`)
+3. **Demo Project:** `00000000-0000-0000-0001-000000000001` ("Demo Banking Application").
+4. **Demo Scan:** `a8098c1a-f86e-11da-bd1a-00112444be1e` seeded with status `COMPLETED` for preloaded demo findings.
+5. **Demo Findings:** Two development findings (`is_development = TRUE`) attached to the demo scan.
 
 ---
 
+## 4. How to Run & Verify
 
-## 3. How to Run & Verify
+### Step 1: Configure Environment (.env)
+Create an untracked `.env` in the repository root (or set environment variables):
+```ini
+MYSQL_DATABASE=pqc_security
+MYSQL_USER=pqc
+MYSQL_PASSWORD=your_secure_mysql_password
+MYSQL_ROOT_PASSWORD=your_secure_mysql_root_password
+REDIS_PASSWORD=your_secure_redis_password
+DATABASE_URL=mysql+pymysql://pqc:your_secure_mysql_password@127.0.0.1:3306/pqc_security
+```
 
-### Option A: Local PostgreSQL & pgAdmin (Recommended for Lab / Desktop Setup)
-* **Status:** Fully supported. Uses the local PostgreSQL service (`localhost:5432`).
-* **Database Name:** `pqc_security`
-* **Schema Script:** [`database/schema_postgres.sql`](file:///d:/Projects/PQC/PQC-Platform/database/schema_postgres.sql)
-* **Seed Script:** [`database/seed_postgres.sql`](file:///d:/Projects/PQC/PQC-Platform/database/seed_postgres.sql)
+### Step 2: Start MySQL & Redis with Docker Compose
+```bash
+docker compose up -d mysql redis
+```
+* **Ports:** Bound strictly to `127.0.0.1` (`3306` for MySQL, `6379` for Redis) for desktop security.
+* **Security:** `MYSQL_ROOT_HOST=localhost`, healthchecks authenticate via environment variables (`MYSQL_PWD`, `REDISCLI_AUTH`) without command-line exposure.
+* **Initialization:** Auto-executes `database/schema.sql` and `database/seed.sql` on first volume creation.
 
-To initialize and verify with Python:
+### Step 3: Run the Verification Script
 ```bash
 python database/verify_db.py
 ```
-
-To view or manage in **pgAdmin**:
-1. Open **pgAdmin**.
-2. Connect to your local PostgreSQL server (`localhost:5432`).
-3. Expand **Databases** -> **pqc_security** -> **Schemas** -> **public** -> **Tables**.
-4. You will see all 6 core tables: `organizations`, `users`, `projects`, `scans`, `scan_files`, `findings`.
-
----
-
-### Option B: Start MySQL with Docker Compose
-If Docker Desktop is installed:
-```bash
-docker compose up -d mysql
-```
-*Port:* `127.0.0.1:3306` (Localhost restricted for security)  
-*Default User:* `pqc`  
-*Default Password:* `change_me_locally`  
-*Database:* `pqc_security`
-
----
-
-### Step 2: Run the Verification Script
-```bash
-python database/verify_db.py
-```
-Automatically detects PostgreSQL first, then MySQL, or falls back to SQLite for schema validation.
-
+Validates:
+* All 6 core tables and relationships.
+* Idempotent seed data checking.
+* Unified UUID identifier standard.
+* `error_message` column on `scans`.
+* Findings `explanation`, `confidence`, and `is_development` columns.
+* Clean teardown in a `finally` block with zero leftover test rows.
+* Strictly connects to MySQL (exits non-zero if unreachable; no silent fallback).

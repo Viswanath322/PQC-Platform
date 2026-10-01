@@ -10,10 +10,10 @@ __pycache__/
 .env.local
 .env.*.local
 *.env
-env/
-venv/
-.venv/
-ENV/
+/env/
+/venv/
+/.venv/
+/ENV/
 
 # Python packaging (anchored to avoid hiding source directories)
 /build/

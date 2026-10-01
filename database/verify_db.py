@@ -21,7 +21,7 @@ try:
     from sqlalchemy.orm import sessionmaker
 except ImportError:
     print("[ERROR] SQLAlchemy is not installed.")
-    print("Please install requirements: pip install sqlalchemy pymysql psycopg2-binary")
+    print("Please install requirements: pip install sqlalchemy pymysql")
     sys.exit(1)
 
 # Allow importing local models
@@ -30,37 +30,42 @@ from database.models import Base, Organization, User, Project, Scan, ScanFile, F
 
 
 def get_engine():
-    env_url = os.environ.get("DATABASE_URL")
-    candidate_urls = []
-    if env_url:
-        candidate_urls.append(env_url)
+    # Attempt to load untracked .env from repo root if python-dotenv is available
+    try:
+        from dotenv import load_dotenv
+        env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+        if os.path.exists(env_file):
+            load_dotenv(env_file)
+    except ImportError:
+        pass
 
-    # Check candidates: environment URL, MySQL, then PostgreSQL
-    candidate_urls.extend([
-        "mysql+pymysql://pqc:change_me_locally@127.0.0.1:3306/pqc_security",
-        "postgresql+psycopg2://postgres@localhost:5432/pqc_security",
-    ])
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        # Check explicit MySQL environment variables if DATABASE_URL is not directly supplied
+        mysql_password = os.environ.get("MYSQL_PASSWORD")
+        if mysql_password:
+            mysql_user = os.environ.get("MYSQL_USER", "pqc")
+            mysql_host = os.environ.get("MYSQL_HOST", "127.0.0.1")
+            mysql_port = os.environ.get("MYSQL_PORT", "3306")
+            mysql_db = os.environ.get("MYSQL_DATABASE", "pqc_security")
+            url = f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:{mysql_port}/{mysql_db}"
 
-    for url in candidate_urls:
-        try:
-            db_engine = create_engine(url, echo=False, pool_pre_ping=True)
-            with db_engine.connect() as conn:
-                conn.execute(text("SELECT 1"))
-            dialect = db_engine.dialect.name.lower()
-            if dialect == "mysql":
-                print(f"[OK] Successfully connected to live MySQL instance at: {url}")
-            elif dialect == "postgresql":
-                print(f"[OK] Successfully connected to live POSTGRESQL instance at: {url}")
-            else:
-                print(f"[OK] Successfully connected to live {dialect.upper()} instance at: {url}")
-            return db_engine, db_engine.dialect.name.upper()
-        except Exception:
-            continue
+    if not url:
+        print("[ERROR] DATABASE_URL (or MYSQL_PASSWORD) environment variable is required to connect to MySQL.")
+        print("Please set DATABASE_URL, e.g.:")
+        print("  DATABASE_URL=mysql+pymysql://<user>:<password>@127.0.0.1:3306/pqc_security")
+        sys.exit(1)
 
-    print("[WARN] Live database connection failed.")
-    print("[INFO] Falling back to SQLite in-memory database to verify Schema/Model logic...")
-    sqlite_engine = create_engine("sqlite:///:memory:", echo=False)
-    return sqlite_engine, "SQLite (Model Validation)"
+    try:
+        db_engine = create_engine(url, echo=False, pool_pre_ping=True)
+        with db_engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        safe_url = url.split("@")[-1] if "@" in url else url
+        print(f"[OK] Successfully connected to live MySQL instance at: {safe_url}")
+        return db_engine, db_engine.dialect.name.upper()
+    except Exception as exc:
+        print(f"[ERROR] Live database connection to MySQL failed: {exc}")
+        sys.exit(1)
 
 
 def run_day1_verification():
@@ -136,7 +141,8 @@ def run_day1_verification():
             id=scan_uuid,
             project_id=test_project.id,
             status="QUEUED",
-            repository_path="uploads/demo-banking.zip"
+            repository_path="uploads/demo-banking.zip",
+            error_message=None,
         )
         session.add(test_scan)
         session.commit()
@@ -150,10 +156,12 @@ def run_day1_verification():
         assert retrieved_scan is not None, "Scan could not be retrieved from database!"
         assert retrieved_scan.status == "QUEUED", f"Expected 'QUEUED', got {retrieved_scan.status}"
         assert retrieved_scan.project_id == test_project.id, "Project ID mismatch on scan!"
+        assert retrieved_scan.error_message is None, "Expected error_message to be None!"
         print(f"   --> [PASS] Retrieved Scan: id={retrieved_scan.id}")
         print(f"              Status:          {retrieved_scan.status}")
         print(f"              Project ID:      {retrieved_scan.project_id} (UUID)")
         print(f"              Project Name:    {retrieved_scan.project.name}")
+        print(f"              Error Message:   {retrieved_scan.error_message}")
 
         # 7. Add a finding to verify findings table relationship (including explanation and is_development)
         print("\n[Step 7] Adding a mock Finding linked to Scan...")
