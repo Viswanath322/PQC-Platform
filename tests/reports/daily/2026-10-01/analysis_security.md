@@ -252,7 +252,7 @@ Fix: remove `tests/` from her branch. The suite lives on `qa/pushpam` and the de
 - `PQC-frontend apiAuthContract.test.mjs:242`
 
 None of them is a real secret.
-Fix: use obviously fake values with `# pragma: allowlist secret` (or build them at runtime), and leave the password empty in `.env.example`. On my side I'll allowlist `__tests__/` and the `autoComplete` attribute in the QA scanner.
+Fix: use obviously fake values with `# pragma: allowlist secret` (or build them at runtime), and leave the password empty in `.env.example`. On my side, test files and `autoComplete` values are now warnings in the QA scanner, so only Vamsi's two non-test hits still fail.
 
 **SEC-17 · Low · Branch bug · Aakash/Amrutha (aakash-port, foundation), Harshitha (backend copy). Requirements are ranges with no lock file.**
 The air-gapped installer needs exact wheels, and the set we audit has to be the set we ship.
