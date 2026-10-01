@@ -209,13 +209,12 @@ def test_dummy_smoke_on_demo_repo(lib, demo_files):
 ENGINES_SUBPKGS = ["sast", "crypto", "dependency", "configuration"]
 
 
-def _engines_dir():
-    import base
-    return Path(base.__file__).resolve().parent.parent
+def _engines_dir(lib):
+    return lib.engines_dir
 
 
 def test_engine_subpackages_exist(lib):
-    d = _engines_dir()
+    d = _engines_dir(lib)
     for name in ENGINES_SUBPKGS:
         assert (d / name / "__init__.py").is_file(), name
 
@@ -226,29 +225,18 @@ def _run(code, cwd, env_extra=None):
     return subprocess.run([sys.executable, "-c", code], cwd=cwd, capture_output=True, text=True, env=env, timeout=60)
 
 
-def test_layout_import_by_name_is_awkward(lib):
-    """`analysis-engines` is not a valid identifier; documenting how each import style behaves."""
-    root = _engines_dir().parent
-    r = _run("import analysis_engines", root)
-    assert r.returncode != 0, "underscore name unexpectedly importable"
-    r2 = _run("import importlib; importlib.import_module('analysis-engines')", root)
-    assert r2.returncode != 0 and "base" in r2.stderr, (
-        "hyphen import_module should fail inside __init__ ('from base...' needs the dir on sys.path)")
-
-
-@pytest.mark.xfail(reason="FINDING AE-03: package dir is not importable as a package (hyphen) and its own "
-                          "__init__.py uses top-level `from base...`; only the PYTHONPATH hack works", strict=False)
 def test_layout_importable_as_package(lib):
-    root = _engines_dir().parent
-    r = _run("import importlib; m = importlib.import_module('analysis-engines'); m.DummyEngine", root)
-    assert r.returncode == 0, r.stderr[-300:]
+    """AE-03: from the checkout root, `import analysis_engines` must work without PYTHONPATH tricks."""
+    root = _engines_dir(lib).parent
+    r = _run("import analysis_engines as m; m.DummyEngine, m.AnalysisPipeline", root)
+    assert r.returncode == 0, f"FINDING AE-03: package not importable by name: {r.stderr[-300:]}"
 
 
 def test_no_pycache_or_pyc_tracked(lib):
     import shutil
     if not shutil.which("git"):
         blocked("git not available")
-    root = _engines_dir().parent
+    root = _engines_dir(lib).parent
     r = subprocess.run(["git", "ls-files"], cwd=root, capture_output=True, text=True)
     if r.returncode != 0:
         blocked("not a git checkout")
