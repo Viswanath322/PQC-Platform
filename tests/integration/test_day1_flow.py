@@ -33,9 +33,15 @@ def blocked(reason):
     pytest.skip(f"BLOCKED: {reason}")
 
 
+def _send_token(request):
+    """Once test_02 has logged in, every call carries the token unless it sets its own header."""
+    if FLOW.get("token") and "authorization" not in request.headers:
+        request.headers["Authorization"] = f"Bearer {FLOW['token']}"
+
+
 @pytest.fixture(scope="module")
 def http():
-    c = httpx.Client(base_url=API_URL, timeout=15)
+    c = httpx.Client(base_url=API_URL, timeout=15, event_hooks={"request": [_send_token]})
     try:
         c.get("/openapi.json")
     except httpx.TransportError:
@@ -157,7 +163,8 @@ def test_02b_wrong_password_and_bad_token(http, paths):
     r = http.post(login, json={"email": FLOW["auth_email"], "password": "not-the-password-123"})
     assert r.status_code == 401, r.text
     if me:
-        assert http.get(me).status_code in (401, 403), "/me without a token must be refused"
+        with httpx.Client(base_url=API_URL, timeout=15) as anon:
+            assert anon.get(me).status_code in (401, 403), "/me without a token must be refused"
         assert http.get(me, headers={"Authorization": "Bearer x.y.z"}).status_code == 401
 
 
