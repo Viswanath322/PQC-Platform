@@ -239,7 +239,7 @@ describe('API Authentication Contract', () => {
       user: { id: 'u1', email: 'a@b.com', full_name: 'Alice', role: 'admin', created_at: '' },
     });
 
-    const { token } = await client.login({ email: 'a@b.com', password: 'secret' });
+    const { token } = await client.login({ email: 'a@b.com', password: 'TEST_ONLY_NOT_A_REAL_PASSWORD' }); // # pragma: allowlist secret
 
     assert.equal(token, 'test-token-abc123');
     assert.equal(localStorage.getItem('pqc_auth_token'), 'test-token-abc123');
