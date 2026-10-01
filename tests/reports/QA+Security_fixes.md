@@ -248,6 +248,7 @@ Fix: delete `tests/` from her branch. The suite lives on `qa/pushpam` and the de
 
 **34. Test passwords trip the secret scanners** (SEC-16) · Aakash, Vamsi, Harshitha, Sathish · Branch bug
 At `test_api_auth_scoping.py:44`, `run_combined_flow.py:71`, `backend/.env.example:3` and `apiAuthContract.test.mjs:242`. None of them is real.
+Test files now only raise warnings in the QA scan, so the hits that still fail are Vamsi's two (`run_combined_flow.py:71`, `backend/.env.example:3`).
 Fix: obviously fake values with `# pragma: allowlist secret`, and leave the password empty in `.env.example`.
 
 **35. Pin backend dependencies** (SEC-17) · Aakash / Amrutha · Branch bug
@@ -268,8 +269,8 @@ Classification edge cases, language map gaps, `is_excluded("")` returning `[]`, 
 
 ## On my side (QA)
 
-- Done today: the suite now logs in automatically on backends with auth, so routes that need a token no longer show up as false 401 failures.
-- To do:
-  - Update `tests/analysis` for the new `analysis_engines` package (93 tests show as Blocked until then).
-  - Remove the stale xfail markers.
-  - Allowlist test fixtures in the secret check.
+Done today on `qa/pushpam`:
+- The suite logs in automatically on backends with auth, so no more false 401 failures.
+- `tests/analysis` supports the new `analysis_engines` package (93 tests were showing as Blocked before).
+- Removed the xfail markers for AE-04 and AE-06, which are fixed.
+- The secret check treats test files anywhere in the tree as warnings, not failures.
