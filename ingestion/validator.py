@@ -2,9 +2,14 @@
 
 from pathlib import Path
 from dataclasses import dataclass
+import logging
 import lzma
 import zipfile
 import zlib
+
+
+# Issue #16: Add logging
+log = logging.getLogger(__name__)
 
 
 class InvalidArchiveError(ValueError):
@@ -19,12 +24,21 @@ class ZipLimits:
     max_compression_ratio: float = 200.0
     max_files: int = 50_000
     max_entries: int = 100_000
+    # Issue #7: Add limits for directories, member size, path depth/length
+    max_dirs: int = 10_000
+    max_member_bytes: int = 512 * 1024 * 1024
+    max_depth: int = 100
+    max_path_len: int = 512
 
     def __post_init__(self) -> None:
         if self.max_uncompressed_bytes <= 0 or self.max_compression_ratio <= 0:
             raise ValueError("ZIP size and compression limits must be positive")
         if self.max_files <= 0 or self.max_entries <= 0:
             raise ValueError("ZIP file and entry limits must be positive")
+        if self.max_dirs <= 0 or self.max_member_bytes <= 0:
+            raise ValueError("ZIP directory and member size limits must be positive")
+        if self.max_depth <= 0 or self.max_path_len <= 0:
+            raise ValueError("ZIP path depth and length limits must be positive")
 
 
 DEFAULT_ZIP_LIMITS = ZipLimits()
@@ -56,6 +70,8 @@ def _check_limits(infos: list[zipfile.ZipInfo], limits: ZipLimits) -> None:
 def validate_zip(path: str | Path, limits: ZipLimits = DEFAULT_ZIP_LIMITS) -> Path:
     archive = Path(path)
     if not archive.is_file() or not zipfile.is_zipfile(archive):
+        # Issue #16: Log rejection
+        log.warning(f"Not a valid ZIP file: {archive.name}")
         raise InvalidArchiveError(f"Not a valid ZIP file: {archive}")
     try:
         with zipfile.ZipFile(archive) as zipped:
