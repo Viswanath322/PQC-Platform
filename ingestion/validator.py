@@ -70,9 +70,9 @@ def _check_limits(infos: list[zipfile.ZipInfo], limits: ZipLimits) -> None:
 def validate_zip(path: str | Path, limits: ZipLimits = DEFAULT_ZIP_LIMITS) -> Path:
     archive = Path(path)
     if not archive.is_file() or not zipfile.is_zipfile(archive):
-        # Issue #16: Log rejection
+        # Issue #16: Log rejection (Issue #15: only log name, not full path)
         log.warning(f"Not a valid ZIP file: {archive.name}")
-        raise InvalidArchiveError(f"Not a valid ZIP file: {archive}")
+        raise InvalidArchiveError("Not a valid ZIP file")
     try:
         with zipfile.ZipFile(archive) as zipped:
             infos = zipped.infolist()
