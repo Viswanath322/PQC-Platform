@@ -86,7 +86,8 @@ def test_upload_path_traversal_filename(api, openapi):
             up = Path(UPLOAD_DIR).resolve()
             assert not list(up.parent.parent.rglob(f"{marker}*")) or all(
                 up in p.resolve().parents for p in up.parent.parent.rglob(f"{marker}*"))
-            assert (up / f"{b['upload_id']}.zip").exists()
+            # stored anywhere under the upload dir (some branches use per-org subfolders)
+            assert list(up.rglob(f"{b['upload_id']}.zip")), "upload not stored under PQC_UPLOAD_DIR"
         assert ".." not in b["filename"] and "/" not in b["filename"], \
             f"filename echoed unsanitised: {b['filename']!r}"
 
@@ -133,7 +134,7 @@ def test_upload_oversized_rejected_413(api, openapi):
     from tests.conftest import API_URL
     try:
         r = httpx.post(API_URL + U, content=gen(), timeout=120,
-                       headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+                       headers={**api.headers, "Content-Type": f"multipart/form-data; boundary={boundary}"})
     except (httpx.WriteError, httpx.ReadError):
         # Server may answer 413 and close the socket while we are still sending; the client can
         # then see a reset instead of the response. Treated as "rejected" (verified 413 via curl).
