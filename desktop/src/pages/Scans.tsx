@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Scan as ScanIcon, RefreshCw, Filter, Search, X } from 'lucide-react';
+import { Plus, Scan as ScanIcon, RefreshCw, Filter, Search, X, AlertCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ScanTable } from '@/components/scans/ScanTable';
 import { NewScanModal } from '@/components/scans/NewScanModal';
@@ -23,6 +23,8 @@ export const Scans: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedScanForDetails, setSelectedScanForDetails] = useState<Scan | null>(null);
+  // BUG 7: cancel-scan failure must be surfaced to the user
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -73,12 +75,20 @@ export const Scans: React.FC = () => {
   };
 
   const handleCancelScan = async (scan: Scan) => {
+    setCancelError(null);
     try {
       await api.cancelScan(scan.id);
+      // Only update UI on confirmed API success
       setScans((prev) =>
         prev.map((s) => (s.id === scan.id ? { ...s, status: 'CANCELLED' } : s))
       );
     } catch (err) {
+      // BUG 7: capture and display error — do NOT update scan to CANCELLED falsely
+      const message =
+        err instanceof ApiError
+          ? err.userMessage
+          : 'Unable to cancel scan. Please try again.';
+      setCancelError(message);
       console.error('Failed to cancel scan:', err);
     }
   };
@@ -126,6 +136,28 @@ export const Scans: React.FC = () => {
         }
       />
 
+      {/* BUG 7: Cancel-scan failure banner */}
+      {cancelError && (
+        <div
+          role="alert"
+          className="flex items-center gap-3 rounded-xl px-4 py-3 text-[13px] mb-1"
+          style={{
+            background: 'rgba(220, 38, 38, 0.07)',
+            border: '1px solid rgba(220, 38, 38, 0.18)',
+            color: '#dc2626',
+          }}
+        >
+          <AlertCircle size={15} className="shrink-0" />
+          <span><strong>Unable to cancel scan</strong> — {cancelError}</span>
+          <button
+            onClick={() => setCancelError(null)}
+            className="ml-auto text-xs hover:underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-5">
         {/* Filters Bar */}
         <div className="card flex flex-wrap items-center justify-between gap-4 p-4">
@@ -135,7 +167,7 @@ export const Scans: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by Scan ID (e.g. SCAN-001), repository, project…"
+              placeholder="Search by Scan ID, repository, project…"
               className="h-9 w-full rounded-lg border bg-surface pl-9 pr-4 text-[13px] outline-none placeholder:text-muted-foreground focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
             />
           </div>

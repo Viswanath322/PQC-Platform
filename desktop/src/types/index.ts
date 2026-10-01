@@ -49,20 +49,20 @@ export interface UserProfile {
 }
 
 export const defaultUserProfile: UserProfile = {
-  id: 'usr-sec-01',
-  name: 'SecOfficer',
-  fullName: 'Sathish V.',
-  email: 'sathish.officer@pqc-sentinel.local',
-  role: 'Security Auditor',
-  title: 'Air-Gapped Auditor',
-  clearanceLevel: 'Level 4 (Top Secret / PQC Defense)',
-  organization: 'Post-Quantum Security Division',
-  pgpKeyId: '4A9F 821E 993B C401',
-  bio: 'Lead security engineer and air-gapped auditor specializing in cryptographic vulnerability discovery, CBOM management, and post-quantum algorithm migration.',
-  avatarInitials: 'SO',
-  phone: '+1 (555) 019-2834',
-  location: 'Defense Operations Center (Air-Gapped)',
-  updatedAt: '2026-09-29T12:00:00.000Z',
+  id: '',
+  name: '',
+  fullName: '',
+  email: '',
+  role: '',
+  title: '',
+  clearanceLevel: '',
+  organization: '',
+  pgpKeyId: '',
+  bio: '',
+  avatarInitials: '?',
+  phone: '',
+  location: '',
+  updatedAt: new Date().toISOString(),
 };
 
 export interface Project {

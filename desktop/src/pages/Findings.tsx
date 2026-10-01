@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Bug, RefreshCw } from 'lucide-react';
+import { Bug, RefreshCw, AlertCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { FindingsTable } from '@/components/findings/FindingsTable';
 import { FindingFilters } from '@/components/findings/FindingFilters';
 import { FindingDetails } from '@/components/findings/FindingDetails';
-import { api } from '@/services/api';
+import { api, ApiError } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import type { Finding } from '@/types';
 
 export const Findings: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const { handleUnauthorized } = useAuth();
   const initialSeverity = searchParams.get('severity') || 'ALL';
 
   const [findings, setFindings] = useState<Finding[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);   // null = no error
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSeverity, setSelectedSeverity] = useState<string>(initialSeverity);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
@@ -22,10 +26,22 @@ export const Findings: React.FC = () => {
 
   const loadFindings = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       const data = await api.getFindings();
       setFindings(data);
     } catch (err) {
+      // REAL API FAILURE != EMPTY SUCCESS
+      // Capture the error and surface it \u2014 never convert to empty array
+      const message =
+        err instanceof ApiError
+          ? err.userMessage
+          : 'Failed to load findings. Check your network connection.';
+      setLoadError(message);
+
+      if (err instanceof ApiError && err.errorType === 'UNAUTHORIZED') {
+        handleUnauthorized();
+      }
       console.error('Failed to load findings:', err);
     } finally {
       setIsLoading(false);
@@ -38,10 +54,21 @@ export const Findings: React.FC = () => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    setRefreshError(null);
     try {
       const data = await api.getFindings();
       setFindings(data);
+      setLoadError(null); // Clear previous load error on successful refresh
     } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? err.userMessage
+          : 'Failed to refresh findings.';
+      setRefreshError(message);
+
+      if (err instanceof ApiError && err.errorType === 'UNAUTHORIZED') {
+        handleUnauthorized();
+      }
       console.error('Failed to refresh findings:', err);
     } finally {
       setIsRefreshing(false);
@@ -91,6 +118,28 @@ export const Findings: React.FC = () => {
         }
       />
 
+      {/* Refresh error banner */}
+      {refreshError && !isRefreshing && (
+        <div
+          role="alert"
+          className="flex items-center gap-3 rounded-xl px-4 py-3 text-[13px] mb-4"
+          style={{
+            background: 'rgba(220, 38, 38, 0.07)',
+            border: '1px solid rgba(220, 38, 38, 0.18)',
+            color: '#dc2626',
+          }}
+        >
+          <AlertCircle size={15} className="shrink-0" />
+          <span><strong>Unable to refresh findings</strong> — {refreshError}</span>
+          <button
+            onClick={() => setRefreshError(null)}
+            className="ml-auto text-xs hover:underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-5">
         {/* Filters */}
         <FindingFilters
@@ -105,14 +154,40 @@ export const Findings: React.FC = () => {
           onReset={handleResetFilters}
         />
 
-        {/* Content Area */}
+        {/* Content Area: 4 distinct states */}
         {isLoading ? (
+          /* STATE 1: Loading */
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="card h-16 skeleton" />
             ))}
+            <p className="text-center text-[12px] text-slate-400">Loading findings…</p>
           </div>
-        ) : filteredFindings.length === 0 ? (
+        ) : loadError ? (
+          /* STATE 4: API failure — clearly distinct from 'No findings' */
+          <div className="card flex flex-col items-center justify-center p-12 text-center">
+            <div
+              className="grid h-12 w-12 place-items-center rounded-xl mb-4"
+              style={{
+                background: 'rgba(220, 38, 38, 0.07)',
+                border: '1px solid rgba(220, 38, 38, 0.18)',
+                color: '#dc2626',
+              }}
+            >
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <h3 className="text-[16px] font-semibold" style={{ color: '#29384D' }}>
+              Unable to load findings
+            </h3>
+            <p className="mt-1 text-[13px] max-w-sm leading-relaxed" style={{ color: '#687587' }}>
+              {loadError}
+            </p>
+            <button onClick={loadFindings} className="btn-primary mt-5">
+              Try Again
+            </button>
+          </div>
+        ) : filteredFindings.length === 0 && findings.length > 0 ? (
+          /* STATE 3b: Successful response but filtered to empty — reset filters */
           <div className="card flex flex-col items-center justify-center p-12 text-center">
             <div className="grid h-12 w-12 place-items-center rounded-xl bg-surface-2 text-muted-foreground">
               <Bug className="h-6 w-6" />
@@ -121,14 +196,23 @@ export const Findings: React.FC = () => {
             <p className="mt-1 text-[13px] text-muted-foreground max-w-sm">
               Try adjusting your active severity and category filters or clearing the search query.
             </p>
-            <button
-              onClick={handleResetFilters}
-              className="btn mt-5"
-            >
+            <button onClick={handleResetFilters} className="btn mt-5">
               Reset Filters
             </button>
           </div>
+        ) : findings.length === 0 ? (
+          /* STATE 3a: Successful response, zero findings (clean empty state) */
+          <div className="card flex flex-col items-center justify-center p-12 text-center">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-surface-2 text-muted-foreground">
+              <Bug className="h-6 w-6" />
+            </div>
+            <h3 className="mt-4 text-[16px] font-semibold">No findings</h3>
+            <p className="mt-1 text-[13px] text-muted-foreground max-w-sm">
+              No security findings were returned for this scan. Run a scan to detect vulnerabilities.
+            </p>
+          </div>
         ) : (
+          /* STATE 2: Success with data */
           <FindingsTable
             findings={filteredFindings}
             selectedFindingId={selectedFinding?.id}

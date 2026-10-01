@@ -174,7 +174,7 @@ export const mockFindings: Finding[] = [
       'A plain-text HMAC secret was detected embedded directly within the repository configuration file. Adversaries or compromised dependencies can forge arbitrary administrative bearer tokens.',
     recommendation:
       'Extract all cryptographic secrets to an air-gapped on-premise hardware security module (HSM) or HashiCorp Vault instance referenced via environment variables.',
-    evidence: '"jwt_signing_secret": "prod_sec_994821a8d8e12b774f1c90c7"',
+    evidence: '"config_key": "<REDACTED - no real credentials in source code>"',
     cwe_id: 'CWE-798: Use of Hard-coded Credentials',
     detected_at: '2026-09-29 11:42:15 UTC',
     status: 'OPEN',

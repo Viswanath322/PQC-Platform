@@ -1,6 +1,6 @@
 import { Search, Bell, RefreshCw, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@/context/UserContext";
+import { useAuth } from "@/context/AuthContext";
 
 export function Topbar({
   page = "Dashboard",
@@ -18,7 +18,16 @@ export function Topbar({
   isRefreshing?: boolean;
 }) {
   const navigate = useNavigate();
-  const { profile } = useUser();
+  const { user: authUser } = useAuth();
+
+  // Derive initials from real authenticated user; fall back to ? if not logged in
+  const avatarInitials = (() => {
+    const src = authUser?.full_name || authUser?.email?.split('@')[0] || '';
+    const parts = src.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    if (src.length >= 2) return src.substring(0, 2).toUpperCase();
+    return '?';
+  })();
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-4 border-b border-white/70 bg-white/50 px-4 backdrop-blur-xl lg:px-6">
@@ -74,10 +83,10 @@ export function Topbar({
         </button>
         <button
           onClick={() => navigate("/profile")}
-          title={`Profile: ${profile.fullName} (@${profile.name}) - Click to view and edit`}
+          title={authUser ? `Profile: ${authUser.full_name || authUser.email} (<${authUser.email}>) - Click to view` : 'Profile'}
           className="grid h-8.5 w-8.5 place-items-center rounded-xl bg-gradient-to-br from-purple-100 to-teal-50 text-[11.5px] font-bold text-purple-700 ring-1 ring-purple-200/80 backdrop-blur-md shadow-2xs transition-all duration-200 hover:ring-2 hover:ring-purple-300 hover:shadow-[0_4px_14px_rgba(147,51,234,0.15)] hover:scale-105 active:scale-95 cursor-pointer"
         >
-          {profile.avatarInitials}
+          {avatarInitials}
         </button>
       </div>
     </header>

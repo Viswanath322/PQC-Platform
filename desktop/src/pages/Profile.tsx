@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useUser } from '@/context/UserContext';
+import { useAuth } from '@/context/AuthContext';
 import type { UserProfile } from '@/types';
 
 interface ProfileProps {
@@ -25,8 +26,22 @@ interface ProfileProps {
 
 export const Profile: React.FC<ProfileProps> = ({ onShowToast }) => {
   const { profile, updateProfile, resetProfile } = useUser();
+  const { user: authUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserProfile>(profile);
+
+  // Identity comes from the authenticated user — never from mock defaults
+  const displayName = authUser?.full_name || profile.fullName || 'Not provided';
+  const displayEmail = authUser?.email || profile.email || 'Not provided';
+  const displayRole = authUser?.role || profile.role || 'Not provided';
+  // Compute initials from real auth user name, fall back to ? if unknown
+  const computedInitials = (() => {
+    const src = authUser?.full_name || authUser?.email?.split('@')[0] || '';
+    const parts = src.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    if (src.length >= 2) return src.substring(0, 2).toUpperCase();
+    return '?';
+  })();
 
   // Sync formData when entering edit mode
   const handleStartEditing = () => {
@@ -99,7 +114,7 @@ export const Profile: React.FC<ProfileProps> = ({ onShowToast }) => {
         <div className="card p-6 flex flex-col md:flex-row items-start md:items-center gap-6">
           <div className="relative group shrink-0">
             <div className="grid h-20 w-20 place-items-center rounded-2xl bg-gradient-to-br from-primary/25 to-primary/10 text-primary font-bold text-2xl ring-2 ring-primary/30 shadow-md">
-              {profile.avatarInitials}
+              {computedInitials}
             </div>
             <div className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-white ring-2 ring-white" title="Active Air-Gapped Session">
               <Check className="h-3.5 w-3.5" />
@@ -109,13 +124,15 @@ export const Profile: React.FC<ProfileProps> = ({ onShowToast }) => {
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2.5">
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
-                {profile.fullName}
+                {displayName}
               </h2>
-              <span className="font-mono text-[12px] text-purple-700 bg-purple-100/70 px-2 py-0.5 rounded-md border border-purple-200/80 font-semibold">
-                @{profile.name}
-              </span>
+              {authUser?.email && (
+                <span className="font-mono text-[12px] text-purple-700 bg-purple-100/70 px-2 py-0.5 rounded-md border border-purple-200/80 font-semibold">
+                  {authUser.email}
+                </span>
+              )}
               <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary ring-1 ring-primary/20">
-                {profile.title}
+                {displayRole}
               </span>
             </div>
 
@@ -201,18 +218,15 @@ export const Profile: React.FC<ProfileProps> = ({ onShowToast }) => {
                 <Mail className="h-3 w-3 text-slate-400" />
                 Air-Gapped Email / Address
               </label>
-              {isEditing ? (
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="h-9 w-full rounded-lg border border-white/80 bg-white/80 px-3.5 text-[13px] text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
-                  required
-                />
-              ) : (
                 <div className="h-9 flex items-center px-3.5 rounded-lg bg-white/50 border border-slate-200/60 font-mono text-[12.5px] text-slate-900">
-                  {profile.email}
+                  {/* Email comes from authenticated session — not editable here */}
+                  {displayEmail}
                 </div>
+              {/* Email from auth session is always read-only */}
+              {isEditing && (
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Email is managed by your authentication provider and cannot be changed here.
+                </p>
               )}
             </div>
 

@@ -159,20 +159,27 @@ export function Projects({ projects: externalProjects }: ProjectsProps) {
       ) : (
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-3">
           {filtered.map((p) => {
-            const rawStatus = (p.last_scan_status?.toLowerCase() || "completed") as "queued" | "completed" | "analyzing";
-            const counts = {
-              crit: p.findings_count?.critical ?? 1,
-              high: p.findings_count?.high ?? 3,
-              med: p.findings_count?.medium ?? 8,
-              low: p.findings_count?.low ?? 4,
-            };
-            const date = p.last_scan_at ? new Date(p.last_scan_at).toLocaleDateString() : "Sep 29, 2026";
+            // A project has no scans if last_scan_status is absent
+            const hasScans = !!p.last_scan_status;
+            const validStatuses = ['queued', 'analyzing', 'completed'] as const;
+            const rawStatus = hasScans && validStatuses.includes(p.last_scan_status!.toLowerCase() as typeof validStatuses[number])
+              ? (p.last_scan_status!.toLowerCase() as typeof validStatuses[number])
+              : undefined;
+            // Only use real API finding counts — no invented defaults
+            const counts = hasScans && p.findings_count ? {
+              crit: p.findings_count.critical,
+              high: p.findings_count.high,
+              med: p.findings_count.medium,
+              low: p.findings_count.low,
+            } : undefined;
+            // Only show a real scan date — never a hardcoded fallback
+            const date = p.last_scan_at ? new Date(p.last_scan_at).toLocaleDateString() : undefined;
             return (
               <ProjectCard
                 key={p.id || p.name}
                 name={p.name}
-                branch={p.branch || "main"}
-                description={p.description || "Air-gapped repository target"}
+                branch={p.branch || 'main'}
+                description={p.description || 'No description provided'}
                 state={rawStatus}
                 counts={counts}
                 date={date}

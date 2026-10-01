@@ -12,12 +12,7 @@ import { api, ApiError } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import type { Project, Scan, Finding } from "@/types";
 
-const activity = [
-  { t: "Scan SCAN-001 queued for AST ingestion", when: "10 min ago" },
-  { t: "Scan SCAN-002 completed (18 findings detected)", when: "2 hours ago" },
-  { t: "CBOM export generated for Core-Services", when: "5 hours ago" },
-  { t: "AST Analyzer ruleset updated to FIPS 203", when: "1 day ago" },
-];
+// No hardcoded activity — activity is derived from real API scan data
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -72,7 +67,16 @@ export function Dashboard() {
   const lowCount = findings.filter((f) => f.severity === "LOW").length;
   const totalFindings = criticalCount + highCount + mediumCount + lowCount;
 
-  const currentScan = scans.find((s) => s.status === "QUEUED" || s.status === "ANALYZING") || scans[0];
+  const currentScan = scans.find((s) => s.status === "QUEUED" || s.status === "ANALYZING") || scans[0] || null;
+
+  // Build real activity from actual scan list — no hardcoded events
+  const recentActivity = scans.slice(0, 5).map((s) => ({
+    id: s.id,
+    t: `Scan ${s.id} — ${s.status.toLowerCase()} · ${s.project_name || 'unknown project'}`,
+    when: s.completed_at
+      ? new Date(s.completed_at).toLocaleString()
+      : new Date(s.created_at).toLocaleString(),
+  }));
 
   return (
     <>
@@ -171,21 +175,32 @@ export function Dashboard() {
             icon={Info}
           />
         </div>
+        {/* Active assessment — only shows real scan data; no invented SCAN-001 fallback */}
         <div className="card min-w-0 border-purple-200/80 bg-gradient-to-br from-purple-100/50 via-white/70 to-sky-100/40 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <span className="eyebrow text-purple-700 font-semibold">Active assessment</span>
-            <span className="rounded-full bg-purple-100/70 border border-purple-200/70 px-2 py-0.5 text-[11px] font-medium text-purple-700">
-              {currentScan ? currentScan.status : "Queued"}
-            </span>
+            {currentScan && (
+              <span className="rounded-full bg-purple-100/70 border border-purple-200/70 px-2 py-0.5 text-[11px] font-medium text-purple-700">
+                {currentScan.status}
+              </span>
+            )}
           </div>
-          <div className="mt-3 font-mono text-[22px] font-semibold tracking-tight text-purple-700">
-            {currentScan ? currentScan.id : "SCAN-001"}
-          </div>
-          <p className="mt-1 truncate font-mono text-[12px] text-slate-500">
-            {currentScan ? currentScan.repository_name : "core-services.zip"}
-          </p>
+          {currentScan ? (
+            <>
+              <div className="mt-3 font-mono text-[22px] font-semibold tracking-tight text-purple-700">
+                {currentScan.id}
+              </div>
+              <p className="mt-1 truncate font-mono text-[12px] text-slate-500">
+                {currentScan.repository_name}
+              </p>
+            </>
+          ) : (
+            <div className="mt-3 text-[13px] text-slate-400 italic">
+              No active scan. Start a new scan to see it here.
+            </div>
+          )}
           <div className="mt-3 flex items-center justify-between text-[13px]">
-            <span className="text-slate-500">Queue position #1</span>
+            <span className="text-slate-500">{currentScan ? 'Queue position #1' : ''}</span>
             <button
               onClick={() => navigate("/scans")}
               className="cursor-pointer font-medium text-purple-700 hover:text-purple-900 hover:underline bg-transparent border-0 p-0"
@@ -195,6 +210,7 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+
 
       {/* Row 1: [Security score | PQC readiness] */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -297,17 +313,24 @@ export function Dashboard() {
             </button>
           }
         >
-          <ul className="space-y-3">
-            {activity.map((a) => (
-              <li key={a.t} className="flex items-center justify-between gap-4 text-[13px]">
-                <span className="flex min-w-0 items-center gap-2.5">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                  <span className="truncate">{a.t}</span>
-                </span>
-                <span className="shrink-0 text-[12px] text-muted-foreground">{a.when}</span>
-              </li>
-            ))}
-          </ul>
+          {recentActivity.length > 0 ? (
+            <ul className="space-y-3">
+              {recentActivity.map((a) => (
+                <li key={a.id} className="flex items-center justify-between gap-4 text-[13px]">
+                  <span className="flex min-w-0 items-center gap-2.5">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    <span className="truncate">{a.t}</span>
+                  </span>
+                  <span className="shrink-0 text-[12px] text-muted-foreground">{a.when}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-6 text-center text-[13px] text-slate-400">
+              <span className="font-medium text-slate-500">No scan activity yet</span>
+              <span className="mt-1 text-[12px]">Start a scan to see activity here.</span>
+            </div>
+          )}
         </Panel>
       </div>
 

@@ -92,7 +92,7 @@ const AppLayout: React.FC = () => {
   return (
     <AppShell
       page={pageTitle}
-      project={mockProjectMetadata.projectName}
+      project={`[DEV] ${mockProjectMetadata.projectName}`}
       branch={mockProjectMetadata.branch}
       online={isOnline}
       onRefresh={handleRefreshScan}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { X, Play, FolderGit2, Clock } from 'lucide-react';
+import { X, Play, FolderGit2, Clock, AlertCircle } from 'lucide-react';
 import { RepositoryUpload } from './RepositoryUpload';
-import { api } from '../../services/api';
+import { api, ApiError } from '../../services/api';
 import type { Project, Scan } from '../../types';
 
 interface NewScanModalProps {
@@ -31,6 +31,9 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdScan, setCreatedScan] = useState<Scan | null>(null);
 
+  // BUG 6: Capture create-scan errors and show them to the user
+  const [createError, setCreateError] = useState<string | null>(null);
+
   if (!isOpen) return null;
 
   const handleUploadSuccess = (data: {
@@ -40,24 +43,44 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
     file: File;
   }) => {
     setUploadedFile(data);
+    setCreateError(null); // clear any previous error when upload changes
   };
 
+  // BUG 8: Start scan MUST require a valid upload
+  // Disabled when: no project, no upload, or already submitting
+  const canStartScan = !!selectedProjectId && !!uploadedFile && !isSubmitting;
+  const startScanTooltip = !selectedProjectId
+    ? 'Select a project before starting a scan.'
+    : !uploadedFile
+      ? 'Upload a project before starting a scan.'
+      : isSubmitting
+        ? 'Scan is being queued…'
+        : 'Create & Queue Scan';
+
   const handleCreateScan = async () => {
-    if (!selectedProjectId) return;
+    if (!canStartScan) return;
 
     setIsSubmitting(true);
+    setCreateError(null);
     try {
       const scan = await api.createScan({
         project_id: selectedProjectId,
-        upload_id: uploadedFile?.upload_id || '',
-        file_name: uploadedFile?.file_name || 'repository.zip',
-        file_size: uploadedFile ? `${(uploadedFile.size_bytes / (1024 * 1024)).toFixed(1)} MB` : '8.2 MB',
+        upload_id: uploadedFile!.upload_id,
+        file_name: uploadedFile!.file_name,
+        file_size: `${(uploadedFile!.size_bytes / (1024 * 1024)).toFixed(1)} MB`,
       });
 
       setCreatedScan(scan);
       onScanCreated(scan);
     } catch (err: unknown) {
+      // BUG 6: Surface real error — never create a fake scan
+      const message =
+        err instanceof ApiError
+          ? err.userMessage
+          : 'Unable to start scan. Please try again.';
+      setCreateError(message);
       console.error('Scan creation failed:', err);
+      // Do NOT call onScanCreated — the scan was NOT created
     } finally {
       setIsSubmitting(false);
     }
@@ -66,6 +89,7 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
   const handleResetAndClose = () => {
     setUploadedFile(null);
     setCreatedScan(null);
+    setCreateError(null);
     onClose();
   };
 
@@ -100,35 +124,48 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
               <div className="grid h-12 w-12 place-items-center rounded-xl bg-medium/10 ring-1 ring-medium/25 text-medium mb-4 animate-pulse">
                 <Clock className="h-6 w-6" />
               </div>
-              <h3 className="text-[18px] font-semibold text-slate-900 mb-1">
-                {createdScan.is_mock
-                  ? "Scan creation is not connected yet."
-                  : "Scan created"}
-              </h3>
+              <h3 className="text-[18px] font-semibold text-slate-900 mb-1">Scan created</h3>
               <p className="text-[13px] text-slate-500 mb-2">
-                {createdScan.is_mock ? (
-                  <>Backend offline · Day 1 UI placeholder (Local ID: <span className="font-mono text-purple-700 font-semibold">{createdScan.id}</span>)</>
-                ) : (
-                  <>Scan ID: <span className="font-mono text-purple-700 font-semibold">{createdScan.id}</span></>
-                )}
+                Scan ID: <span className="font-mono text-purple-700 font-semibold">{createdScan.id}</span>
               </p>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-medium/10 text-medium ring-1 ring-medium/25 mb-4">
                 Status: {createdScan.status}
               </div>
               <p className="text-[13px] text-slate-500 max-w-sm mb-6 leading-relaxed">
-                {createdScan.is_mock
-                  ? "Live scan execution requires a running backend service. This entry is for local UI preview only."
-                  : "The repository has been queued for AST ingestion, cryptographic inspection, and post-quantum vulnerability grading."}
+                The repository has been queued for AST ingestion, cryptographic inspection, and post-quantum vulnerability grading.
               </p>
-              <button
-                onClick={handleResetAndClose}
-                className="btn-primary px-6"
-              >
+              <button onClick={handleResetAndClose} className="btn-primary px-6">
                 Close &amp; View in Scans Table
               </button>
             </div>
           ) : (
             <>
+              {/* BUG 6: Create-scan error — shown to user, not just console */}
+              {createError && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-3 rounded-xl px-4 py-3 text-[13px]"
+                  style={{
+                    background: 'rgba(220, 38, 38, 0.07)',
+                    border: '1px solid rgba(220, 38, 38, 0.18)',
+                    color: '#dc2626',
+                  }}
+                >
+                  <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-semibold">Unable to start scan</div>
+                    <div className="mt-0.5 text-[12px] text-red-700/80">{createError}</div>
+                  </div>
+                  <button
+                    onClick={() => setCreateError(null)}
+                    className="ml-auto shrink-0 hover:opacity-70"
+                    aria-label="Dismiss error"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              )}
+
               {/* Step 1: Select Target Project */}
               <div className="flex flex-col gap-2">
                 <label className="eyebrow flex items-center gap-1.5">
@@ -157,6 +194,13 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
                   onUploadSuccess={handleUploadSuccess}
                   isUploading={isSubmitting}
                 />
+                {/* BUG 8: Upload required helper text */}
+                {!uploadedFile && (
+                  <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                    <AlertCircle size={11} />
+                    Upload a .zip file above before you can start a scan.
+                  </p>
+                )}
               </div>
 
               {/* Footer Actions */}
@@ -168,10 +212,12 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
                 >
                   Cancel
                 </button>
+                {/* BUG 8: disabled until upload exists */}
                 <button
                   type="button"
                   onClick={handleCreateScan}
-                  disabled={!selectedProjectId || isSubmitting}
+                  disabled={!canStartScan}
+                  title={startScanTooltip}
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Play className="h-3.5 w-3.5 fill-current" />
