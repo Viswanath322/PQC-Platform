@@ -81,11 +81,23 @@ def ingest_scan_upload(repository_path: str | Path, scan_id: str, storage_root: 
             raise ValueError("Upload path is outside the uploads folder") from exc
 
     scan_directory = Path(storage_root).resolve() / "scans" / normalized_scan_id
-    extracted_directory = scan_directory / "repository"
-    summary = ingest_repository(repo_path, extracted_directory)
-    scan_directory.mkdir(parents=True, exist_ok=True)
     summary_path = scan_directory / "ingestion-summary.json"
-    temporary_path = scan_directory / "ingestion-summary.json.tmp"
-    temporary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    temporary_path.replace(summary_path)
-    return summary
+    
+    # Issue #6: If summary already exists, treat as already done (idempotent)
+    if summary_path.exists():
+        return json.loads(summary_path.read_text(encoding="utf-8"))
+    
+    extracted_directory = scan_directory / "repository"
+    
+    try:
+        summary = ingest_repository(repo_path, extracted_directory)
+        scan_directory.mkdir(parents=True, exist_ok=True)
+        temporary_path = scan_directory / "ingestion-summary.json.tmp"
+        temporary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+        temporary_path.replace(summary_path)
+        return summary
+    except Exception:
+        # Issue #6: On summary write failure, remove scan folder for clean retry
+        import shutil
+        shutil.rmtree(scan_directory, ignore_errors=True)
+        raise

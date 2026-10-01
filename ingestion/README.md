@@ -19,13 +19,15 @@ The scan API stores the uploaded ZIP in `Scan.repository_path` and uses a UUID s
 ```python
 from ingestion import ingest_scan_record
 
-summary = ingest_scan_record(db, Scan, scan_id, "backend/storage")
+summary = ingest_scan_record(db, Scan, scan_id, storage_root="backend/storage", uploads_root="backend/storage/uploads")
 ```
 
 `db` is the SQLAlchemy session configured for the application database (MySQL in the integrated deployment); `Scan` is the same ORM model used by the scan API. The adapter loads the row with `db.get(Scan, scan_id)` and reads `repository_path` from that database record. It never depends on the path being returned by the API. A missing scan raises `ScanNotFoundError`; a missing stored path raises `ValueError`.
 
+**Security (Issue #3):** The `uploads_root` parameter confines `repository_path` to the uploads folder, preventing path traversal attacks.
+
 Ingestion creates `backend/storage/scans/<scan-id>/repository/` and writes `ingestion-summary.json` beside it. The adapter validates the scan UUID before using it in a path. The scan route currently queues scans; the scan-processing worker should invoke this adapter when it handles that queue item.
 
-Run the requested cases with `python -m pytest ingestion/tests`. Tests use `unittest` assertions and can also run without pytest via `python -m unittest discover -s ingestion/tests`.
+Run the tests with `pytest ingestion/tests` or `python -m pytest ingestion/tests`. Tests use `unittest` assertions and can also run without pytest via `python -m unittest discover -s ingestion/tests`.
 
 The ingestion package does not change the upload or scan API. The scan-processing caller should pass `scan.repository_path`, `scan.id`, and the backend storage root to `ingest_scan_upload` after loading a queued scan.

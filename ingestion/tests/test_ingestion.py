@@ -29,11 +29,13 @@ class IngestionTests(unittest.TestCase):
             z.writestr("README.md", "demo")
             z.writestr("node_modules/pkg/index.js", "ignored")
         result = ingest_repository(self.archive, self.destination)
-        self.assertEqual(result["files_seen"], 3)
+        # Issue #4: Excluded files not written to disk anymore
+        self.assertEqual(result["files_seen"], 2)  # Only non-excluded files
         self.assertEqual(result["files_included"], 2)
-        self.assertEqual(result["files_excluded"], 1)
+        self.assertEqual(result["files_excluded"], 0)
         self.assertEqual(result["language_counts"], {"python": 1})
-        self.assertTrue((self.destination / "node_modules/pkg/index.js").exists())
+        # Issue #4: node_modules files are NOT written to disk
+        self.assertFalse((self.destination / "node_modules/pkg/index.js").exists())
 
     def test_non_zip_is_rejected(self):
         self.archive.write_text("not a zip")
@@ -193,9 +195,9 @@ class IngestionTests(unittest.TestCase):
         self.assertEqual(classify_file("payload.unknown", b"\x00\x01"), "binary")
 
     def test_additional_config_and_source_file_types(self):
-        # Issue #22: .pem should be config, .html should be source
-        self.assertEqual(classify_file("cert.pem"), "config")
-        self.assertEqual(classify_file("key.pem"), "config")
+        # Issue #22: .pem should be crypto_material (Issue #9), .html should be source
+        self.assertEqual(classify_file("cert.pem"), "crypto_material")
+        self.assertEqual(classify_file("key.pem"), "crypto_material")
         self.assertEqual(classify_file("index.html"), "source")
         self.assertEqual(classify_file("page.htm"), "source")
 

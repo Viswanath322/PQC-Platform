@@ -33,7 +33,12 @@ def build_summary(files: list[Path], extraction_root: str | Path) -> dict:
         type_counts[file_type] += 1
         if language:
             language_counts[language] += 1
-        records.append({"path": relative, "file_type": file_type, "language": language, "size_bytes": path.stat().st_size})
+        # Issue #18: Guard stat() to handle vanished files
+        try:
+            size_bytes = path.stat().st_size
+        except OSError:
+            size_bytes = None
+        records.append({"path": relative, "file_type": file_type, "language": language, "size_bytes": size_bytes})
     return {
         "files_seen": len(files),
         "files_included": len(records),
