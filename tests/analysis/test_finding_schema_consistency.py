@@ -75,17 +75,15 @@ def test_shared_field_names_present_in_db(lib, db):
     assert "id" in db["cols"]
 
 
-@pytest.mark.xfail(reason="FINDING AE-04: Finding.confidence is float 0..1 but FindingOut.confidence is `str | None` "
-                          "and findings.confidence is VARCHAR(50)", strict=False)
 def test_confidence_type_agrees(lib, api, db):
+    """AE-04 (fixed 1 Oct): float 0..1 in the engine, the API and the DB."""
     ann = api["fields"]["confidence"]
     assert "float" in ann or "int" in ann, f"API confidence is `{ann}`, engine emits float"
     assert not db["cols"]["confidence"].startswith("VARCHAR"), db["cols"]["confidence"]
 
 
-@pytest.mark.xfail(reason="FINDING AE-06: Finding.is_development has no column/field in API or DB, so a DummyEngine "
-                          "finding is indistinguishable from a real one once persisted", strict=False)
 def test_development_flag_survives_persistence(lib, api, db):
+    """AE-06 (fixed 1 Oct): a DummyEngine finding stays recognisable once stored."""
     assert "is_development" in api["fields"] and "is_development" in db["cols"]
 
 
