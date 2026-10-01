@@ -12,8 +12,9 @@ Environment variables:
     PQC_INGESTION_ROOT  opt-in: directory that contains the `ingestion/` package
                         (e.g. .worktrees/hima); prepended to sys.path so tests/ingestion
                         imports the teammate's code from that checkout. Unset = not delivered.
-    PQC_ANALYSIS_ROOT   opt-in: checkout that contains `analysis-engines/` (e.g. .worktrees/harshitha);
-                        its `analysis-engines/` dir is prepended to sys.path (the hyphenated dir
+    PQC_ANALYSIS_ROOT   opt-in: checkout that contains `analysis-engines/` (e.g. .worktrees/harshitha).
+                        If it has the `analysis_engines` package facade, the checkout root goes on
+                        sys.path; otherwise (older layout) its `analysis-engines/` dir does (the hyphenated dir
                         cannot be imported by name, the team README uses PYTHONPATH the same way).
 
 A test whose target service or endpoint does not exist yet is skipped with a
@@ -45,6 +46,8 @@ def _prepend_root(var: str, sub: str = ""):
     root = Path(raw)
     root = (root if root.is_absolute() else REPO_ROOT / root).resolve()
     target = root / sub if sub and (root / sub).is_dir() else root
+    if (root / "analysis_engines" / "__init__.py").is_file():
+        target = root  # newer layout: importable `analysis_engines` package at the checkout root
     if str(target) not in sys.path:
         sys.path.insert(0, str(target))
 
