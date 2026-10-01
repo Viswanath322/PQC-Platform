@@ -31,12 +31,12 @@ PQC_ANALYSIS_ROOT=.worktrees/harshitha PQC_DEMO_REPO=.worktrees/tests-pushpam/vu
   .venv/bin/pytest tests/analysis -v -rs -rx -p no:cacheprovider
 ```
 
-- As committed on `qa/pushpam`: 2 passed, 93 blocked. This is our gap, not hers. She moved to an importable `analysis_engines` package, and our adapter (`tests/analysis/analysis_adapter.py`) and `tests/conftest.py` still import the old top-level `base` / `dummy_engine` from `analysis-engines/`. I'll fix that on `qa/pushpam`.
-- With the adapter fixed in a scratch copy: **83 passed, 4 failed, 6 xfail, 2 xpass** (95 tests, 2.9 s).
-  - 1 real failure: `test_dummy_finding_id_unique_per_run` (AE-02). The id is always `92072cb8-1ff0-5b6f-9c4f-0575988c638b`.
-  - 3 stale tests on our side that still `import base`: `test_engine_subpackages_exist`, `test_layout_import_by_name_is_awkward`, `test_no_pycache_or_pyc_tracked`. Checked by hand: `git ls-files` has no `.pyc`.
-  - XFAIL: AE-07, AE-08, AE-09 (x3), and the AE-03 layout test.
-  - XPASS: `test_confidence_type_agrees` (AE-04) and `test_development_flag_survives_persistence` (AE-06), so those markers can go. `test_finding_service_columns_exist_in_db` passes (AE-05).
+- At first, `qa/pushpam` showed 2 passed and 93 blocked. That was our gap, not hers: she moved to an importable `analysis_engines` package, and our adapter still imported the old top-level `base` / `dummy_engine`.
+- I fixed the adapter on `qa/pushpam` the same day. It now loads `analysis_engines` when the checkout has it and falls back to the old layout. I also replaced the stale layout tests and removed the xfail markers for AE-04 and AE-06.
+- Result after the fix: **88 passed, 1 failed, 5 xfail, 0 blocked** (94 tests, 2.8 s).
+  - The 1 failure is real: `test_dummy_finding_id_unique_per_run` (AE-02). The id is always `92072cb8-1ff0-5b6f-9c4f-0575988c638b`.
+  - XFAIL: AE-07, AE-08, AE-09 (x3).
+  - `test_confidence_type_agrees` (AE-04), `test_development_flag_survives_persistence` (AE-06), `test_layout_importable_as_package` (AE-03) and `test_finding_service_columns_exist_in_db` (AE-05) all pass.
 
 **Her own tests:** `python -m pytest analysis-engines/tests` gives 61 passed (contract 4, crypto 17, path utils 7, runner 14, SAST 19).
 
@@ -269,4 +269,9 @@ Fix: a pinned `requirements.lock` (ideally with hashes) and run pip-audit on tha
 
 Not done this time: gitleaks (not installed), the 1 MB slowdown case (stopped at 2 minutes), and the end-to-end worker run (covered in the database and integration report: INT-30, INT-31, INT-37).
 
-On my side: update the analysis adapter and `conftest.py` for the `analysis_engines` layout, drop the AE-04 and AE-06 xfail markers, and allowlist test fixtures in the secret check.
+On my side, done the same day on `qa/pushpam`:
+- The analysis adapter and `conftest.py` support the `analysis_engines` layout.
+- The AE-04 and AE-06 xfail markers are gone.
+- The secret check treats test files anywhere in the tree (`tests/`, `__tests__/`, `test_*.py`, `*.test.*`) and HTML `autocomplete` values as warnings, not failures.
+
+After that, the secret tests pass on PQC-frontend, aakash-port and harshitha. Only Vamsi's two non-test hits (`run_combined_flow.py:71`, `backend/.env.example:3`) still fail, as they should.
