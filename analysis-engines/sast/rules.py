@@ -286,6 +286,41 @@ _RULES: list[Rule] = [
         ),
         confidence=0.90,
     ),
+    Rule(
+        rule_id="SAST-INJ-005",
+        engine="sast",
+        category="Code Injection",
+        severity="critical",
+        title="Dynamic code evaluation detected",
+        pattern=re.compile(r"\beval\s*\("),
+        explanation="Dynamic evaluation can execute attacker-controlled code in the application process.",
+        recommendation="Avoid eval; parse data with a safe format or use an explicit allowlisted interpreter.",
+        confidence=0.90,
+    ),
+    Rule(
+        rule_id="SAST-XSS-001",
+        engine="sast",
+        category="Cross-Site Scripting",
+        severity="high",
+        title="HTML is assigned through innerHTML",
+        pattern=re.compile(r"\.innerHTML\s*="),
+        explanation="Assigning untrusted content to innerHTML can execute attacker-controlled markup or script.",
+        recommendation="Use textContent or a vetted sanitizer before rendering untrusted HTML.",
+        confidence=0.88,
+    ),
+    Rule(
+        rule_id="SAST-SEC-004",
+        engine="sast",
+        category="Hardcoded Secret",
+        severity="critical",
+        title="Cloud credential assigned in source or configuration",
+        pattern=re.compile(
+            r"(?i)\b(?:AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID|client_secret|private_key)\b\s*[:=]\s*[\"'][^\"']{6,}[\"']"
+        ),
+        explanation="A cloud credential or private key value appears to be embedded in a file.",
+        recommendation="Remove the value, rotate the credential, and load it from a protected local secret store.",
+        confidence=0.94,
+    ),
 ]
 
 

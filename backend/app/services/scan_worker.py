@@ -19,6 +19,7 @@ Design rules:
 from __future__ import annotations
 
 import logging
+import hashlib
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -35,16 +36,22 @@ def _import_pipeline():
     sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
     from analysis_engines.runner import AnalysisPipeline
     from analysis_engines.path_utils import normalize_findings_paths
-    from ingestion.summary import ingest_repository
-    return AnalysisPipeline, normalize_findings_paths, ingest_repository
+    from ingestion.scan_adapter import ingest_scan_record
+    return AnalysisPipeline, normalize_findings_paths, ingest_scan_record
 
 
 def _now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-def _set_status(scan, status: str, db: Session) -> None:
+def _set_status(scan, status: str, db: Session, error_message: str | None = None) -> None:
     scan.status = status
+    if error_message is not None:
+        scan.error_message = error_message[:500]
+    elif status == "FAILED" and not getattr(scan, "error_message", None):
+        scan.error_message = "SCAN_PROCESSING_FAILED"
+    elif status != "FAILED":
+        scan.error_message = None
     if status in ("INGESTING", "ANALYZING", "PROCESSING"):
         if scan.started_at is None:
             scan.started_at = _now()
@@ -83,11 +90,13 @@ def process_scan(scan_id: str, db: Session) -> bool:
         _set_status(scan, "FAILED", db)
         return False
 
-    storage_root = zip_path.parent.parent  # storage/uploads → storage/
+    from app.core.config import get_settings
+    settings = get_settings()
+    storage_root = settings.storage_dir.resolve()
     scan_dir = storage_root / "scans" / scan_id / "repository"
 
     try:
-        AnalysisPipeline, normalize_findings_paths, ingest_repository = _import_pipeline()
+        AnalysisPipeline, normalize_findings_paths, ingest_scan_record = _import_pipeline()
     except ImportError as exc:
         logger.exception("process_scan: could not import pipeline: %s", exc)
         _set_status(scan, "FAILED", db)
@@ -98,10 +107,18 @@ def process_scan(scan_id: str, db: Session) -> bool:
     # ------------------------------------------------------------------
     _set_status(scan, "INGESTING", db)
     try:
-        summary = ingest_repository(zip_path, scan_dir)
+        organization_id = scan.project.organization_id
+        organization_key = hashlib.sha256(organization_id.encode("utf-8")).hexdigest()
+        summary = ingest_scan_record(
+            db, Scan, scan_id, storage_root,
+            uploads_root=settings.upload_dir / organization_key,
+        )
     except Exception as exc:  # noqa: BLE001
         logger.exception("process_scan: ingestion failed for scan %s: %s", scan_id, exc)
         _set_status(scan, "FAILED", db)
+        return False
+    db.refresh(scan)
+    if scan.status == "CANCELLED":
         return False
 
     # Persist scan_files inventory
@@ -128,10 +145,13 @@ def process_scan(scan_id: str, db: Session) -> bool:
 
     try:
         pipeline = AnalysisPipeline()
-        pipeline_result = pipeline.run(file_paths)
+        pipeline_result = pipeline.run(file_paths, root_dir=scan_dir)
     except Exception as exc:  # noqa: BLE001
         logger.exception("process_scan: analysis failed for scan %s: %s", scan_id, exc)
         _set_status(scan, "FAILED", db)
+        return False
+    db.refresh(scan)
+    if scan.status == "CANCELLED":
         return False
 
     # ------------------------------------------------------------------
@@ -178,6 +198,9 @@ def process_scan(scan_id: str, db: Session) -> bool:
     # ------------------------------------------------------------------
     # 5. COMPLETED
     # ------------------------------------------------------------------
+    db.refresh(scan)
+    if scan.status == "CANCELLED":
+        return False
     _set_status(scan, "COMPLETED", db)
     logger.info(
         "process_scan: scan %s COMPLETED — files=%d findings=%d errors=%d",

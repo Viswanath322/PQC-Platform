@@ -1,13 +1,12 @@
-import os
-
 import redis
+from app.core.config import get_settings
 
 QUEUE_KEY = "pqc:scan_queue"
 
 
 def get_redis() -> redis.Redis:
     return redis.Redis.from_url(
-        os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0"),
+        get_settings().redis_url,
         decode_responses=True,
         socket_connect_timeout=2,
     )

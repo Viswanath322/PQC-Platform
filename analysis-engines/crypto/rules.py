@@ -92,7 +92,7 @@ _CRYPTO_RULES: list[CryptoRule] = [
         severity="critical",
         title="Diffie-Hellman key exchange detected — quantum-vulnerable",
         pattern=re.compile(
-            r"dh\.generate_parameters|DHE|DiffieHellman|generate_dh_parameters",
+            r"dh\.generate_parameters|\bDHE\b|\bDiffieHellman\b|generate_dh_parameters",
             re.IGNORECASE,
         ),
         explanation=(
@@ -117,7 +117,7 @@ _CRYPTO_RULES: list[CryptoRule] = [
         category="Broken Hash Algorithm",
         severity="high",
         title="MD5 hash function detected — cryptographically broken",
-        pattern=re.compile(r"\bhashlib\.md5\b|MD5\.new\s*\(|DigestMD5", re.IGNORECASE),
+        pattern=re.compile(r"\bhashlib\.md5\b(?!\s*\([^)]*usedforsecurity\s*=\s*False)|MD5\.new\s*\(|DigestMD5", re.IGNORECASE),
         explanation=(
             "MD5 is broken: practical collision attacks exist. "
             "It must not be used for digital signatures, certificate fingerprints, "
@@ -248,6 +248,28 @@ _CRYPTO_RULES: list[CryptoRule] = [
         ),
         confidence=0.85,
         quantum_vulnerable=False,
+    ),
+    CryptoRule(
+        rule_id="CRYPTO-KEY-004",
+        algorithm="AES-ECB",
+        category="Weak Cipher Mode",
+        severity="high",
+        title="AES used in ECB mode",
+        pattern=re.compile(r"MODE_ECB|modes\.ECB|AES/ECB", re.IGNORECASE),
+        explanation="ECB reveals repeated plaintext patterns because blocks are encrypted independently.",
+        recommendation="Use an authenticated mode such as AES-GCM with a fresh nonce.",
+        confidence=0.95,
+    ),
+    CryptoRule(
+        rule_id="CRYPTO-WEAK-005",
+        algorithm="MD5/SHA-1",
+        category="Deprecated Hash Algorithm",
+        severity="high",
+        title="Java MessageDigest uses MD5 or SHA-1",
+        pattern=re.compile(r"MessageDigest\.getInstance\s*\(\s*[\"'](?:MD5|SHA-?1)[\"']", re.IGNORECASE),
+        explanation="MD5 and SHA-1 are unsuitable for security-sensitive hashing due to practical collision attacks.",
+        recommendation="Use SHA-256 or SHA-3 for integrity; use Argon2id for password storage.",
+        confidence=0.95,
     ),
 
     # -------------------------------------------------------------------------

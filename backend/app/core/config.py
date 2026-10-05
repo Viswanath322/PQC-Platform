@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, field_validator
@@ -15,6 +16,9 @@ class Settings(BaseSettings):
         "http://localhost:5173,http://127.0.0.1:5173,"
         "tauri://localhost,http://tauri.localhost"
     )
+    upload_dir: Path = Path("storage/uploads")
+    storage_dir: Path = Path("storage")
+    redis_url: str = "redis://127.0.0.1:6379/0"
 
     model_config = SettingsConfigDict(
         env_file=".env",

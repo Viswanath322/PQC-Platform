@@ -22,7 +22,7 @@ class ScanOut(BaseModel):
     id: str
     project_id: str
     status: str
-    repository_path: str | None = None
+    error_message: str | None = None
     created_at: datetime
     started_at: datetime | None = None
     completed_at: datetime | None = None

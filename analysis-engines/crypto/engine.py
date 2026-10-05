@@ -16,6 +16,7 @@ Design constraints:
 from __future__ import annotations
 
 import logging
+import time
 from pathlib import Path
 from typing import Iterable
 from uuid import NAMESPACE_URL, uuid5
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 _SCANNABLE = {
     ".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".go",
     ".rb", ".php", ".cs", ".cpp", ".c", ".rs", ".swift", ".kt",
+    ".env", ".yaml", ".yml", ".json", ".pem", ".toml", ".ini", ".cfg",
 }
 
 _EXCLUDED_DIRS = {
@@ -42,6 +44,9 @@ def _is_excluded(path: Path) -> bool:
 
 _MAX_FILE_BYTES = 1 * 1024 * 1024
 _MAX_EVIDENCE_CHARS = 200
+_MAX_LINE_CHARS = 2000
+_MAX_FILE_SECONDS = 5.0
+_MAX_SCAN_SECONDS = 60.0
 
 
 def _finding_id(rule_id: str, file_path: str, line_number: int) -> str:
@@ -65,17 +70,33 @@ class CryptoEngine(AnalysisEngine):
     def name(self) -> EngineName:
         return EngineName.CRYPTO
 
+    def set_root_dir(self, root_dir: Path) -> None:
+        self.root_dir = Path(root_dir).resolve()
+
+    def _relative_path(self, file_path: Path) -> Path:
+        root_dir = getattr(self, "root_dir", None)
+        if root_dir is None:
+            return file_path
+        try:
+            return file_path.resolve().relative_to(root_dir)
+        except ValueError:
+            return Path()
+
     def analyze(self, files: Iterable[Path]) -> AnalysisResult:
         rules = get_crypto_rules()
         findings: list[Finding] = []
         errors: list[str] = []
         files_processed = 0
+        scan_deadline = time.monotonic() + _MAX_SCAN_SECONDS
         seen: set[tuple[str, str, int]] = set()
 
         for file_path in files:
-            if file_path.suffix.lower() not in _SCANNABLE:
+            if file_path.suffix.lower() not in _SCANNABLE and not file_path.name.lower().startswith(".env"):
                 continue
-            if _is_excluded(file_path):
+            if file_path.is_symlink():
+                continue
+            relative_path = self._relative_path(file_path)
+            if not relative_path.parts or _is_excluded(relative_path):
                 continue
             files_processed += 1
             try:
@@ -85,8 +106,19 @@ class CryptoEngine(AnalysisEngine):
                 except UnicodeDecodeError:
                     text = raw.decode("latin-1", errors="replace")
 
+                file_deadline = time.monotonic() + _MAX_FILE_SECONDS
                 lines = text.splitlines()
                 for lineno, line in enumerate(lines, start=1):
+                    if time.monotonic() >= scan_deadline:
+                        errors.append("Crypto scan time budget exceeded")
+                        return AnalysisResult(findings=tuple(findings), files_processed=files_processed, errors=tuple(errors))
+                    if time.monotonic() >= file_deadline:
+                        errors.append(f"Crypto file time budget exceeded: {relative_path.as_posix()}")
+                        break
+                    line = line[:_MAX_LINE_CHARS]
+                    stripped = line.lstrip()
+                    if stripped.startswith(("#", "//", "/*", "*", "<!--", "--")):
+                        continue
                     for rule in rules:
                         if rule.pattern.search(line):
                             key = (rule.rule_id, str(file_path), lineno)
@@ -110,8 +142,8 @@ class CryptoEngine(AnalysisEngine):
                                 )
                             )
             except OSError as exc:
-                errors.append(f"Could not read {file_path}: {exc}")
-                logger.warning("CryptoEngine: could not read %s: %s", file_path, exc)
+                errors.append(f"Could not read {relative_path.as_posix()}")
+                logger.warning("CryptoEngine: could not read repository file %s", relative_path.as_posix())
 
         return AnalysisResult(
             findings=tuple(findings),

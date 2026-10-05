@@ -103,7 +103,7 @@ class AnalysisPipeline:
             tuple(engines) if engines is not None else self.DEFAULT_ENGINES
         )
 
-    def run(self, files: Iterable[Path]) -> PipelineResult:
+    def run(self, files: Iterable[Path], *, root_dir: Path | None = None) -> PipelineResult:
         """
         Run all engines against the supplied file paths.
 
@@ -118,6 +118,8 @@ class AnalysisPipeline:
         result = PipelineResult(total_files=len(file_list))
 
         for engine in self._engines:
+            if root_dir is not None and hasattr(engine, "set_root_dir"):
+                engine.set_root_dir(root_dir)
             engine_name = engine.name.value
             logger.info("Pipeline: running engine=%s files=%d", engine_name, len(file_list))
             try:

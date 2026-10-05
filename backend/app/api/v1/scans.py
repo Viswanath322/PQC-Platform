@@ -4,12 +4,12 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, R
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import get_current_user
 from app.models import Project, Scan, User
 from app.schemas.common import UUID_PATTERN
 from app.schemas.scan import ScanCreate, ScanOut
 from app.services.redis_service import dequeue_scan, enqueue_scan
 from app.services.storage_service import get_upload_path
+from app.api.v1.routes.auth import get_current_user, get_user_organization_id
 
 router = APIRouter(prefix="/scans", tags=["scans"])
 FINAL_STATES = {"COMPLETED", "FAILED", "CANCELLED"}

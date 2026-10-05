@@ -11,6 +11,7 @@ def list_findings(
     *,
     organization_id: str,
     scan_id: str | None = None,
+    include_dev: bool = False,
     severity: str | None = None,
     category: str | None = None,
     engine: str | None = None,
@@ -24,6 +25,8 @@ def list_findings(
         "limit": limit,
         "offset": offset,
     }
+    if not include_dev:
+        clauses.append("findings.is_development = FALSE")
     if scan_id is not None:
         clauses.append("findings.scan_id = :scan_id")
         params["scan_id"] = scan_id
@@ -74,7 +77,8 @@ def get_finding(db: Session, finding_id: str, *, organization_id: str) -> Findin
 
 def get_report_data(
     db: Session, scan_id: str, *, organization_id: str
-) -> tuple[str, int, ReportSeverityCounts] | None:    """Return scan status and finding counts; None means the scan does not exist."""
+) -> tuple[str, int, ReportSeverityCounts] | None:
+    """Return scan status and finding counts; None means the scan does not exist."""
     scan = db.execute(
         text(
             "SELECT scans.status FROM scans "
@@ -92,6 +96,7 @@ def get_report_data(
             "JOIN scans ON scans.id = findings.scan_id "
             "JOIN projects ON projects.id = scans.project_id "
             "WHERE findings.scan_id = :scan_id AND projects.organization_id = :organization_id "
+            "AND findings.is_development = FALSE "
             "GROUP BY findings.severity"
         ),
         {"scan_id": scan_id, "organization_id": organization_id},
