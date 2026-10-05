@@ -9,7 +9,6 @@ import {
   LogOut,
 } from 'lucide-react';
 import { BackendStatus } from '../common/BackendStatus';
-import { MockDataBadge } from '../pqc/MockDataBadge';
 import { useAuth } from '../../context/AuthContext';
 
 interface TopHeaderProps {
@@ -126,9 +125,6 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
       {/* Right: Controls & Profile */}
       <div className="flex items-center gap-2.5 flex-shrink-0">
-        {/* Single Subtle Platform Badge */}
-        <MockDataBadge size="sm" />
-
         {/* Backend Status */}
         <BackendStatus variant="pill" />
 

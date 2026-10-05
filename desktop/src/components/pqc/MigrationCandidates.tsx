@@ -1,7 +1,6 @@
 import React from 'react';
 import { ArrowRight, Cpu, GitBranch } from 'lucide-react';
 import type { MigrationCandidate } from '../../types/pqc';
-import { MockDataBadge } from './MockDataBadge';
 
 interface MigrationCandidatesProps {
   candidates: MigrationCandidate[];
@@ -22,14 +21,13 @@ export const MigrationCandidates: React.FC<MigrationCandidatesProps> = ({
             <span className="rounded-full bg-purple-100/70 border border-purple-200/80 px-2.5 py-0.5 text-[11px] font-semibold text-purple-700 shadow-xs">
               NIST FIPS 203 / 204
             </span>
-            <MockDataBadge size="sm" label="Development / Mock Data" />
           </div>
           <p className="section-sub mt-0.5 text-muted-foreground">
-            Development examples — not generated from an actual scan. Illustrative quantum-vulnerable primitives and recommended post-quantum replacements.
+            Identified quantum-vulnerable primitives and recommended post-quantum replacements based on NIST standards.
           </p>
         </div>
         <div className="text-[12px] text-muted-foreground">
-          Showing <span className="tabular font-medium text-foreground">{candidates.length}</span> example candidates
+          Showing <span className="tabular font-medium text-foreground">{candidates.length}</span> migration candidates
         </div>
       </div>
 

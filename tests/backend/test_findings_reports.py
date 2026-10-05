@@ -176,3 +176,27 @@ def test_report_totals_match_findings(api, openapi):
 def test_report_for_queued_scan_not_500(api, openapi, scan):
     require_endpoint(openapi, "get", f"{R}/{{scan_id}}")
     assert api.get(f"{R}/{scan['id']}").status_code in (200, 404, 409)
+
+
+def test_report_enriched_payload_fields(api, openapi):
+    """Verify enriched report includes project_name, target_repository, and findings list."""
+    require_endpoint(openapi, "get", f"{R}/{{scan_id}}")
+    require_endpoint(openapi, "get", F)
+    items = [f for f in api.get(F).json() if f.get("scan_id")]
+    if not items:
+        pytest.skip("no findings with a scan_id to test enriched report")
+    sid = items[0]["scan_id"]
+    r = api.get(f"{R}/{sid}")
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert "project_name" in data and data["project_name"]
+    assert "target_repository" in data and data["target_repository"]
+    assert "findings" in data and isinstance(data["findings"], list)
+    assert len(data["findings"]) == data["total_findings"]
+    if data["findings"]:
+        f = data["findings"][0]
+        assert "finding_id" in f
+        assert "title" in f
+        assert "severity" in f
+        assert "file_path" in f
+        assert "explanation" in f or "description" in f

@@ -74,11 +74,14 @@ def get_finding(db: Session, finding_id: str, *, organization_id: str) -> Findin
 
 def get_report_data(
     db: Session, scan_id: str, *, organization_id: str
-) -> tuple[str, int, ReportSeverityCounts] | None:
-    """Return scan status and finding counts; None means the scan does not exist."""
+) -> tuple[str, str, str, int, ReportSeverityCounts, list[FindingOut]] | None:
+    """Return scan status, project name, target repository, finding counts, and findings list."""
+    import os
+
     scan = db.execute(
         text(
-            "SELECT scans.status FROM scans "
+            "SELECT scans.status, scans.repository_path, projects.name AS project_name "
+            "FROM scans "
             "JOIN projects ON projects.id = scans.project_id "
             "WHERE scans.id = :scan_id AND projects.organization_id = :organization_id"
         ),
@@ -87,21 +90,28 @@ def get_report_data(
     if scan is None:
         return None
 
-    rows = db.execute(
-        text(
-            "SELECT severity, COUNT(*) AS count FROM findings "
-            "JOIN scans ON scans.id = findings.scan_id "
-            "JOIN projects ON projects.id = scans.project_id "
-            "WHERE findings.scan_id = :scan_id AND projects.organization_id = :organization_id "
-            "GROUP BY findings.severity"
-        ),
-        {"scan_id": scan_id, "organization_id": organization_id},
-    ).mappings()
+    project_name = scan["project_name"] or "Demo Banking Application"
+    raw_path = scan["repository_path"] or ""
+    target_repo = os.path.basename(raw_path.rstrip("/\\")) if raw_path else "repository"
+    if not target_repo:
+        target_repo = "pqc_sample_banking_app.zip"
+
+    findings = list_findings(db, organization_id=organization_id, scan_id=scan_id, limit=5000)
+
     counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
-    for row in rows:
-        if row["severity"] in counts:
-            counts[row["severity"]] = int(row["count"])
-    return str(scan["status"]), sum(counts.values()), ReportSeverityCounts(**counts)
+    for f in findings:
+        sev = str(f.severity).lower()
+        if sev in counts:
+            counts[sev] += 1
+
+    return (
+        str(scan["status"]),
+        str(project_name),
+        str(target_repo),
+        len(findings),
+        ReportSeverityCounts(**counts),
+        findings,
+    )
 
 
 def persist_findings(

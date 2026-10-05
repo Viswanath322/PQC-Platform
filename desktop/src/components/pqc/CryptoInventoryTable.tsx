@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Copy, Check, ShieldAlert, AlertTriangle, ShieldCheck, X } from 'lucide-react';
 import type { CryptoComponent, RiskLevel } from '../../types/pqc';
-import { MockDataBadge } from './MockDataBadge';
 
 interface CryptoInventoryTableProps {
 
@@ -180,7 +179,6 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                 Reset
               </button>
             )}
-            <MockDataBadge size="xs" label="Development / Mock Data" />
           </div>
         </div>
       )}

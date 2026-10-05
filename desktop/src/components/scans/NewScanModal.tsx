@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Play, FolderGit2, Clock, AlertCircle } from 'lucide-react';
 import { RepositoryUpload } from './RepositoryUpload';
 import { api, ApiError } from '../../services/api';
@@ -22,6 +22,24 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
   const [selectedProjectId, setSelectedProjectId] = useState<string>(
     defaultProjectId || (projects[0]?.id ?? '')
   );
+
+  useEffect(() => {
+    if (defaultProjectId && projects.some((p) => p.id === defaultProjectId)) {
+      setSelectedProjectId(defaultProjectId);
+    } else if (!selectedProjectId || !projects.some((p) => p.id === selectedProjectId)) {
+      if (projects.length > 0) {
+        setSelectedProjectId(projects[0].id);
+      }
+    }
+  }, [defaultProjectId, projects, selectedProjectId]);
+
+  const effectiveProjectId =
+    selectedProjectId && projects.some((p) => p.id === selectedProjectId)
+      ? selectedProjectId
+      : defaultProjectId && projects.some((p) => p.id === defaultProjectId)
+        ? defaultProjectId
+        : (projects[0]?.id ?? '');
+
   const [uploadedFile, setUploadedFile] = useState<{
     upload_id: string;
     file_name: string;
@@ -48,8 +66,8 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
 
   // BUG 8: Start scan MUST require a valid upload
   // Disabled when: no project, no upload, or already submitting
-  const canStartScan = !!selectedProjectId && !!uploadedFile && !isSubmitting;
-  const startScanTooltip = !selectedProjectId
+  const canStartScan = !!effectiveProjectId && !!uploadedFile && !isSubmitting;
+  const startScanTooltip = !effectiveProjectId
     ? 'Select a project before starting a scan.'
     : !uploadedFile
       ? 'Upload a project before starting a scan.'
@@ -58,16 +76,16 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
         : 'Create & Queue Scan';
 
   const handleCreateScan = async () => {
-    if (!canStartScan) return;
+    if (!canStartScan || !effectiveProjectId || !uploadedFile) return;
 
     setIsSubmitting(true);
     setCreateError(null);
     try {
       const scan = await api.createScan({
-        project_id: selectedProjectId,
-        upload_id: uploadedFile!.upload_id,
-        file_name: uploadedFile!.file_name,
-        file_size: `${(uploadedFile!.size_bytes / (1024 * 1024)).toFixed(1)} MB`,
+        project_id: effectiveProjectId,
+        upload_id: uploadedFile.upload_id,
+        file_name: uploadedFile.file_name,
+        file_size: `${(uploadedFile.size_bytes / (1024 * 1024)).toFixed(1)} MB`,
       });
 
       setCreatedScan(scan);
@@ -173,7 +191,7 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
                   <span>1. Select Target Project</span>
                 </label>
                 <select
-                  value={selectedProjectId}
+                  value={effectiveProjectId}
                   onChange={(e) => setSelectedProjectId(e.target.value)}
                   className="h-10 w-full rounded-lg border border-white/80 bg-white/70 px-3 text-[13px] text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
                 >

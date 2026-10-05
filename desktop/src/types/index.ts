@@ -116,6 +116,7 @@ export interface Scan {
 
 export interface Finding {
   id: string;
+  finding_id?: string;
   scan_id: string;
   severity: FindingSeverity;
   category: FindingCategory | string;
@@ -123,10 +124,14 @@ export interface Finding {
   finding_category?: string;
   title: string;
   file: string;
+  file_path?: string;
   line: number;
+  line_number?: number;
   confidence: ConfidenceLevel | number;
   explanation: string;
+  description?: string;
   recommendation: string;
+  remediation?: string;
   evidence: string;
   cwe_id?: string;
   detected_at?: string;
@@ -178,24 +183,34 @@ export interface MigrationCandidate {
 
 export interface Report {
   scan_id: string;
-  project_name: string;
+  status?: string;
   generated_at: string;
-  executive_summary: string;
-  summary: {
+  project_name: string;
+  target_repository?: string;
+  total_findings?: number;
+  findings_by_severity?: {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+  };
+  findings?: Finding[];
+  executive_summary?: string;
+  summary?: {
     total_findings: number;
     critical_findings: number;
     high_findings: number;
     medium_findings: number;
     low_findings: number;
   };
-  pqc_risk_summary: {
+  pqc_risk_summary?: {
     overall_readiness_score: number;
     high_risk_assets: number;
     medium_risk_assets: number;
     low_risk_assets: number;
     total_crypto_assets: number;
   };
-  crypto_inventory_summary: {
+  crypto_inventory_summary?: {
     total_components: number;
     vulnerable_algorithms: number;
     migration_candidates: number;

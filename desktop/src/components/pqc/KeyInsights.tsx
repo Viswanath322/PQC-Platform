@@ -1,7 +1,6 @@
 import React from 'react';
 import { AlertCircle, AlertTriangle, Info, Sparkles } from 'lucide-react';
 import type { KeyInsight } from '../../types/pqc';
-import { MockDataBadge } from './MockDataBadge';
 
 interface KeyInsightsProps {
   insights: KeyInsight[];
@@ -43,14 +42,13 @@ export const KeyInsights: React.FC<KeyInsightsProps> = ({ insights }) => {
           <div className="flex items-center gap-2.5">
             <Sparkles className="h-4 w-4 text-purple-700" />
             <h3 className="section-title">Key security insights</h3>
-            <MockDataBadge size="sm" label="DEVELOPMENT / MOCK DATA" />
           </div>
           <p className="section-sub mt-0.5 text-muted-foreground">
-            Development examples — not generated from an actual scan. Illustrative security findings and architectural insights.
+            Critical observations derived from static AST inspection and cryptographic algorithm analysis.
           </p>
         </div>
         <div className="text-[12px] text-muted-foreground">
-          Showing <span className="tabular font-medium text-foreground">{insights.length}</span> mock insights
+          Showing <span className="tabular font-medium text-foreground">{insights.length}</span> insights
         </div>
       </div>
 

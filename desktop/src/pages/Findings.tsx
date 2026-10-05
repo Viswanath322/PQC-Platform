@@ -15,6 +15,7 @@ export const Findings: React.FC = () => {
   const initialSeverity = searchParams.get('severity') || 'ALL';
   const initialEngine = searchParams.get('engine') || 'ALL';
   const initialFindingCategory = searchParams.get('finding_category') || 'ALL';
+  const initialScanId = searchParams.get('scan_id') || '';
 
   const [findings, setFindings] = useState<Finding[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +26,15 @@ export const Findings: React.FC = () => {
   const [selectedSeverity, setSelectedSeverity] = useState<string>(initialSeverity);
   const [engine, setEngine] = useState<string>(initialEngine);
   const [findingCategory, setFindingCategory] = useState<string>(initialFindingCategory);
+  const [scanFilter, setScanFilter] = useState<string>(initialScanId);
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
+
+  useEffect(() => {
+    const sId = searchParams.get('scan_id');
+    if (sId) {
+      setScanFilter(sId);
+    }
+  }, [searchParams]);
 
   const loadFindings = async () => {
     setIsLoading(true);
@@ -83,9 +92,13 @@ export const Findings: React.FC = () => {
     setSelectedSeverity('ALL');
     setEngine('ALL');
     setFindingCategory('ALL');
+    setScanFilter('');
   };
 
   const filteredFindings = findings.filter((f) => {
+    if (scanFilter && f.scan_id !== scanFilter) {
+      return false;
+    }
     if (selectedSeverity !== 'ALL' && f.severity?.toUpperCase() !== selectedSeverity.toUpperCase()) {
       return false;
     }
@@ -185,6 +198,22 @@ export const Findings: React.FC = () => {
           filteredCount={filteredFindings.length}
           onReset={handleResetFilters}
         />
+
+        {scanFilter && (
+          <div className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-purple-50/90 border border-purple-200/80 px-4 py-2 text-xs text-purple-900 shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">Filtered by Scan ID:</span>
+              <code className="font-mono bg-white px-2 py-0.5 rounded border border-purple-200 text-purple-700 text-[11px]">{scanFilter}</code>
+              <span className="text-slate-500">({filteredFindings.length} findings)</span>
+            </div>
+            <button
+              onClick={() => setScanFilter('')}
+              className="text-purple-700 hover:text-purple-900 font-medium underline text-xs cursor-pointer"
+            >
+              Show all findings
+            </button>
+          </div>
+        )}
 
         {/* Content Area: 4 distinct states */}
         {isLoading ? (

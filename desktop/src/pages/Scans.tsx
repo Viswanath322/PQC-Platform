@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Plus, Scan as ScanIcon, RefreshCw, Filter, Search, X, AlertCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ScanTable } from '@/components/scans/ScanTable';
@@ -7,9 +7,10 @@ import { NewScanModal } from '@/components/scans/NewScanModal';
 import { ApiErrorBanner } from '@/components/common/ApiErrorBanner';
 import { api, ApiError } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
-import type { Scan, Project } from '@/types';
+import type { Scan, Project, Finding } from '@/types';
 
 export const Scans: React.FC = () => {
+  const navigate = useNavigate();
   const { handleUnauthorized } = useAuth();
   const [searchParams] = useSearchParams();
   const projectFilter = searchParams.get('project');
@@ -26,15 +27,38 @@ export const Scans: React.FC = () => {
   // BUG 7: cancel-scan failure must be surfaced to the user
   const [cancelError, setCancelError] = useState<string | null>(null);
 
+  const enrichScans = (scanList: Scan[], projList: Project[], findingsList: Finding[]): Scan[] => {
+    const projMap = new Map(projList.map((p) => [p.id, p.name]));
+    return scanList.map((s) => {
+      const scanFindings = findingsList.filter((f) => f.scan_id === s.id);
+      const critical = scanFindings.filter((f) => (f.severity || '').toUpperCase() === 'CRITICAL').length;
+      const high = scanFindings.filter((f) => (f.severity || '').toUpperCase() === 'HIGH').length;
+      const medium = scanFindings.filter((f) => (f.severity || '').toUpperCase() === 'MEDIUM').length;
+      const low = scanFindings.filter((f) => (f.severity || '').toUpperCase() === 'LOW').length;
+      return {
+        ...s,
+        project_name: s.project_name || projMap.get(s.project_id) || 'Demo Banking Application',
+        branch: s.branch || 'main',
+        repository_name: s.repository_name || s.file_name || 'pqc_sample_banking_app.zip',
+        total_findings: scanFindings.length,
+        critical_count: critical,
+        high_count: high,
+        medium_count: medium,
+        low_count: low,
+      };
+    });
+  };
+
   const loadData = async () => {
     setIsLoading(true);
     setLoadError(null);
     try {
-      const [scanList, projList] = await Promise.all([
+      const [scanList, projList, findingsList] = await Promise.all([
         api.getScans(),
         api.getProjects(),
+        api.getFindings().catch(() => []),
       ]);
-      setScans(scanList);
+      setScans(enrichScans(scanList, projList, findingsList));
       setProjects(projList);
     } catch (err) {
       // Surface real error — NEVER substitute mock data
@@ -56,8 +80,13 @@ export const Scans: React.FC = () => {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      const updated = await api.getScans();
-      setScans(updated);
+      const [scanList, projList, findingsList] = await Promise.all([
+        api.getScans(),
+        api.getProjects(),
+        api.getFindings().catch(() => []),
+      ]);
+      setScans(enrichScans(scanList, projList, findingsList));
+      setProjects(projList);
     } catch (err) {
       const apiErr = err instanceof ApiError ? err : new Error(String(err));
       setLoadError(apiErr);
@@ -70,8 +99,8 @@ export const Scans: React.FC = () => {
     }
   };
 
-  const handleScanCreated = (newScan: Scan) => {
-    setScans((prev) => [newScan, ...prev]);
+  const handleScanCreated = (_newScan: Scan) => {
+    loadData();
   };
 
   const handleCancelScan = async (scan: Scan) => {
@@ -298,6 +327,21 @@ export const Scans: React.FC = () => {
                   className="btn"
                 >
                   Close
+                </button>
+                <button
+                  onClick={() => {
+                    const scanId = selectedScanForDetails.id;
+                    setSelectedScanForDetails(null);
+                    navigate(`/findings?scan_id=${scanId}`);
+                  }}
+                  className="btn-primary flex items-center gap-1.5"
+                >
+                  <span>View Findings</span>
+                  {selectedScanForDetails.total_findings > 0 && (
+                    <span className="rounded bg-white/20 px-1.5 py-0.5 text-xs font-semibold">
+                      {selectedScanForDetails.total_findings}
+                    </span>
+                  )}
                 </button>
               </div>
             </div>

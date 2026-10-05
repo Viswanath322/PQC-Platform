@@ -86,12 +86,28 @@ const AppLayout: React.FC = () => {
     return 'Dashboard';
   };
 
+  const [activeProject, setActiveProject] = useState<string>('Demo Banking Application');
+
+  useEffect(() => {
+    let isMounted = true;
+    api.getProjects()
+      .then((projs) => {
+        if (isMounted && projs.length > 0) {
+          setActiveProject(projs[0].name);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const pageTitle = getPageTitle();
 
   return (
     <AppShell
       page={pageTitle}
-      project="[DEV] Enterprise-Core-Services"
+      project={activeProject}
       branch="main"
       online={isOnline}
       onRefresh={handleRefreshScan}

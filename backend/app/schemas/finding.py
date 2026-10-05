@@ -28,12 +28,26 @@ class FindingOut(BaseModel):
         default=None,
         description="Human-readable explanation of why the finding matters",
     )
+    description: str | None = Field(
+        default=None,
+        description="Human-readable explanation of why the finding matters",
+    )
     confidence: float | None = Field(default=None, ge=0, le=1)
     recommendation: str | None = None
+    remediation: str | None = Field(
+        default=None,
+        description="Remediation guidance alias for recommendation",
+    )
     is_development: bool = Field(
         default=False,
         description="True for synthetic or development-only findings",
     )
+
+    def model_post_init(self, __context: object) -> None:
+        if self.description is None and self.explanation is not None:
+            self.description = self.explanation
+        if self.remediation is None and self.recommendation is not None:
+            self.remediation = self.recommendation
 
 
 class ReportSeverityCounts(BaseModel):
@@ -44,10 +58,13 @@ class ReportSeverityCounts(BaseModel):
 
 
 class ReportOut(BaseModel):
-    """Day 1 report skeleton: scan metadata and finding counts, no export yet."""
+    """Day 2 report model: scan metadata, finding counts, and detailed findings list."""
 
     scan_id: str
     status: str
     generated_at: datetime
+    project_name: str = "Demo Project"
+    target_repository: str = "repository"
     total_findings: int = 0
     findings_by_severity: ReportSeverityCounts
+    findings: list[FindingOut] = []
