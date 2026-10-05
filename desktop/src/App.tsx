@@ -13,7 +13,6 @@ import { CryptoInventory } from './pages/CryptoInventory';
 import { Reports } from './pages/Reports';
 import { Settings } from './pages/Settings';
 import { Profile } from './pages/Profile';
-import { mockProjectMetadata } from './data/pqcMockData';
 import { api } from './services/api';
 import { Info, X, Loader2 } from 'lucide-react';
 
@@ -92,8 +91,8 @@ const AppLayout: React.FC = () => {
   return (
     <AppShell
       page={pageTitle}
-      project={`[DEV] ${mockProjectMetadata.projectName}`}
-      branch={mockProjectMetadata.branch}
+      project="[DEV] Enterprise-Core-Services"
+      branch="main"
       online={isOnline}
       onRefresh={handleRefreshScan}
       isRefreshing={isRefreshing}

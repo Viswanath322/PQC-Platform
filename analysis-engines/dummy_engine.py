@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from typing import Iterable
-from uuid import NAMESPACE_URL, uuid5
+from uuid import uuid4
 
 from .base.analyzer import AnalysisEngine
 from .base.finding import EngineName, Finding, Severity
@@ -19,7 +19,7 @@ class DummyEngine(AnalysisEngine):
     def analyze(self, files: Iterable[Path]) -> AnalysisResult:
         processed_files = tuple(files)
         finding = Finding(
-            finding_id=str(uuid5(NAMESPACE_URL, "pqc-platform/dummy-engine/development-fixture")),
+            finding_id=str(uuid4()),
             engine=self.name,
             category="sast",
             severity=Severity.LOW,

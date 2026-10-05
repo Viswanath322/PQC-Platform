@@ -3,10 +3,12 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from pwdlib import PasswordHash
 from pwdlib.exceptions import UnknownHashError
+from pwdlib.hashers.argon2 import Argon2Hasher
+from pwdlib.hashers.bcrypt import BcryptHasher
 
 from app.core.config import get_settings
 
-password_hasher = PasswordHash.recommended()
+password_hasher = PasswordHash((Argon2Hasher(), BcryptHasher()))
 
 
 def hash_password(password: str) -> str:

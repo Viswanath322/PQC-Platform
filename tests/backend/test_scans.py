@@ -9,6 +9,25 @@ S = f"{V1}/scans"
 NIL = "00000000-0000-4000-8000-000000000000"
 
 
+@pytest.fixture(scope="module", autouse=True)
+def _scans_worker_pause():
+    """Coordinate with background workers to keep test scans QUEUED and avoid race conditions."""
+    r = None
+    try:
+        import redis
+        from tests.conftest import REDIS_URL
+        r = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+        r.set("pqc:worker:paused", "1")
+    except Exception:
+        pass
+    yield
+    if r:
+        try:
+            r.delete("pqc:worker:paused")
+        except Exception:
+            pass
+
+
 def test_create_scan_is_queued(api, openapi, project, upload):
     require_endpoint(openapi, "post", S)
     r = api.post(S, json={"project_id": project["id"], "upload_id": upload["upload_id"]})

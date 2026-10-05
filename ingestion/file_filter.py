@@ -7,6 +7,7 @@ EXCLUDED_DIRS = {
     ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox",
     ".venv", "venv", "coverage", ".next", ".gradle",
     ".idea", ".vscode", "pods", "site-packages",
+    "build", "dist",
 }
 EXCLUDED_FILES = {".ds_store", "thumbs.db"}
 

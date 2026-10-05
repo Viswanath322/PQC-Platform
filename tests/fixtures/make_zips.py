@@ -88,7 +88,9 @@ def _entries(path: Path, entries: dict[str, bytes | str]):
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("ok/readme.txt", "benign file\n")
         for name, data in entries.items():
-            z.writestr(zipfile.ZipInfo(name), data)
+            info = zipfile.ZipInfo(name)
+            info.filename = name
+            z.writestr(info, data)
 
 
 def _symlink(path: Path):

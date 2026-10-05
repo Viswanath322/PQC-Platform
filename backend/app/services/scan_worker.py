@@ -43,7 +43,15 @@ def _now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-def _set_status(scan, status: str, db: Session, error_message: str | None = None) -> None:
+def _set_status(scan, status: str, db: Session, error_message: str | None = None) -> bool:
+    try:
+        db.refresh(scan)
+        if scan.status == "CANCELLED":
+            logger.info("Scan %s has been CANCELLED; stopping pipeline", scan.id)
+            return False
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Could not refresh scan %s: %s", scan.id, exc)
+
     scan.status = status
     if error_message is not None:
         scan.error_message = error_message
@@ -53,6 +61,7 @@ def _set_status(scan, status: str, db: Session, error_message: str | None = None
     if status in ("COMPLETED", "FAILED", "CANCELLED"):
         scan.completed_at = _now()
     db.commit()
+    return True
 
 
 def process_scan(scan_id: str, db: Session) -> bool:
@@ -100,7 +109,8 @@ def process_scan(scan_id: str, db: Session) -> bool:
     # ------------------------------------------------------------------
     # 2. INGESTING — extract and inventory the ZIP
     # ------------------------------------------------------------------
-    _set_status(scan, "INGESTING", db)
+    if not _set_status(scan, "INGESTING", db):
+        return False
     try:
         summary = ingest_repository(zip_path, scan_dir)
     except Exception as exc:  # noqa: BLE001
@@ -128,7 +138,8 @@ def process_scan(scan_id: str, db: Session) -> bool:
     # ------------------------------------------------------------------
     # 3. ANALYZING — run detection engines
     # ------------------------------------------------------------------
-    _set_status(scan, "ANALYZING", db)
+    if not _set_status(scan, "ANALYZING", db):
+        return False
     file_paths = [scan_dir / record["path"] for record in summary.get("files", [])]
 
     try:
@@ -143,7 +154,8 @@ def process_scan(scan_id: str, db: Session) -> bool:
     # ------------------------------------------------------------------
     # 4. PROCESSING — normalize paths and persist findings
     # ------------------------------------------------------------------
-    _set_status(scan, "PROCESSING", db)
+    if not _set_status(scan, "PROCESSING", db):
+        return False
     all_findings = normalize_findings_paths(pipeline_result.all_findings, scan_dir)
 
     persisted = 0
@@ -185,7 +197,8 @@ def process_scan(scan_id: str, db: Session) -> bool:
     # ------------------------------------------------------------------
     # 5. COMPLETED
     # ------------------------------------------------------------------
-    _set_status(scan, "COMPLETED", db)
+    if not _set_status(scan, "COMPLETED", db):
+        return False
     logger.info(
         "process_scan: scan %s COMPLETED — files=%d findings=%d errors=%d",
         scan_id,

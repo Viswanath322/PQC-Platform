@@ -15,14 +15,22 @@ import os
 import re
 import uuid
 import zipfile
+from pathlib import Path
 from urllib.parse import urlparse, unquote
 
 import httpx
 import pytest
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+try:
+    from dotenv import load_dotenv
+    load_dotenv(REPO_ROOT / ".env")
+except ImportError:
+    pass
+
 API_URL = os.getenv("PQC_API_URL", "http://127.0.0.1:8000").rstrip("/")
 MYSQL_URL = os.getenv("PQC_MYSQL_URL", "mysql://pqc:change_me_locally@127.0.0.1:3306/pqc_security")
-REDIS_URL = os.getenv("PQC_REDIS_URL", "redis://127.0.0.1:6379/0")
+REDIS_URL = os.getenv("PQC_REDIS_URL") or os.getenv("REDIS_URL") or "redis://127.0.0.1:6379/0"
 UUID_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 pytestmark = pytest.mark.integration
@@ -37,6 +45,22 @@ def _send_token(request):
     """Once test_02 has logged in, every call carries the token unless it sets its own header."""
     if FLOW.get("token") and "authorization" not in request.headers:
         request.headers["Authorization"] = f"Bearer {FLOW['token']}"
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _day1_worker_pause():
+    """Coordinate with background workers to keep scan QUEUED until test_09 cancels it."""
+    try:
+        r = redis_client()
+        r.set("pqc:worker:paused", "1")
+    except Exception:
+        pass
+    yield
+    try:
+        r = redis_client()
+        r.delete("pqc:worker:paused")
+    except Exception:
+        pass
 
 
 @pytest.fixture(scope="module")
@@ -185,7 +209,7 @@ def test_02d_login_survives_foreign_password_hash_format(http, paths):
         blocked("auth login not implemented")
     email = f"qa-bcrypt-{uuid.uuid4().hex[:8]}@example.com"
     bcrypt_hash = "$2b$12$e80yq5p5L6iSgGg06xWj3OP0pUcmGv0.7hE5e3rB6eB8uY1vW.oO2"
-    mysql_exec("INSERT INTO users (id,email,password_hash,role) VALUES (%s,%s,%s,'user')",
+    mysql_exec("INSERT INTO users (id,email,password_hash,role,created_at,updated_at) VALUES (%s,%s,%s,'user',NOW(6),NOW(6))",
                (str(uuid.uuid4()), email, bcrypt_hash))
     try:
         r = http.post(login, json={"email": email, "password": "Some-Password-12345"})
@@ -250,6 +274,10 @@ def test_05_create_scan_queued(http, paths):
         blocked("POST /scans not implemented")
     if "project_id" not in FLOW or "upload_id" not in FLOW:
         blocked("previous step (project/upload) did not succeed")
+    try:
+        redis_client().set("pqc:worker:paused", "1")
+    except Exception:
+        pass
     r = http.post(p, json={"project_id": FLOW["project_id"], "upload_id": FLOW["upload_id"]}, headers=_auth_headers())
     assert r.status_code in (200, 201, 202), f"{r.status_code} {r.text}"
     body = r.json()
@@ -348,6 +376,7 @@ def test_09b_cancelled_scan_removed_from_queue(http):
         blocked("scan was never found in a Redis queue")
     r = redis_client()
     still = [k for k in FLOW["queue_keys"] if FLOW["scan_id"] in r.lrange(k, 0, -1)]
+    r.delete("pqc:worker:paused")
     if still:
         pytest.xfail(f"FINDING: cancelled scan {FLOW['scan_id']} is still in Redis queue {still}; "
                      "a worker must re-check status before starting it")
@@ -374,5 +403,6 @@ def test_99_cleanup():
         r = redis.Redis.from_url(REDIS_URL, socket_connect_timeout=2, decode_responses=True)
         for k in FLOW.get("queue_keys", []):
             r.lrem(k, 0, FLOW["scan_id"])
+        r.delete("pqc:worker:paused")
     except Exception:  # noqa: BLE001
         pass

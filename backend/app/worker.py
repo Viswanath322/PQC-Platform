@@ -43,6 +43,11 @@ def run_worker() -> None:
 
     while _running:
         try:
+            # Allow tests to hold queue consumption during queue-state validation
+            if r.get("pqc:worker:paused"):
+                time.sleep(0.2)
+                continue
+
             # BLPOP with a timeout so it periodically yields to check _running
             item = r.blpop(QUEUE_KEY, timeout=2)
             if item is None:

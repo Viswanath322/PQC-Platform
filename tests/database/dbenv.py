@@ -5,8 +5,14 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+try:
+    from dotenv import load_dotenv
+    load_dotenv(REPO_ROOT / ".env")
+except ImportError:
+    pass
+
 MYSQL_URL = os.getenv("PQC_MYSQL_URL", "mysql://pqc:change_me_locally@127.0.0.1:3306/pqc_security")
-REDIS_URL = os.getenv("PQC_REDIS_URL", "redis://127.0.0.1:6379/0")
+REDIS_URL = os.getenv("PQC_REDIS_URL") or os.getenv("REDIS_URL") or "redis://127.0.0.1:6379/0"
 
 
 def blocked(reason: str):

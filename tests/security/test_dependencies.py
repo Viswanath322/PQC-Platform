@@ -50,9 +50,10 @@ def test_npm_audit_desktop(scan_root):
     d = scan_root / "desktop"
     if not (d / "package-lock.json").is_file():
         pytest.skip("BLOCKED: desktop/package-lock.json missing")
-    if not shutil.which("npm"):
+    npm_exe = shutil.which("npm.cmd") or shutil.which("npm")
+    if not npm_exe:
         pytest.skip("BLOCKED: npm not installed")
-    p = subprocess.run(["npm", "audit", "--omit=dev", "--json"], cwd=d, capture_output=True, text=True, timeout=300)
+    p = subprocess.run([npm_exe, "audit", "--omit=dev", "--json"], cwd=d, capture_output=True, text=True, timeout=300)
     try:
         data = json.loads(p.stdout)
     except json.JSONDecodeError:

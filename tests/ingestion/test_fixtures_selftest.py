@@ -23,7 +23,7 @@ FIX = Path(make_zips.__file__).parent
 
 def names(p):
     with zipfile.ZipFile(p) as z:
-        return z.namelist()
+        return [getattr(x, "orig_filename", x.filename) for x in z.filelist]
 
 
 def test_build_all_builds_every_fixture(zips):

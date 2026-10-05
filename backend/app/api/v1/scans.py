@@ -77,6 +77,7 @@ def cancel_scan(scan_id: str, db: Session = Depends(get_db), user: User = Depend
         db.query(Scan)
         .join(Project)
         .filter(Scan.id == scan_id, Project.organization_id == get_user_organization_id(user))
+        .with_for_update()
         .first()
     )
     if scan is None:
@@ -86,6 +87,5 @@ def cancel_scan(scan_id: str, db: Session = Depends(get_db), user: User = Depend
     scan.status = ScanStatus.CANCELLED.value
     scan.completed_at = _utcnow()
     db.commit()
-    db.refresh(scan)
     dequeue_scan(scan.id)
     return scan

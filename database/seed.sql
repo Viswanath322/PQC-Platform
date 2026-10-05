@@ -12,13 +12,13 @@ VALUES
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- 2. Development Admin User (Standard 36-char UUID; .example domain for QA and EmailStr compatibility)
--- Password hash is Argon2id (pwdlib.PasswordHash.recommended()) for documented dev admin password
+-- Password hash is Bcrypt (60-char valid hash for dev admin password 'change_me_locally')
 INSERT INTO `users` (`id`, `organization_id`, `email`, `password_hash`, `role`, `created_at`, `updated_at`)
 VALUES (
     '00000000-0000-0000-0000-000000000001',
     'org-default-001',
     'admin@pqc.example',
-    '$argon2id$v=19$m=65536,t=3,p=4$fUMHaVaGyNAPd/EPJp1cUQ$+xGRp37M9+SX6BmV55T816t0yLFqQSkxNroSbynVHwE',
+    '$2b$12$gqr69tfBNyDuzh/u4bD0X.wnkuh4IsV53KTl72OC2G05rOMTBec5e',
     'admin',
     NOW(6),
     NOW(6)

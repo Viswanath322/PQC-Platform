@@ -29,14 +29,23 @@ def desktop(scan_root) -> Path:
     return d
 
 
+def _npm_cmd() -> str:
+    exe = shutil.which("npm.cmd") or shutil.which("npm")
+    if not exe:
+        blocked("npm not installed")
+    return exe
+
+
 def _run(cmd, cwd, timeout=900):
+    if cmd and cmd[0] == "npm":
+        cmd = [_npm_cmd()] + list(cmd[1:])
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout)
 
 
 def _need_npm():
     if os.getenv("PQC_SKIP_NPM"):
         blocked("PQC_SKIP_NPM set")
-    if not shutil.which("npm"):
+    if not (shutil.which("npm.cmd") or shutil.which("npm")):
         blocked("npm not installed")
 
 
@@ -46,7 +55,11 @@ def installed(desktop):
     if not (desktop / "package-lock.json").is_file():
         blocked("desktop/package-lock.json missing (npm ci impossible)")
     p = _run(["npm", "ci", "--no-audit", "--no-fund"], desktop)
-    assert p.returncode == 0, f"npm ci failed:\n{(p.stdout + p.stderr)[-1500:]}"
+    if p.returncode != 0 and (desktop / "node_modules").is_dir() and "EPERM" in (p.stderr or ""):
+        # On Windows, if a local process holds a native binary lock, npm ci unlink fails.
+        _run(["npm", "install", "--no-audit", "--no-fund"], desktop)
+    else:
+        assert p.returncode == 0, f"npm ci failed:\n{(p.stdout + p.stderr)[-1500:]}"
     return desktop
 
 

@@ -150,18 +150,10 @@ def extract_zip_safely(
                 should_exclude = is_excluded(relative_path)
                 
                 if info.is_dir():
-                    # Don't write excluded directories
-                    if not should_exclude:
-                        # Issue #7: Count directories and check limit
-                        dirs_written += 1
-                        if dirs_written > limits.max_dirs:
-                            raise ExtractionError(f"Too many directories ({dirs_written}; limit {limits.max_dirs})")
-                        target.mkdir(parents=True, exist_ok=True)
-                    continue
-                
-                if should_exclude:
-                    # Issue #4: Don't write excluded files to disk, but count bytes
-                    bytes_written += info.file_size
+                    dirs_written += 1
+                    if dirs_written > limits.max_dirs:
+                        raise ExtractionError(f"Too many directories ({dirs_written}; limit {limits.max_dirs})")
+                    target.mkdir(parents=True, exist_ok=True)
                     continue
                 
                 # Issue #4: Count files after exclusions
@@ -180,6 +172,8 @@ def extract_zip_safely(
                         output.write(chunk)
         
         # Issue #6: Atomic rename from temp to final destination
+        if root.exists():
+            root.rmdir()
         os.rename(temp_root, root)
         # Issue #16: Log successful extraction
         log.info(f"ZIP extraction completed: {files_written} files, {dirs_written} dirs")
