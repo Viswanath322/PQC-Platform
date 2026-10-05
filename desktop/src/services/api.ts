@@ -145,7 +145,16 @@ class ApiClient {
         let detail: string | undefined;
         try {
           const body = await response.json();
-          detail = typeof body?.detail === 'string' ? body.detail : undefined;
+          if (typeof body?.detail === 'string') {
+            detail = body.detail;
+          } else if (Array.isArray(body?.detail) && body.detail.length > 0) {
+            detail = body.detail
+              .map((d: { msg?: string; loc?: string[] }) => {
+                const field = d.loc && d.loc.length > 1 ? `${d.loc[d.loc.length - 1]}: ` : '';
+                return `${field}${d.msg || 'Invalid value'}`;
+              })
+              .join(', ');
+          }
         } catch {
           // ignore parse errors
         }

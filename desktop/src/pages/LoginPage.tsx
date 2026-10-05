@@ -35,6 +35,11 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
+    if (mode === 'register' && password.trim().length < 12) {
+      setErrorMessage('Password must be at least 12 characters.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (mode === 'login') {
@@ -235,7 +240,7 @@ export const LoginPage: React.FC = () => {
               htmlFor="auth-password"
               style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}
             >
-              Password
+              Password {mode === 'register' && <span style={{ fontWeight: 400, color: '#94a3b8' }}>(min 12 characters)</span>}
             </label>
             <div className="relative">
               <input
@@ -245,7 +250,7 @@ export const LoginPage: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder={mode === 'register' ? 'Minimum 12 characters' : '••••••••'}
                 disabled={isSubmitting}
                 style={{
                   height: 38,
