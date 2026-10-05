@@ -15,9 +15,10 @@ class Settings(BaseSettings):
         "http://localhost:5173,http://127.0.0.1:5173,"
         "tauri://localhost,http://tauri.localhost"
     )
+    redis_url: str = "redis://127.0.0.1:6379/0"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
         extra="ignore",
         hide_input_in_errors=True,

@@ -8,8 +8,13 @@ logger = logging.getLogger("pqc.queue")
 
 
 def get_redis() -> redis.Redis:
+    try:
+        from app.core.config import get_settings
+        url = os.getenv("REDIS_URL") or get_settings().redis_url
+    except Exception:
+        url = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
     return redis.Redis.from_url(
-        os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0"),
+        url,
         decode_responses=True,
         socket_connect_timeout=2,
     )
