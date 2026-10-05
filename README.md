@@ -1,196 +1,219 @@
 # PQC Security Assessment Platform
 
-**Silicofeller Quantum** · on-premises, air-gapped desktop application for software security and
-Post-Quantum Cryptography (PQC) readiness.
+**Silicofeller Quantum** · On-premises, air-gapped security assessment platform for software vulnerability detection and Post-Quantum Cryptography (PQC) readiness.
 
-The platform scans a source-code repository and reports:
-
-- **Security vulnerabilities (SAST)**: injection, hardcoded secrets, path traversal and more
-- **Cryptographic inventory and PQC risk**: which algorithms (RSA, ECC, SHA-1, MD5, …) are in use, which are quantum-vulnerable, and what to migrate to, published as a **CBOM** (Cryptography Bill of Materials)
-- **Dependency risk**: an **SBOM** of third-party packages and their known vulnerabilities
-- **Configuration and infrastructure risk**
-- **Remediation guidance** from a local 8B-class LLM that runs *after* deterministic analysis, never instead of it
-
-Everything runs on the customer's machine. No code, findings or telemetry leave the environment.
-
-> **Status: Day 1 — foundation.** The goal of Day 1 is one real end-to-end flow:
-> launch app → create project → upload ZIP → create scan → scan stored in MySQL as `QUEUED` → shown in the UI.
-> Real SAST rules, PQC scoring, SBOM/CBOM generation, the LLM and Elasticsearch come in later milestones.
+The platform inspects source-code repositories to provide:
+- **SAST Vulnerability Analysis**: Injection vulnerabilities, hardcoded credentials/secrets, path traversal, and misconfigurations.
+- **Cryptographic Inventory & PQC Risk Classification**: Categorizes classical primitives (RSA, ECC, Diffie-Hellman, MD5, SHA-1) against Shor's and Grover's quantum threats.
+- **NIST FIPS 203/204 Migration Guidance**: Actionable migration candidate recommendations to transition to quantum-safe algorithms (ML-KEM / ML-DSA).
+- **Compliance Audit Reporting**: Machine-readable JSON reports exported directly for offline regulatory compliance.
+- **100% Air-Gapped Execution**: All engines, databases, and UI components execute strictly on `127.0.0.1`. No code, findings, or telemetry leave the host machine.
 
 ---
 
-## Architecture
+## Architecture & Service Map
 
 ```
-┌──────────────────────── Desktop application (Tauri) ────────────────────────┐
-│  React + TypeScript UI                                                      │
-│  Dashboard · Projects · Scans · Findings · PQC · Reports                    │
-└───────────────────────────────┬─────────────────────────────────────────────┘
-                                │  http://127.0.0.1:8000/api/v1
-                                ▼
-                         FastAPI (local only)
-                ┌───────────────┼────────────────┐
-                ▼               ▼                ▼
-             MySQL            Redis         Local file storage
-         (application      (job queue)      (uploaded repositories,
-             data)                           extracted artifacts)
-                                │
-                                ▼
-                     Ingestion → Analysis workers
-               SAST · Crypto/PQC · Dependency · Configuration
-                                │
-                                ▼
-                 Findings processor → Local 8B LLM → Dashboard & reports
+┌────────────────────────────────────────────────────────────────────────┐
+│                   Desktop / Web Interface (React 19 + TypeScript)      │
+│     Dashboard · Projects · Scans · Findings · PQC Assessment · Reports │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │ HTTP (127.0.0.1:5173 ↔ 127.0.0.1:8000)
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   FastAPI Backend API (Python 3.10+)                   │
+│     Authentication · Projects · Upload Ingestion · Reports · Health    │
+└──────────────────┬─────────────────┬───────────────────┬───────────────┘
+                   │                 │                   │
+                   ▼                 ▼                   ▼
+            MySQL 8 Database   Redis 7 Queue    Local Storage
+            (Persistent Data)  (pqc:scan_queue) (storage/uploads)
+                                     │
+                                     ▼
+                   ┌──────────────────────────────────┐
+                   │    Background Scan Worker        │
+                   │    (python -m app.worker)        │
+                   ├──────────────────────────────────┤
+                   │ 1. ZIP Extraction & Path Safety  │
+                   │ 2. Language & Framework Analysis │
+                   │ 3. AST SAST Rule Engine          │
+                   │ 4. Cryptographic Rule Engine     │
+                   │ 5. Database Findings Persistence │
+                   └──────────────────────────────────┘
 ```
 
-| Layer | Technology |
-|---|---|
-| Desktop shell | Tauri |
-| UI | React + TypeScript, Vite |
-| Backend | Python 3.11+, FastAPI, SQLAlchemy, Pydantic |
-| Database | MySQL 8 |
-| Queue | Redis 7 |
-| Storage | Local filesystem (ZIPs are never stored in MySQL) |
-| Search (later) | Elasticsearch |
-| AI (later) | Local 8B-class model |
-| Local services | Docker Compose |
+| Service | Port / URL | Purpose |
+| :--- | :--- | :--- |
+| **Frontend UI** | [http://localhost:5173](http://localhost:5173) | Primary user interface |
+| **FastAPI Backend** | [http://127.0.0.1:8000](http://127.0.0.1:8000) | Core REST API |
+| **API Documentation** | [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) | Interactive Swagger OpenAPI UI |
+| **Backend Health** | [http://127.0.0.1:8000/api/v1/health](http://127.0.0.1:8000/api/v1/health) | Live service heartbeat |
+| **MySQL Database** | `127.0.0.1:3306` | Relational persistence (`pqc_security`) |
+| **Redis Broker** | `127.0.0.1:6379` | Background scan job queue |
 
-## Repository layout
+---
 
-```
-PQC-Platform/
-├── desktop/            React + TypeScript UI and Tauri shell (src-tauri/)
-├── backend/            FastAPI application (app/api/v1, models, schemas, services, core)
-├── ingestion/          ZIP validation, safe extraction, file filtering and classification
-├── analysis-engines/   Common engine interface + SAST, crypto, dependency, configuration engines
-├── llm/                Local model integration (later)
-├── database/           schema.sql, migrations, seed data
-├── tests/              QA, security and desktop-security test suite
-├── docs/               API contracts and design notes
-├── infrastructure/     Deployment and packaging
-└── docker-compose.yml  Local MySQL + Redis
-```
-
-## Getting started
+## Quick Start (Start in 4 Steps)
 
 ### Prerequisites
+- **Python 3.10+**
+- **Node.js 20+** and **npm**
+- **Docker** & **Docker Compose** *(or local MySQL 8 & Redis 7)*
+- **Git**
 
-Git · Python 3.11+ · Node.js 20 LTS+ and npm · Rust toolchain · Docker (Docker Desktop, Colima or Docker Engine + Compose) ·
-[Tauri prerequisites](https://tauri.app/start/prerequisites/) for your OS.
+---
+
+### Step 1: Clone & Configure Environment
+
+Clone the repository and create your local `.env` configuration:
 
 ```bash
-node --version && npm --version
-rustc --version && cargo --version
-python --version
-docker compose version
+# Clone the repository
+git clone https://github.com/Viswanath322/PQC-Platform.git
+cd PQC-Platform
+
+# Copy the environment template
+# Windows PowerShell:
+copy .env.example .env
+
+# macOS / Linux:
+cp .env.example .env
 ```
 
-### 1. Start local services
+> **Note:** The default `.env.example` includes pre-configured local development credentials out-of-the-box.
+
+---
+
+### Step 2: Start Infrastructure (MySQL & Redis)
+
+Start the local MySQL 8 database and Redis broker containers via Docker Compose:
 
 ```bash
 docker compose up -d
+```
+
+Verify containers are running:
+```bash
 docker compose ps
 ```
-
-MySQL runs on `3306` (database `pqc_security`) and Redis on `6379`. The credentials in
-`docker-compose.yml` are **development placeholders only**.
-
-### 2. Run the backend
-
-See [`backend/README.md`](backend/README.md) for backend configuration and authentication endpoint details.
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env               # never commit .env
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-
-- Swagger UI: http://127.0.0.1:8000/docs
-- Health check: http://127.0.0.1:8000/api/v1/health
-
-### 3. Run the desktop app
-
-```bash
-cd desktop
-npm install
-npm run tauri dev
-```
-
-The **Backend Status** indicator should turn healthy while FastAPI is running.
-
-### 4. Run the tests
-
-```bash
-pip install -r tests/requirements.txt
-pytest tests -v -rs
-```
-
-See [tests/README.md](tests/README.md) for configuration and how to read Pass / Fail / Blocked results.
-
-## Day 1 API contract
-
-All endpoints are served under `/api/v1`.
-
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/health` | GET | Backend health check |
-| `/auth/register` | POST | Development user registration |
-| `/auth/login` | POST | Development login |
-| `/auth/me` | GET | Current user |
-| `/projects` | POST / GET | Create / list projects |
-| `/projects/{id}` | GET | Project details |
-| `/uploads` | POST | Upload repository ZIP |
-| `/scans` | POST / GET | Create / list scans |
-| `/scans/{id}` | GET | Scan status and details |
-| `/scans/{id}/cancel` | POST | Cancel a scan |
-| `/findings` | GET | Findings list (`severity`, `category` filters) |
-| `/findings/{id}` | GET | Finding details |
-| `/reports/{scan_id}` | GET | Report for a scan |
-
-**Scan status lifecycle:** `QUEUED → INGESTING → ANALYZING → PROCESSING → AI_ANALYSIS → COMPLETED`,
-or `FAILED` / `CANCELLED`.
-
-**Finding fields:** `finding_id`, `engine`, `category`, `severity`, `title`, `file_path`, `line_number`,
-`evidence`, `confidence`, `recommendation`. Engines are `sast`, `crypto`, `dependency` and `configuration`;
-severities are `critical`, `high`, `medium` and `low`.
-
-## Team and branches
-
-| Person | Area | Branch |
-|---|---|---|
-| Harshith | Desktop shell + Security Dashboard | `frontend/harshith-desktop-dashboard` |
-| Hema | Findings Explorer | `frontend/hema-findings` |
-| Sathish | PQC Dashboard + Reports | `frontend/sathish-pqc` |
-| Amrutha | FastAPI foundation + authentication | `backend/amrutha-foundation` |
-| Aakash | Projects, upload and scan APIs, Redis | `backend/aakash-scan` |
-| Sathwik | Findings + reports API contracts | `backend/sathwik-findings` |
-| Hima Bindu | Repository ingestion | `backend/hima-ingestion` |
-| Harshitha | Analysis-engine foundation | `backend/harshitha-analysis` |
-| Vamsi | MySQL + core schema | `database/vamsi` |
-| Pushpam | QA + cyber security + desktop security | `qa/pushpam` |
-
-## Contributing
-
-- Never push directly to `main`. Work on your own branch and integrate through pull requests.
-- Commit small, working increments and push your branch before the end of the day.
-- If you change an API request/response or a database column, update the docs and tell the people who consume it.
-- Every module needs a README or clear start-up instructions.
-- If you're blocked for 20–30 minutes, share the exact error, the command, and what you already tried.
-
-## Security rules
-
-This is a security product for air-gapped environments, so these rules are strict:
-
-- **Never commit** `.env` files, passwords, tokens, keys, customer repositories, uploaded ZIPs, local databases (`*.db`) or model files.
-- **No external network calls** from the app: no CDN assets, web fonts, analytics or telemetry. Bundle every asset locally.
-- **Bind local services to `127.0.0.1`**, never `0.0.0.0`.
-- **Treat every uploaded archive as hostile:** reject path traversal, symlinks and zip bombs before extraction.
-- **Label all mock or development data** clearly in the UI and in API responses.
-- `tests/fixtures/vulnerable-demo-repo/` is **intentionally insecure** test material with fake secrets. Never deploy or run it.
+*(The MySQL container automatically initializes the schema from `database/schema.sql` and default organization seed from `database/seed.sql` on first start).*
 
 ---
 
-Internal project · © Silicofeller Quantum
+### Step 3: Install Python Dependencies & Start Backend
+
+Create a Python virtual environment, install requirements, and run the backend services:
+
+#### Terminal 1 — FastAPI Server:
+```bash
+# Create and activate virtual environment
+python -m venv .venv
+
+# Activate on Windows:
+.venv\Scripts\activate
+# Activate on macOS / Linux:
+source .venv/bin/activate
+
+# Install all dependencies
+pip install -r requirements.txt
+
+# Start the FastAPI server
+cd backend
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+Test health check: open [http://127.0.0.1:8000/api/v1/health](http://127.0.0.1:8000/api/v1/health) &rarr; `{"status":"healthy"}`.
+
+#### Terminal 2 — Background Scan Worker:
+Open a second terminal, activate the environment, and start the Redis worker that processes scan jobs:
+
+```bash
+# Windows:
+.venv\Scripts\activate
+# macOS / Linux:
+source .venv/bin/activate
+
+# Start the queue worker
+cd backend
+python -m app.worker
+```
+The worker will log: `PQC scan worker started. Listening on queue 'pqc:scan_queue'...`.
+
+---
+
+### Step 4: Install Frontend Dependencies & Start UI
+
+In a third terminal, start the modern Vite interface:
+
+#### Terminal 3 — Frontend:
+```bash
+cd desktop
+npm install
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser!
+
+---
+
+## Running a Test Scan
+
+1. Open the UI at [http://localhost:5173](http://localhost:5173).
+2. Navigate to **Projects** or **Scans**.
+3. Click **New Scan** &rarr; select or create a project.
+4. Upload any `.zip` containing Python files (or compress any sample code).
+5. Click **Start Security Scan**.
+6. Watch the scan transition through `QUEUED → INGESTING → ANALYZING → PROCESSING → COMPLETED`.
+7. Explore findings in **Findings**, review quantum risk in **PQC Assessment**, inspect algorithms in **Crypto Inventory**, and download the audit payload from **Reports** (**Export JSON**).
+
+---
+
+## Running Tests
+
+All test suites can be run locally using `pytest`:
+
+```bash
+# Run backend findings & reports tests
+python -m pytest tests/backend/test_findings_reports.py -v
+
+# Run repository ingestion safety tests
+python -m pytest ingestion/tests/ -v
+
+# Run analysis engines contract tests
+python -m pytest analysis-engines/tests/ -v
+
+# Run frontend production build & type checks
+cd desktop
+npm run build
+```
+
+---
+
+## Repository Structure
+
+```
+PQC-Platform/
+├── backend/            # FastAPI backend API, schemas, routes, and Redis scan worker
+├── desktop/            # React + TypeScript frontend application (Vite / Tailwind / Lucide)
+├── analysis-engines/   # Core analysis pipelines (AST-based SAST and Cryptographic primitive inspection)
+├── analysis_engines/   # Import facade package mapping to analysis-engines
+├── ingestion/          # ZIP archive validation, path traversal safety, and file classification
+├── database/           # MySQL 8 schema (schema.sql), seed data (seed.sql), and ER diagrams
+├── storage/uploads/    # Storage root for uploaded archives and extracted scan repositories
+├── tests/              # End-to-end integration, security, and regression tests
+├── docker-compose.yml  # Local Docker Compose setup for MySQL 8 and Redis 7
+├── requirements.txt    # Unified Python dependencies file for quick installation
+└── .env.example        # Environment variable template
+```
+
+---
+
+## Security Guidelines
+
+- **Zero Remote Dependencies**: The platform is built to operate in offline, air-gapped environments. Do not introduce CDN links or external telemetry.
+- **Never Commit Secrets**: Keep `.env`, keys, tokens, and archive data out of Git tracking.
+- **Safe Extraction**: All uploaded files are strictly checked against Zip Slip path traversal and symlink vulnerabilities before extraction.
+- **Binding**: Local servers are strictly bound to `127.0.0.1`.
+
+---
+
+© Silicofeller Quantum · Air-Gapped Post-Quantum Cryptography Assessment Platform
