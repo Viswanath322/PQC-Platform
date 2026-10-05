@@ -44,6 +44,7 @@ class ScanOut(BaseModel):
     status: ScanStatus
     # Read from the DB row but never sent to the client (it is an absolute server path).
     repository_path: str | None = Field(default=None, exclude=True)
+    error_message: str | None = None
     created_at: datetime
     started_at: datetime | None = None
     completed_at: datetime | None = None

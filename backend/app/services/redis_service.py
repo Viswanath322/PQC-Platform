@@ -9,7 +9,7 @@ logger = logging.getLogger("pqc.queue")
 
 def get_redis() -> redis.Redis:
     return redis.Redis.from_url(
-        os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0"),
+        os.getenv("REDIS_URL") or "redis://127.0.0.1:6379/0",
         decode_responses=True,
         socket_connect_timeout=2,
     )

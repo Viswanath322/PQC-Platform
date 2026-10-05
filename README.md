@@ -88,12 +88,14 @@ docker compose version
 ### 1. Start local services
 
 ```bash
+cp .env.example .env   # Windows PowerShell: Copy-Item .env.example .env
+# Fill MYSQL_PASSWORD, MYSQL_ROOT_PASSWORD, and REDIS_PASSWORD in .env first.
 docker compose up -d
 docker compose ps
 ```
 
-MySQL runs on `3306` (database `pqc_security`) and Redis on `6379`. The credentials in
-`docker-compose.yml` are **development placeholders only**.
+MySQL runs on `127.0.0.1:3306` (database `pqc_security`) and Redis on `127.0.0.1:6379`.
+Compose exits with a clear error if a local password is missing; credentials are not stored in tracked files.
 
 ### 2. Run the backend
 
@@ -104,8 +106,8 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env               # never commit .env
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+cp .env.example .env               # never commit .env; set DATABASE_URL and REDIS_URL
+uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --no-server-header
 ```
 
 - Swagger UI: http://127.0.0.1:8000/docs

@@ -6,7 +6,7 @@ All ids are UUID strings. Example values below are illustrative.
 ## Authentication
 Every route below needs `Authorization: Bearer <access_token>`.
 
-1. `POST /auth/register` `{"email": "...", "password": "<12+ chars>"}` puts the new user in organization `org-default-001`.
+1. `POST /auth/register` is disabled by default. For local development only, set `ALLOW_PUBLIC_REGISTRATION=true`; each accepted account gets its own organization. The generic `202` response does not reveal whether an email already exists.
 2. `POST /auth/login` returns `{"access_token": "...", "token_type": "bearer"}`.
 3. Send the token on every request. In Swagger, click **Authorize** and paste the token.
 
@@ -41,7 +41,7 @@ Every route below needs `Authorization: Bearer <access_token>`.
  "created_at": "2026-09-30T09:50:10.837998", "started_at": null, "completed_at": null}
 ```
 - The server-side ZIP path is not returned. It is saved in `scans.repository_path` in MySQL for ingestion.
-- Response header `X-Queue-Status`: `enqueued` (pushed to Redis list `pqc:scan_queue`) or `deferred` (Redis unreachable; scan is still saved as `QUEUED`).
+- The response includes `X-Queue-Status: enqueued` when Redis accepted the scan or `deferred` when Redis is unavailable. A deferred scan is saved as `QUEUED`; an operator or worker retry must enqueue it later.
 - Errors: `422` ids that are not UUIDs, `404` project or upload not found (or in another organization).
 
 Other routes:
@@ -49,7 +49,7 @@ Other routes:
 - `POST /scans/{scan_id}/cancel` sets `CANCELLED`, fills `completed_at`, and removes the scan from the Redis queue. `409` if already `COMPLETED`, `FAILED` or `CANCELLED`.
 
 ## Redis test
-`GET /redis/ping` returns `{"redis": "ok", "queue_length": 0}`, or `503` if Redis is unreachable or the password is wrong.
+`GET /redis/ping` requires a bearer token and returns `{"redis": "ok", "queue_length": 0}`, or the generic `503` response `Redis unavailable` if Redis is unreachable.
 
 ## Local run
 ```
@@ -58,7 +58,7 @@ copy .env.example .env          # then set DATABASE_URL and a random JWT_SECRET_
 python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --reload
 ```
-`REDIS_URL` with the compose password: `redis://:change_me_locally@127.0.0.1:6379/0` (Memurai without a password: `redis://127.0.0.1:6379/0`).
+`REDIS_URL` must use the same locally chosen password as `REDIS_PASSWORD` in the repository-root `.env` (URL-encode reserved characters in the password). For Memurai without authentication, use `redis://127.0.0.1:6379/0`.
 
 ## Tests
 ```

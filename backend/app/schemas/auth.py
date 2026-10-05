@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated
 
 from email_validator import EmailNotValidError, validate_email
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, computed_field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, computed_field, field_validator
 
 from app.core.config import get_settings
 
@@ -36,6 +36,22 @@ AccountEmail = Annotated[str, AfterValidator(validate_account_email)]
 class RegisterRequest(BaseModel):
     email: AccountEmail
     password: str = Field(min_length=12, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def reject_common_passwords(cls, value: str) -> str:
+        normalized = value.strip().casefold()
+        if normalized in {
+            "password1234", "password123", "password1", "qwerty123456", "letmein12345",
+            "admin123456", "welcome12345", "iloveyou12345", "changeme12345", "qwertyuiop12",
+            "pqcplatform123", "silicofeller123",
+        }:
+            raise ValueError("Choose a less common password")
+        return value
+
+
+class RegisterAccepted(BaseModel):
+    message: str = "If registration is enabled and the address is available, the account has been created. You can now sign in."
 
 
 class LoginRequest(BaseModel):

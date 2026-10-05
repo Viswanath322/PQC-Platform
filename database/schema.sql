@@ -26,8 +26,8 @@ DROP TABLE IF EXISTS `organizations`;
 CREATE TABLE `organizations` (
     `id` VARCHAR(36) NOT NULL DEFAULT (UUID()),
     `name` VARCHAR(255) NOT NULL,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -42,8 +42,8 @@ CREATE TABLE `users` (
     `email` VARCHAR(255) NOT NULL,
     `password_hash` VARCHAR(255) NOT NULL,
     `role` VARCHAR(50) NOT NULL DEFAULT 'user',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_users_email` (`email`),
     KEY `idx_users_organization_id` (`organization_id`),
@@ -63,8 +63,8 @@ CREATE TABLE `projects` (
     `organization_id` VARCHAR(36) NULL DEFAULT 'org-default-001',
     `name` VARCHAR(255) NOT NULL,
     `description` TEXT NULL,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     PRIMARY KEY (`id`),
     KEY `idx_projects_organization_id` (`organization_id`),
     KEY `idx_projects_name` (`name`),
@@ -94,9 +94,10 @@ CREATE TABLE `scans` (
         'CANCELLED'
     ) NOT NULL DEFAULT 'QUEUED',
     `repository_path` VARCHAR(1024) NOT NULL,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `started_at` DATETIME NULL DEFAULT NULL,
-    `completed_at` DATETIME NULL DEFAULT NULL,
+    `error_message` TEXT NULL,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    `started_at` DATETIME(6) NULL DEFAULT NULL,
+    `completed_at` DATETIME(6) NULL DEFAULT NULL,
     PRIMARY KEY (`id`),
     KEY `idx_scans_project_id` (`project_id`),
     KEY `idx_scans_status` (`status`),
@@ -119,7 +120,7 @@ CREATE TABLE `scan_files` (
     `file_type` VARCHAR(100) NULL,
     `language` VARCHAR(100) NULL,
     `size_bytes` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (`id`),
     KEY `idx_scan_files_scan_id` (`scan_id`),
     KEY `idx_scan_files_language` (`language`),
@@ -154,13 +155,16 @@ CREATE TABLE `findings` (
     `file_path` VARCHAR(1024) NOT NULL,
     `line_number` INT NULL,
     `evidence` TEXT NULL,
-    `confidence` VARCHAR(50) NULL,
+    `explanation` TEXT NULL,
+    `confidence` FLOAT NULL,
     `recommendation` TEXT NULL,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `is_development` BOOLEAN NOT NULL DEFAULT FALSE,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (`id`),
     KEY `idx_findings_scan_id` (`scan_id`),
     KEY `idx_findings_severity` (`severity`),
     KEY `idx_findings_engine` (`engine`),
+    KEY `idx_findings_category` (`category`),
     KEY `idx_findings_scan_severity` (`scan_id`, `severity`),
     KEY `idx_findings_scan_engine` (`scan_id`, `engine`),
     CONSTRAINT `fk_findings_scan`
@@ -169,13 +173,11 @@ CREATE TABLE `findings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
--- Default Seed: Organizations (supporting both 'org-default-001' and '1')
--- Guarantees foreign key resolution for both UUID and legacy/integer references
+-- Default Seed: Organization (Single unified UUID-compatible standard)
 -- -----------------------------------------------------------------------------
 INSERT INTO `organizations` (`id`, `name`, `created_at`, `updated_at`)
-VALUES 
-    ('org-default-001', 'Default Organization', NOW(), NOW()),
-    ('1', 'Default Organization', NOW(), NOW())
+VALUES
+    ('org-default-001', 'Default Organization', NOW(6), NOW(6))
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- Re-enable foreign key checks

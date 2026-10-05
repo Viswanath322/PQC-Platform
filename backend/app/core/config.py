@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     jwt_secret_key: str = Field(min_length=32)
     jwt_algorithm: Literal["HS256"] = "HS256"
     access_token_expire_minutes: int = 30
+    allow_public_registration: bool = False
     cors_origins: str = (
         "http://localhost:5173,http://127.0.0.1:5173,"
         "tauri://localhost,http://tauri.localhost"

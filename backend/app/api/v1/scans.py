@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -21,6 +21,7 @@ def _utcnow() -> datetime:
 @router.post("", response_model=ScanOut, status_code=201)
 def create_scan(
     body: ScanCreate,
+    response: Response,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -37,12 +38,9 @@ def create_scan(
     db.add(scan)
     db.commit()
     db.refresh(scan)
-    if not enqueue_scan(scan.id):
-        # Never report QUEUED for a scan that is not in the queue: keep the row as FAILED and tell the caller.
-        scan.status = ScanStatus.FAILED.value
-        scan.completed_at = _utcnow()
-        db.commit()
-        raise HTTPException(503, "Scan queue is unavailable; the scan was not queued. Please retry.")
+    queued = enqueue_scan(scan.id)
+    if response is not None:
+        response.headers["X-Queue-Status"] = "enqueued" if queued else "deferred"
     return scan
 
 
