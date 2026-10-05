@@ -18,7 +18,7 @@ VALUES (
     '00000000-0000-0000-0000-000000000001',
     'org-default-001',
     'admin@pqc.example',
-    '$argon2id$v=19$m=65536,t=3,p=4$M7uTQkr8amx0e06HMfk1ig$gtZiERUEonf1XFq0AvpCmShrVe8nVdDTL27ty6iV5x4',
+    '$argon2id$v=19$m=65536,t=3,p=4$fUMHaVaGyNAPd/EPJp1cUQ$+xGRp37M9+SX6BmV55T816t0yLFqQSkxNroSbynVHwE',
     'admin',
     NOW(6),
     NOW(6)
