@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-d
 import { AppShell } from './components/layout/AppShell';
 import { UserProvider } from './context/UserContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { LoginPage } from './pages/LoginPage';
 import { Dashboard } from './pages/Dashboard';
 import { Projects } from './pages/Projects';
@@ -164,13 +165,15 @@ const AuthGate: React.FC = () => {
 // ──────────────────────────────────────────────
 export const App: React.FC = () => {
   return (
-    <HashRouter>
-      <AuthProvider>
-        <UserProvider>
-          <AuthGate />
-        </UserProvider>
-      </AuthProvider>
-    </HashRouter>
+    <ErrorBoundary>
+      <HashRouter>
+        <AuthProvider>
+          <UserProvider>
+            <AuthGate />
+          </UserProvider>
+        </AuthProvider>
+      </HashRouter>
+    </ErrorBoundary>
   );
 };
 

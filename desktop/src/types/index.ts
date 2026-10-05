@@ -76,7 +76,7 @@ export interface Project {
   last_scan_id?: string;
   last_scan_at?: string;
   last_scan_status?: ScanStatus;
-  findings_count?: {
+  findings_count: {
     critical: number;
     high: number;
     medium: number;
@@ -102,6 +102,9 @@ export interface Scan {
   status: ScanStatus;
   created_at: string;
   completed_at?: string;
+  upload_id?: string | null;
+  error_message?: string | null;
+  started_at?: string;
   file_name?: string;
   file_size?: string;
   total_findings: number;

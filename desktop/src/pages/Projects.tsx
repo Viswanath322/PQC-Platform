@@ -97,9 +97,9 @@ export function Projects({ projects: externalProjects }: ProjectsProps) {
   // Filter internal projects
   const filtered = internalProjects.filter(
     (p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.branch.toLowerCase().includes(searchQuery.toLowerCase())
+      (p.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.description ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.branch ?? '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

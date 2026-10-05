@@ -3,7 +3,7 @@ import { Upload, FileArchive, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { api } from '../../services/api';
 
 interface RepositoryUploadProps {
-  onUploadSuccess: (uploadData: { upload_id: string; file_name: string; size_bytes: number; file: File }) => void;
+  onUploadSuccess: (uploadData: { upload_id: string; filename: string; size_bytes: number; file: File }) => void;
   isUploading?: boolean;
 }
 
@@ -91,7 +91,7 @@ export const RepositoryUpload: React.FC<RepositoryUploadProps> = ({
       setUploadProgress(100);
       onUploadSuccess({
         upload_id: result.upload_id,
-        file_name: result.file_name,
+        filename: result.filename,
         size_bytes: result.size_bytes,
         file: selectedFile,
       });

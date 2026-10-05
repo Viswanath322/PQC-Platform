@@ -50,9 +50,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [token, setToken] = useState<string | null>(
-    () => localStorage.getItem('pqc_auth_token')
-  );
+  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -61,27 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     let cancelled = false;
 
     const resolve = async () => {
-      const storedToken = localStorage.getItem('pqc_auth_token');
-      if (!storedToken) {
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const me = await api.getCurrentUser();
-        if (!cancelled) {
-          setUser(me);
-          setToken(storedToken);
-        }
-      } catch {
-        // Token invalid / expired → clear everything
-        if (!cancelled) {
-          api.clearToken();
-          setToken(null);
-          setUser(null);
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
+      if (!cancelled) setIsLoading(false);
     };
 
     resolve();
