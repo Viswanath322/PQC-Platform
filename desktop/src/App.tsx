@@ -86,7 +86,7 @@ const AppLayout: React.FC = () => {
     return 'Dashboard';
   };
 
-  const [activeProject, setActiveProject] = useState<string>('Demo Banking Application');
+  const [activeProject, setActiveProject] = useState<string>('Default Workspace');
 
   useEffect(() => {
     let isMounted = true;
@@ -94,6 +94,8 @@ const AppLayout: React.FC = () => {
       .then((projs) => {
         if (isMounted && projs.length > 0) {
           setActiveProject(projs[0].name);
+        } else if (isMounted) {
+          setActiveProject('Default Workspace');
         }
       })
       .catch(() => {});

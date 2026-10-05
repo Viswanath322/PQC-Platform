@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Copy, Check, ShieldAlert, AlertTriangle, ShieldCheck, X } from 'lucide-react';
 import type { CBOMEntry, RiskLevel } from '../../types/pqc';
-import { MockDataBadge } from './MockDataBadge';
 
 interface CBOMTableProps {
 
@@ -103,7 +102,6 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
               <option value="Transitive">Transitive Only</option>
             </select>
           </div>
-          <MockDataBadge size="xs" label="Development / Mock Data" />
         </div>
       </div>
 

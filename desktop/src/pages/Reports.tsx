@@ -272,11 +272,11 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
                 <Clock className="h-4 w-4" />
                 <span>Scan Summary</span>
               </div>
-              <div className="text-[16px] font-semibold text-slate-900 truncate" title={reportData?.project_name || selectedScan?.project_name}>
-                {reportData?.project_name || selectedScan?.project_name || 'Demo Banking Application'}
+              <div className="text-[16px] font-semibold text-slate-900 truncate" title={reportData?.project_name || selectedScan?.project_name || 'No Scan Selected'}>
+                {reportData?.project_name || selectedScan?.project_name || (selectedScan ? 'Repository Scan' : 'No Scan Selected')}
               </div>
-              <div className="text-[12px] text-slate-500 mt-1 font-mono truncate" title={reportData?.target_repository || selectedScan?.repository_name}>
-                Target: {reportData?.target_repository || selectedScan?.repository_name || 'pqc_sample_banking_app.zip'}
+              <div className="text-[12px] text-slate-500 mt-1 font-mono truncate" title={reportData?.target_repository || selectedScan?.repository_name || '—'}>
+                Target: {reportData?.target_repository || selectedScan?.repository_name || selectedScan?.file_name || '—'}
               </div>
             </div>
             <div className="mt-4 pt-3 border-t border-slate-200/60 text-[12px] text-slate-500 space-y-1">
