@@ -24,7 +24,7 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
   );
   const [uploadedFile, setUploadedFile] = useState<{
     upload_id: string;
-    file_name: string;
+    filename: string;
     size_bytes: number;
     file: File;
   } | null>(null);
@@ -38,7 +38,7 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
 
   const handleUploadSuccess = (data: {
     upload_id: string;
-    file_name: string;
+    filename: string;
     size_bytes: number;
     file: File;
   }) => {
@@ -66,7 +66,7 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
       const scan = await api.createScan({
         project_id: selectedProjectId,
         upload_id: uploadedFile!.upload_id,
-        file_name: uploadedFile!.file_name,
+        filename: uploadedFile!.filename,
         file_size: `${(uploadedFile!.size_bytes / (1024 * 1024)).toFixed(1)} MB`,
       });
 

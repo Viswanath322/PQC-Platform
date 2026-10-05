@@ -114,10 +114,10 @@ export const Findings: React.FC = () => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
-        f.id.toLowerCase().includes(q) ||
-        f.title.toLowerCase().includes(q) ||
-        (f.explanation && f.explanation.toLowerCase().includes(q)) ||
-        f.file.toLowerCase().includes(q)
+        (f.id ?? '').toLowerCase().includes(q) ||
+        (f.title ?? '').toLowerCase().includes(q) ||
+        (f.explanation ?? '').toLowerCase().includes(q) ||
+        (f.file ?? '').toLowerCase().includes(q)
       );
     }
     return true;

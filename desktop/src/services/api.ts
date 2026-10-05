@@ -22,6 +22,56 @@ export type ApiErrorType =
   | 'NETWORK_ERROR'
   | 'UNKNOWN';
 
+type ApiFinding = {
+  finding_id: string;
+  scan_id: string;
+  engine: string;
+  category: string | null;
+  severity: string;
+  title: string;
+  file_path: string;
+  line_number: number | null;
+  evidence: string | null;
+  explanation: string | null;
+  confidence: number | null;
+  recommendation: string | null;
+  is_development: boolean;
+};
+
+type ApiProject = { id: string; name: string; description: string | null; created_at: string };
+type ApiScan = {
+  id: string; project_id: string; status: Scan['status']; created_at: string;
+  started_at?: string | null; completed_at?: string | null; upload_id?: string | null;
+  error_message?: string | null;
+};
+
+function normalizeProject(value: ApiProject): Project {
+  return { ...value, description: value.description ?? null };
+}
+
+function normalizeScan(value: ApiScan): Scan {
+  return { ...value, project_name: undefined, repository_name: value.upload_id ?? undefined, branch: undefined };
+}
+
+function normalizeFinding(value: ApiFinding): Finding {
+  return {
+    id: value.finding_id,
+    scan_id: value.scan_id,
+    engine: value.engine.toLowerCase(),
+    category: value.engine.toUpperCase(),
+    finding_category: value.category ?? '',
+    severity: value.severity.toUpperCase() as Finding['severity'],
+    title: value.title,
+    file: value.file_path,
+    line: value.line_number ?? 0,
+    evidence: value.evidence ?? '',
+    explanation: value.explanation ?? '',
+    confidence: value.confidence ?? 0,
+    recommendation: value.recommendation ?? '',
+    is_development: value.is_development,
+  };
+}
+
 export class ApiError extends Error {
   readonly status: number;
   readonly errorType: ApiErrorType;
@@ -51,7 +101,7 @@ export class ApiError extends Error {
       userMessage = 'A backend server error occurred. Please try again later.';
     } else {
       errorType = 'UNKNOWN';
-      userMessage = serverDetail || `Unexpected error (HTTP ${status}).`;
+      userMessage = serverDetail || `The request was rejected (HTTP ${status}).`;
     }
 
     super(userMessage);
@@ -86,16 +136,11 @@ class ApiClient {
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
-    this.token = localStorage.getItem('pqc_auth_token');
+    this.token = null;
   }
 
   setToken(token: string | null) {
     this.token = token;
-    if (token) {
-      localStorage.setItem('pqc_auth_token', token);
-    } else {
-      localStorage.removeItem('pqc_auth_token');
-    }
   }
 
   getToken(): string | null {
@@ -194,8 +239,8 @@ class ApiClient {
     email: string;
     password: string;
     full_name?: string;
-  }): Promise<User> {
-    return this.request<User>('/auth/register', {
+  }): Promise<{ message: string }> {
+    return this.request<{ message: string }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(payload),
     });
@@ -235,7 +280,7 @@ class ApiClient {
   // ──────────────────────────────────────────
 
   async getProjects(): Promise<Project[]> {
-    return this.request<Project[]>('/projects', { method: 'GET' });
+    return (await this.request<ApiProject[]>('/projects', { method: 'GET' })).map(normalizeProject);
   }
 
   async createProject(payload: {
@@ -243,14 +288,14 @@ class ApiClient {
     description: string;
     repository_url?: string;
   }): Promise<Project> {
-    return this.request<Project>('/projects', {
+    return normalizeProject(await this.request<ApiProject>('/projects', {
       method: 'POST',
-      body: JSON.stringify(payload),
-    });
+      body: JSON.stringify({ name: payload.name, description: payload.description }),
+    }));
   }
 
   async getProject(id: string): Promise<Project> {
-    return this.request<Project>(`/projects/${id}`, { method: 'GET' });
+    return normalizeProject(await this.request<ApiProject>(`/projects/${id}`, { method: 'GET' }));
   }
 
   // ──────────────────────────────────────────
@@ -260,14 +305,14 @@ class ApiClient {
   async uploadRepository(
     file: File,
     onProgress?: (percent: number) => void
-  ): Promise<{ upload_id: string; file_name: string; size_bytes: number }> {
+  ): Promise<{ upload_id: string; filename: string; size_bytes: number }> {
     const formData = new FormData();
     formData.append('file', file);
 
     if (onProgress) onProgress(10);
     const res = await this.request<{
       upload_id: string;
-      file_name: string;
+      filename: string;
       size_bytes: number;
     }>('/uploads', {
       method: 'POST',
@@ -284,25 +329,25 @@ class ApiClient {
   async createScan(payload: {
     project_id: string;
     upload_id: string;
-    file_name?: string;
+    filename?: string;
     file_size?: string;
   }): Promise<Scan> {
-    return this.request<Scan>('/scans', {
+    return normalizeScan(await this.request<ApiScan>('/scans', {
       method: 'POST',
-      body: JSON.stringify(payload),
-    });
+      body: JSON.stringify({ project_id: payload.project_id, upload_id: payload.upload_id }),
+    }));
   }
 
   async getScans(): Promise<Scan[]> {
-    return this.request<Scan[]>('/scans', { method: 'GET' });
+    return (await this.request<ApiScan[]>('/scans', { method: 'GET' })).map(normalizeScan);
   }
 
   async getScan(id: string): Promise<Scan> {
-    return this.request<Scan>(`/scans/${id}`, { method: 'GET' });
+    return normalizeScan(await this.request<ApiScan>(`/scans/${id}`, { method: 'GET' }));
   }
 
   async cancelScan(id: string): Promise<Scan> {
-    return this.request<Scan>(`/scans/${id}/cancel`, { method: 'POST' });
+    return normalizeScan(await this.request<ApiScan>(`/scans/${id}/cancel`, { method: 'POST' }));
   }
 
   // ──────────────────────────────────────────
@@ -327,11 +372,13 @@ class ApiClient {
     if (params?.limit !== undefined) query.append('limit', String(params.limit));
     if (params?.offset !== undefined) query.append('offset', String(params.offset));
     const qs = query.toString() ? `?${query.toString()}` : '';
-    return this.request<Finding[]>(`/findings${qs}`, { method: 'GET' });
+    const findings = await this.request<ApiFinding[]>(`/findings${qs}`, { method: 'GET' });
+    return findings.map(normalizeFinding);
   }
 
   async getFinding(id: string): Promise<Finding> {
-    return this.request<Finding>(`/findings/${id}`, { method: 'GET' });
+    const finding = await this.request<ApiFinding>(`/findings/${id}`, { method: 'GET' });
+    return normalizeFinding(finding);
   }
 
   // ──────────────────────────────────────────

@@ -1,6 +1,7 @@
-import { Search, Bell, RefreshCw, ChevronRight } from "lucide-react";
+import { Search, Bell, RefreshCw, ChevronRight, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useUser } from "@/context/UserContext";
 
 export function Topbar({
   page = "Dashboard",
@@ -18,7 +19,8 @@ export function Topbar({
   isRefreshing?: boolean;
 }) {
   const navigate = useNavigate();
-  const { user: authUser } = useAuth();
+  const { user: authUser, logout } = useAuth();
+  const { resetProfile } = useUser();
 
   // Derive initials from real authenticated user; fall back to ? if not logged in
   const avatarInitials = (() => {
@@ -80,6 +82,14 @@ export function Topbar({
           className="grid h-9 w-9 place-items-center rounded-xl border border-white/80 bg-white/60 backdrop-blur-md shadow-[0_1px_3px_rgba(0,0,0,0.03),inset_0_1px_0_rgba(255,255,255,0.95)] transition-all duration-200 hover:border-white hover:bg-white/90 hover:shadow-[0_4px_14px_rgba(41,56,77,0.08),inset_0_1px_0_rgba(255,255,255,1)] hover:-translate-y-0.5 active:translate-y-0 cursor-pointer group"
         >
           <Bell className="h-4 w-4 text-slate-600 transition-colors group-hover:text-slate-900" />
+        </button>
+        <button
+          onClick={() => { logout(); resetProfile(); }}
+          title="Sign out"
+          aria-label="Sign out"
+          className="grid h-9 w-9 place-items-center rounded-xl border border-white/80 bg-white/60 text-slate-600 hover:bg-white"
+        >
+          <LogOut className="h-4 w-4" />
         </button>
         <button
           onClick={() => navigate("/profile")}
