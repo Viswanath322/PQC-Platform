@@ -1,11 +1,11 @@
 # PQC Security Assessment Platform — Database
 
-**Owner:** Vamsi (Database Engineer)  
-**Target Engine:** MySQL 8.0+  
-**Database Name:** `pqc` (with `pqc_security` backwards-compatibility)  
+**Owner:** Vamsi (Database Engineer)
+**Target Engine:** MySQL 8.0+
+**Database Name:** `pqc_security`
 **Git Branch:** `vamsi`
 
-> 📘 **Comprehensive Manual Available:**  
+> 📘 **Comprehensive Manual Available:**
 > For the complete step-by-step guide with full SQL schema code, seed data, required vs non-required breakdown, and troubleshooting, see [DATABASE_README.md](file:///d:/Projects/PQC/PQC-Platform/database/DATABASE_README.md).
 
 ---
@@ -124,24 +124,24 @@ Create an untracked `.env` in the repository root (or export environment variabl
 ```ini
 DB_HOST=localhost
 DB_PORT=3306
-DB_NAME=pqc
+DB_NAME=pqc_security
 DB_USER=pqc_user
 DB_PASSWORD=your_secure_mysql_password
-DATABASE_URL=mysql+pymysql://pqc_user:your_secure_mysql_password@127.0.0.1:3306/pqc
+DATABASE_URL=mysql+pymysql://pqc_user:your_secure_mysql_password@127.0.0.1:3306/pqc_security
 ```
 
 ### Step 2: Initialize Database and Application User (Local MySQL)
 In MySQL Workbench or MySQL Shell:
 ```sql
-CREATE DATABASE IF NOT EXISTS pqc CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS pqc_security CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS 'pqc_user'@'localhost' IDENTIFIED BY 'your_secure_mysql_password';
-GRANT ALL PRIVILEGES ON pqc.* TO 'pqc_user'@'localhost';
+GRANT ALL PRIVILEGES ON pqc_security.* TO 'pqc_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 Then load the schema and seed:
 ```bash
-mysql -u pqc_user -p pqc < database/schema.sql
-mysql -u pqc_user -p pqc < database/seed.sql
+mysql -u pqc_user -p pqc_security < database/schema.sql
+mysql -u pqc_user -p pqc_security < database/seed.sql
 ```
 
 *(Alternatively, run `docker compose up -d mysql` if using containerized local development.)*
@@ -158,4 +158,3 @@ Validates:
 * Findings `explanation`, `confidence`, and `is_development` columns.
 * Clean teardown in a `finally` block with zero leftover test rows.
 * Strictly connects to MySQL (exits non-zero if unreachable; no silent fallback).
-

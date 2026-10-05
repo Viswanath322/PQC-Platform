@@ -172,4 +172,3 @@ class Finding(Base):
 
     def __repr__(self) -> str:
         return f"<Finding id={self.id} severity='{self.severity}' engine='{self.engine}'>"
-

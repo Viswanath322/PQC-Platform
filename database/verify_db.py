@@ -46,7 +46,7 @@ def get_engine():
         db_password = os.environ.get("DB_PASSWORD") or os.environ.get("MYSQL_PASSWORD")
         db_host = os.environ.get("DB_HOST") or os.environ.get("MYSQL_HOST", "127.0.0.1")
         db_port = os.environ.get("DB_PORT") or os.environ.get("MYSQL_PORT", "3306")
-        db_name = os.environ.get("DB_NAME") or os.environ.get("MYSQL_DATABASE", "pqc")
+        db_name = os.environ.get("DB_NAME") or os.environ.get("MYSQL_DATABASE", "pqc_security")
 
         if db_password is not None:
             from urllib.parse import quote_plus
@@ -58,20 +58,23 @@ def get_engine():
         print("Please configure .env or export environment variables:")
         print("  DB_HOST=localhost")
         print("  DB_PORT=3306")
-        print("  DB_NAME=pqc")
+        print("  DB_NAME=pqc_security")
         print("  DB_USER=pqc_user")
         print("  DB_PASSWORD=<your-strong-password>")
+        sys.exit(1)
+
+    if not url.lower().startswith("mysql+pymysql://"):
+        print("[ERROR] verify_db.py requires a MySQL DATABASE_URL; SQLite is not accepted.")
         sys.exit(1)
 
     try:
         db_engine = create_engine(url, echo=False, pool_pre_ping=True)
         with db_engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        safe_url = url.split("@")[-1] if "@" in url else url
-        print(f"[OK] Successfully connected to live MySQL instance at: {safe_url}")
+        print("[OK] Successfully connected to the configured MySQL database.")
         return db_engine, db_engine.dialect.name.upper()
     except Exception as exc:
-        print(f"[ERROR] Live database connection to MySQL failed: {exc}")
+        print(f"[ERROR] Live database connection to MySQL failed ({type(exc).__name__}). Check the host, database name, and local credentials.")
         sys.exit(1)
 
 

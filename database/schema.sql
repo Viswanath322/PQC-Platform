@@ -2,22 +2,18 @@
 -- PQC Security Assessment Platform - Core Database Schema (Day 1)
 -- Author: Vamsi (Database Engineer)
 -- Target: MySQL 8.0+
--- Database: pqc
+-- Database: pqc_security
 --
 -- Unified Identifier Standard:
 --   - All entities use UUID strings (CHAR(36) / VARCHAR(36)) with DEFAULT (UUID())
 --   - Compatible with air-gapped distributed clients and local desktop agents
 -- =============================================================================
 
-CREATE DATABASE IF NOT EXISTS `pqc`
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
-
 CREATE DATABASE IF NOT EXISTS `pqc_security`
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
-USE `pqc`;
+USE `pqc_security`;
 
 -- Disable foreign key checks while creating/recreating tables
 SET FOREIGN_KEY_CHECKS = 0;
@@ -168,6 +164,7 @@ CREATE TABLE `findings` (
     KEY `idx_findings_scan_id` (`scan_id`),
     KEY `idx_findings_severity` (`severity`),
     KEY `idx_findings_engine` (`engine`),
+    KEY `idx_findings_category` (`category`),
     KEY `idx_findings_scan_severity` (`scan_id`, `severity`),
     KEY `idx_findings_scan_engine` (`scan_id`, `engine`),
     CONSTRAINT `fk_findings_scan`
@@ -179,10 +176,9 @@ CREATE TABLE `findings` (
 -- Default Seed: Organization (Single unified UUID-compatible standard)
 -- -----------------------------------------------------------------------------
 INSERT INTO `organizations` (`id`, `name`, `created_at`, `updated_at`)
-VALUES 
+VALUES
     ('org-default-001', 'Default Organization', NOW(6), NOW(6))
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
-
