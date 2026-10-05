@@ -28,13 +28,13 @@ def list_findings(
         clauses.append("findings.scan_id = :scan_id")
         params["scan_id"] = scan_id
     if severity is not None:
-        clauses.append("severity = :severity")
+        clauses.append("findings.severity = :severity")
         params["severity"] = severity.lower()
     if category is not None:
-        clauses.append("category = :category")
+        clauses.append("findings.category = :category")
         params["category"] = category
     if engine is not None:
-        clauses.append("engine = :engine")
+        clauses.append("findings.engine = :engine")
         params["engine"] = engine.lower()
 
     where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
@@ -74,7 +74,8 @@ def get_finding(db: Session, finding_id: str, *, organization_id: str) -> Findin
 
 def get_report_data(
     db: Session, scan_id: str, *, organization_id: str
-) -> tuple[str, int, ReportSeverityCounts] | None:    """Return scan status and finding counts; None means the scan does not exist."""
+) -> tuple[str, int, ReportSeverityCounts] | None:
+    """Return scan status and finding counts; None means the scan does not exist."""
     scan = db.execute(
         text(
             "SELECT scans.status FROM scans "

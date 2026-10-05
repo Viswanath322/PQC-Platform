@@ -47,6 +47,7 @@ class ScanOut(BaseModel):
     created_at: datetime
     started_at: datetime | None = None
     completed_at: datetime | None = None
+    error_message: str | None = None
 
     @computed_field
     @property

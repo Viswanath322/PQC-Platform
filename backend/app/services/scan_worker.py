@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # has not been fully set up (e.g. missing optional dependencies in future).
 # ---------------------------------------------------------------------------
 def _import_pipeline():
-    sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
     from analysis_engines.runner import AnalysisPipeline
     from analysis_engines.path_utils import normalize_findings_paths
     from ingestion.summary import ingest_repository
@@ -43,8 +43,10 @@ def _now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
-def _set_status(scan, status: str, db: Session) -> None:
+def _set_status(scan, status: str, db: Session, error_message: str | None = None) -> None:
     scan.status = status
+    if error_message is not None:
+        scan.error_message = error_message
     if status in ("INGESTING", "ANALYZING", "PROCESSING"):
         if scan.started_at is None:
             scan.started_at = _now()
@@ -79,8 +81,9 @@ def process_scan(scan_id: str, db: Session) -> bool:
 
     zip_path = Path(scan.repository_path)
     if not zip_path.is_file():
-        logger.error("process_scan: ZIP not found at %s for scan %s", zip_path, scan_id)
-        _set_status(scan, "FAILED", db)
+        err = f"ZIP not found at {zip_path}"
+        logger.error("process_scan: %s for scan %s", err, scan_id)
+        _set_status(scan, "FAILED", db, error_message=err)
         return False
 
     storage_root = zip_path.parent.parent  # storage/uploads → storage/
@@ -89,8 +92,9 @@ def process_scan(scan_id: str, db: Session) -> bool:
     try:
         AnalysisPipeline, normalize_findings_paths, ingest_repository = _import_pipeline()
     except ImportError as exc:
-        logger.exception("process_scan: could not import pipeline: %s", exc)
-        _set_status(scan, "FAILED", db)
+        err = f"could not import pipeline: {exc}"
+        logger.exception("process_scan: %s", err)
+        _set_status(scan, "FAILED", db, error_message=err)
         return False
 
     # ------------------------------------------------------------------
@@ -100,8 +104,9 @@ def process_scan(scan_id: str, db: Session) -> bool:
     try:
         summary = ingest_repository(zip_path, scan_dir)
     except Exception as exc:  # noqa: BLE001
+        err = f"ingestion failed: {exc}"
         logger.exception("process_scan: ingestion failed for scan %s: %s", scan_id, exc)
-        _set_status(scan, "FAILED", db)
+        _set_status(scan, "FAILED", db, error_message=err)
         return False
 
     # Persist scan_files inventory
@@ -130,8 +135,9 @@ def process_scan(scan_id: str, db: Session) -> bool:
         pipeline = AnalysisPipeline()
         pipeline_result = pipeline.run(file_paths)
     except Exception as exc:  # noqa: BLE001
+        err = f"analysis failed: {exc}"
         logger.exception("process_scan: analysis failed for scan %s: %s", scan_id, exc)
-        _set_status(scan, "FAILED", db)
+        _set_status(scan, "FAILED", db, error_message=err)
         return False
 
     # ------------------------------------------------------------------
@@ -168,11 +174,12 @@ def process_scan(scan_id: str, db: Session) -> bool:
             "process_scan: scan %s — persisted %d findings", scan_id, persisted
         )
     except Exception as exc:  # noqa: BLE001
+        err = f"finding persistence failed: {exc}"
         logger.exception(
             "process_scan: finding persistence failed for scan %s: %s", scan_id, exc
         )
         db.rollback()
-        _set_status(scan, "FAILED", db)
+        _set_status(scan, "FAILED", db, error_message=err)
         return False
 
     # ------------------------------------------------------------------
