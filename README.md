@@ -11,6 +11,8 @@ The platform inspects source-code repositories to provide:
 
 ---
 
+> 🚀 **Instant Setup Guide**: Setting up on a new machine? See the step-by-step copy-paste instructions in [**CLONE_SETUP.md**](CLONE_SETUP.md).
+
 ## Architecture & Service Map
 
 ```
