@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { UserProvider } from './context/UserContext';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Dashboard } from './pages/Dashboard';
 import { Projects } from './pages/Projects';
 import { Scans } from './pages/Scans';
@@ -126,11 +127,13 @@ const AppLayout: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <HashRouter>
-      <UserProvider>
-        <AppLayout />
-      </UserProvider>
-    </HashRouter>
+    <ErrorBoundary>
+      <HashRouter>
+        <UserProvider>
+          <AppLayout />
+        </UserProvider>
+      </HashRouter>
+    </ErrorBoundary>
   );
 };
 

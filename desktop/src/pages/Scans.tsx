@@ -73,10 +73,10 @@ export const Scans: React.FC = () => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
-        s.id.toLowerCase().includes(q) ||
-        s.project_name.toLowerCase().includes(q) ||
-        s.repository_name.toLowerCase().includes(q) ||
-        s.branch.toLowerCase().includes(q)
+        (s.id ?? '').toLowerCase().includes(q) ||
+        (s.project_name ?? '').toLowerCase().includes(q) ||
+        (s.repository_name ?? '').toLowerCase().includes(q) ||
+        (s.branch ?? '').toLowerCase().includes(q)
       );
     }
     return true;

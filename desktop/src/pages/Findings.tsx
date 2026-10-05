@@ -87,9 +87,9 @@ export const Findings: React.FC = () => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
-        f.finding_id.toLowerCase().includes(q) ||
-        f.title.toLowerCase().includes(q) ||
-        f.file_path.toLowerCase().includes(q) ||
+        (f.finding_id ?? '').toLowerCase().includes(q) ||
+        (f.title ?? '').toLowerCase().includes(q) ||
+        (f.file_path ?? '').toLowerCase().includes(q) ||
         (f.category?.toLowerCase().includes(q) ?? false) ||
         (f.evidence?.toLowerCase().includes(q) ?? false) ||
         (f.recommendation?.toLowerCase().includes(q) ?? false)
