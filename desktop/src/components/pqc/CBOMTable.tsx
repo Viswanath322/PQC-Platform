@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Copy, Check, ShieldAlert, AlertTriangle, ShieldCheck, X } from 'lucide-react';
 import type { CBOMEntry, RiskLevel } from '../../types/pqc';
+import { MockDataBadge } from './MockDataBadge';
 
 interface CBOMTableProps {
+
   data: CBOMEntry[];
 }
 
@@ -88,17 +90,20 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
           )}
         </div>
 
-        <div className="flex items-center gap-2 text-[13px]">
-          <span className="text-muted-foreground">Dependency:</span>
-          <select
-            value={dependencyFilter}
-            onChange={(e) => setDependencyFilter(e.target.value as 'ALL' | 'Direct' | 'Transitive')}
-            className="h-8 rounded-lg border bg-surface px-2.5 text-[12px] text-foreground outline-none focus:border-primary/60"
-          >
-            <option value="ALL">All Dependencies</option>
-            <option value="Direct">Direct Only</option>
-            <option value="Transitive">Transitive Only</option>
-          </select>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-[13px]">
+            <span className="text-muted-foreground">Dependency:</span>
+            <select
+              value={dependencyFilter}
+              onChange={(e) => setDependencyFilter(e.target.value as 'ALL' | 'Direct' | 'Transitive')}
+              className="h-8 rounded-lg border bg-surface px-2.5 text-[12px] text-foreground outline-none focus:border-primary/60"
+            >
+              <option value="ALL">All Dependencies</option>
+              <option value="Direct">Direct Only</option>
+              <option value="Transitive">Transitive Only</option>
+            </select>
+          </div>
+          <MockDataBadge size="xs" label="Development / Mock Data" />
         </div>
       </div>
 
@@ -200,9 +205,9 @@ export const CBOMTable: React.FC<CBOMTableProps> = ({ data }) => {
       <div className="p-3 px-4 border-t border-border bg-surface-2/30 flex items-center justify-between text-[12px] text-muted-foreground">
         <span>
           Showing <strong className="text-foreground tabular">{filteredData.length}</strong> of{' '}
-          <strong className="text-foreground tabular">{data.length}</strong> components
+          <strong className="text-foreground tabular">{data.length}</strong> components (Development / Mock Data)
         </span>
-        <span className="font-mono text-[11px]">CycloneDX 1.6 CBOM Schema</span>
+        <span className="font-mono text-[11px]">CycloneDX 1.6 CBOM Schema (Mock Template)</span>
       </div>
     </div>
   );

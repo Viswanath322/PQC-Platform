@@ -12,7 +12,8 @@ import {
   X,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { mockProjectMetadata, mockRiskSummary, mockCryptoInventory, mockCBOM } from '@/data/pqcMockData';
+import { MockDataBadge } from '@/components/pqc/MockDataBadge';
+import { mockProjectMetadata, mockRiskSummary } from '@/data/pqcMockData';
 
 interface ReportsProps {
   onShowToast?: (message: string) => void;
@@ -22,74 +23,26 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
   const [downloadNotice, setDownloadNotice] = useState<string | null>(null);
 
   const handleExportPDF = () => {
-    setDownloadNotice('PDF Export: The server-side PDF generation worker (/api/v1/reports/{scan_id}/pdf) is not yet implemented on the backend. This is a Day 1 placeholder.');
+    const message = 'PDF export is not implemented yet. This is a Day 1 UI placeholder.';
+    setDownloadNotice(message);
     if (onShowToast) {
-      onShowToast('PDF generation endpoint will be available once the report rendering backend is deployed.');
+      onShowToast(message);
     }
   };
 
   const handleExportJSON = () => {
-    // Generate realistic client-side JSON export of the CBOM
-    const exportData = {
-      bomFormat: 'CycloneDX',
-      specVersion: '1.6',
-      serialNumber: `urn:uuid:pqc-cbom-${Date.now()}`,
-      version: 1,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        component: {
-          name: mockProjectMetadata.projectName,
-          version: '1.0.0',
-          type: 'application',
-        },
-        properties: [
-          { name: 'pqc:engineVersion', value: mockProjectMetadata.scanEngineVersion },
-          { name: 'pqc:isMockData', value: 'true' },
-        ],
-      },
-      cryptographicComponents: mockCryptoInventory,
-      cbom: mockCBOM,
-    };
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${mockProjectMetadata.projectName}-pqc-cbom.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    setDownloadNotice('Downloaded Client-Side CBOM JSON artifact (Mock Preview). Server-side async export queue remains pending.');
+    const message = 'JSON export is not implemented yet. This is a Day 1 UI placeholder.';
+    setDownloadNotice(message);
     if (onShowToast) {
-      onShowToast('Downloaded client-side CBOM JSON schema preview.');
+      onShowToast(message);
     }
   };
 
   const handleExportCSV = () => {
-    // Generate CSV from mockCryptoInventory
-    const headers = ['Algorithm', 'Library', 'Version', 'Location', 'Usage', 'Risk', 'Status'];
-    const rows = mockCryptoInventory.map((item) => [
-      `"${item.algorithm}"`,
-      `"${item.library}"`,
-      `"${item.version}"`,
-      `"${item.location}"`,
-      `"${item.usage}"`,
-      `"${item.risk}"`,
-      `"${item.status || (item.quantumVulnerable ? 'Quantum vulnerable' : 'Currently acceptable')}"`,
-    ]);
-
-    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${mockProjectMetadata.projectName}-crypto-inventory.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    setDownloadNotice('Downloaded Client-Side Crypto Inventory CSV artifact (Mock Preview).');
+    const message = 'CSV export is not implemented yet. This is a Day 1 UI placeholder.';
+    setDownloadNotice(message);
     if (onShowToast) {
-      onShowToast('Downloaded client-side CSV inventory preview.');
+      onShowToast(message);
     }
   };
 
@@ -97,13 +50,15 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
     <>
       <PageHeader
         title="Cryptographic & security reports"
-        description="Export post-quantum readiness assessments, CBOM documentation, and cryptographic audit records."
+        badge={<MockDataBadge label="DEVELOPMENT / MOCK DATA" />}
+        description="Development / Mock Data: Sample post-quantum readiness assessments, CBOM documentation, and cryptographic audit records. (Export engines are currently in development as Day 1 UI placeholders)."
+
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={handleExportPDF}
               className="btn"
-              title="Export executive PDF report (Backend placeholder)"
+              title="PDF export (Day 1 UI placeholder)"
             >
               <FileText className="h-3.5 w-3.5 text-critical" />
               <span>Export PDF</span>
@@ -112,7 +67,7 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
             <button
               onClick={handleExportJSON}
               className="btn"
-              title="Export machine-readable JSON CBOM"
+              title="JSON export (Day 1 UI placeholder)"
             >
               <FileCode className="h-3.5 w-3.5 text-primary" />
               <span>Export JSON</span>
@@ -121,7 +76,7 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
             <button
               onClick={handleExportCSV}
               className="btn-primary"
-              title="Export CSV inventory list"
+              title="CSV export (Day 1 UI placeholder)"
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
               <span>Export CSV</span>
@@ -147,6 +102,15 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
             </button>
           </div>
         )}
+
+        {/* Summary Sections Header */}
+        <div className="flex items-center justify-between border-b border-border pb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-semibold text-foreground">Assessment Telemetry Summary</span>
+            <MockDataBadge size="xs" label="Development / Mock Data" />
+          </div>
+          <span className="text-[12px] text-muted-foreground">Demo Project Baseline</span>
+        </div>
 
         {/* 4 Summary Sections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

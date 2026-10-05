@@ -191,8 +191,8 @@ export function useScanPolling(
           err instanceof ApiError
             ? err
             : err instanceof Error
-            ? new ApiError(err.message, `/scans/${activeId}`, 'network')
-            : new ApiError('Unknown error', `/scans/${activeId}`, 'network');
+            ? new ApiError(0, err.message, `/scans/${activeId}`)
+            : new ApiError(0, 'Unknown error', `/scans/${activeId}`);
 
         consecutiveErrorsRef.current += 1;
         setConsecutiveFailures(consecutiveErrorsRef.current);

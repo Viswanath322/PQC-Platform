@@ -69,7 +69,7 @@ export interface Project {
   last_scan_id?: string;
   last_scan_at?: string;
   last_scan_status?: ScanStatus;
-  findings_count?: {
+  findings_count: {
     critical: number;
     high: number;
     medium: number;
@@ -95,6 +95,9 @@ export interface Scan {
   status: ScanStatus;
   created_at: string;
   completed_at?: string;
+  upload_id?: string | null;
+  error_message?: string | null;
+  started_at?: string;
   file_name?: string;
   file_size?: string;
   total_findings: number;
@@ -104,6 +107,7 @@ export interface Scan {
   low_count: number;
   pqc_readiness_score: number;
   progress_percent?: number;
+  is_mock?: boolean;
 }
 
 export interface Finding {
@@ -121,6 +125,9 @@ export interface Finding {
   cwe_id?: string;
   detected_at?: string;
   status?: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'SUPPRESSED';
+  engine?: string;
+  finding_category?: string;
+  is_development?: boolean;
 }
 
 export interface CryptoComponent {

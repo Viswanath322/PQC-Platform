@@ -24,7 +24,7 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
   );
   const [uploadedFile, setUploadedFile] = useState<{
     upload_id: string;
-    file_name: string;
+    filename: string;
     size_bytes: number;
     file: File;
   } | null>(null);
@@ -35,7 +35,7 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
 
   const handleUploadSuccess = (data: {
     upload_id: string;
-    file_name: string;
+    filename: string;
     size_bytes: number;
     file: File;
   }) => {
@@ -49,7 +49,8 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
     try {
       const scan = await api.createScan({
         project_id: selectedProjectId,
-        file_name: uploadedFile?.file_name || 'repository.zip',
+        upload_id: uploadedFile?.upload_id || '',
+        filename: uploadedFile?.filename || 'repository.zip',
         file_size: uploadedFile ? `${(uploadedFile.size_bytes / (1024 * 1024)).toFixed(1)} MB` : '8.2 MB',
       });
 
@@ -94,22 +95,30 @@ export const NewScanModal: React.FC<NewScanModalProps> = ({
         {/* Content */}
         <div className="p-6 flex flex-col gap-5 text-[13px]">
           {createdScan ? (
-            /* Success confirmation */
+            /* Scan status confirmation */
             <div className="flex flex-col items-center justify-center p-6 text-center">
               <div className="grid h-12 w-12 place-items-center rounded-xl bg-medium/10 ring-1 ring-medium/25 text-medium mb-4 animate-pulse">
                 <Clock className="h-6 w-6" />
               </div>
               <h3 className="text-[18px] font-semibold text-slate-900 mb-1">
-                Scan Scheduled Successfully!
+                {createdScan.is_mock
+                  ? "Scan creation is not connected yet."
+                  : "Scan created"}
               </h3>
               <p className="text-[13px] text-slate-500 mb-2">
-                Scan ID: <span className="font-mono text-purple-700 font-semibold">{createdScan.id}</span>
+                {createdScan.is_mock ? (
+                  <>Backend offline · Day 1 UI placeholder (Local ID: <span className="font-mono text-purple-700 font-semibold">{createdScan.id}</span>)</>
+                ) : (
+                  <>Scan ID: <span className="font-mono text-purple-700 font-semibold">{createdScan.id}</span></>
+                )}
               </p>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-medium/10 text-medium ring-1 ring-medium/25 mb-4">
                 Status: {createdScan.status}
               </div>
               <p className="text-[13px] text-slate-500 max-w-sm mb-6 leading-relaxed">
-                The repository has been queued for AST ingestion, cryptographic inspection, and post-quantum vulnerability grading.
+                {createdScan.is_mock
+                  ? "Live scan execution requires a running backend service. This entry is for local UI preview only."
+                  : "The repository has been queued for AST ingestion, cryptographic inspection, and post-quantum vulnerability grading."}
               </p>
               <button
                 onClick={handleResetAndClose}

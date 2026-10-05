@@ -4,7 +4,9 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 import { ProjectForm } from "@/components/projects/ProjectForm";
 import { NewScanModal } from "@/components/scans/NewScanModal";
-import { api } from "@/services/api";
+import { ApiErrorBanner } from "@/components/common/ApiErrorBanner";
+import { api, ApiError } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 import type { Project, Scan } from "@/types";
 
 interface ProjectsProps {
@@ -12,8 +14,10 @@ interface ProjectsProps {
 }
 
 export function Projects({ projects: externalProjects }: ProjectsProps) {
+  const { handleUnauthorized } = useAuth();
   const [internalProjects, setInternalProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(!externalProjects);
+  const [loadError, setLoadError] = useState<ApiError | Error | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
@@ -21,10 +25,17 @@ export function Projects({ projects: externalProjects }: ProjectsProps) {
 
   const loadProjects = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       const data = await api.getProjects();
       setInternalProjects(data);
     } catch (err) {
+      // Surface real error — NEVER substitute mock data
+      const apiErr = err instanceof ApiError ? err : new Error(String(err));
+      setLoadError(apiErr);
+      if (err instanceof ApiError && err.errorType === 'UNAUTHORIZED') {
+        handleUnauthorized();
+      }
       console.error("Failed to load projects:", err);
     } finally {
       setIsLoading(false);
@@ -86,9 +97,9 @@ export function Projects({ projects: externalProjects }: ProjectsProps) {
   // Filter internal projects
   const filtered = internalProjects.filter(
     (p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.branch.toLowerCase().includes(searchQuery.toLowerCase())
+      (p.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.description ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.branch ?? '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -126,6 +137,12 @@ export function Projects({ projects: externalProjects }: ProjectsProps) {
             <div key={i} className="card h-64 p-5 skeleton" />
           ))}
         </div>
+      ) : loadError ? (
+        <ApiErrorBanner
+          error={loadError}
+          onRetry={loadProjects}
+          onSignIn={loadError instanceof ApiError && loadError.errorType === 'UNAUTHORIZED' ? handleUnauthorized : undefined}
+        />
       ) : filtered.length === 0 ? (
         <div className="card flex flex-col items-center justify-center p-12 text-center">
           <div className="grid h-12 w-12 place-items-center rounded-xl bg-surface-2 text-muted-foreground">

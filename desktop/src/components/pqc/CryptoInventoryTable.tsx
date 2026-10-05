@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Copy, Check, ShieldAlert, AlertTriangle, ShieldCheck, X } from 'lucide-react';
 import type { CryptoComponent, RiskLevel } from '../../types/pqc';
+import { MockDataBadge } from './MockDataBadge';
 
 interface CryptoInventoryTableProps {
+
   data: CryptoComponent[];
   initialRiskFilter?: string;
   onItemSelect?: (item: CryptoComponent) => void;
@@ -178,6 +180,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                 Reset
               </button>
             )}
+            <MockDataBadge size="xs" label="Development / Mock Data" />
           </div>
         </div>
       )}
@@ -279,9 +282,9 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
       <div className="p-3 px-4 border-t border-border bg-surface-2/30 flex items-center justify-between text-[12px] text-muted-foreground">
         <span>
           Showing <strong className="text-foreground tabular">{filteredData.length}</strong> of{' '}
-          <strong className="text-foreground tabular">{data.length}</strong> cryptographic components
+          <strong className="text-foreground tabular">{data.length}</strong> components (Development / Mock Data)
         </span>
-        <span className="font-mono text-[11px]">NIST FIPS 203 / 204 AST Inspector</span>
+        <span className="font-mono text-[11px]">NIST FIPS 203 / 204 AST Inspector (Mock Baseline)</span>
       </div>
     </div>
   );

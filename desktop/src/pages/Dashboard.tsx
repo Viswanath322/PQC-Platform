@@ -12,23 +12,28 @@ import {
   FileArchive,
   Layers,
   Database,
+  WifiOff,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { Panel } from '@/components/dashboard/Panel';
 import { SegmentBar } from '@/components/dashboard/SegmentBar';
 import { ScoreRing } from '@/components/dashboard/ScoreRing';
+import { MockDataBadge } from '@/components/pqc/MockDataBadge';
 import { NewScanModal } from '@/components/scans/NewScanModal';
 import { ScanStatusPill } from '@/components/scans/ScanStatusPill';
 import { EmptyState } from '@/components/common/EmptyState';
 import { useScanPolling } from '@/hooks/useScanPolling';
-import { api } from '@/services/api';
+import { api, ApiError } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import { isTerminalStatus, type ScanOut, type ScanStatus } from '@/types/scan';
 import type { Project } from '@/types';
 import { mockScans, mockProjects } from '@/data/mockData';
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { handleUnauthorized } = useAuth();
+  const [loadError, setLoadError] = useState<ApiError | Error | null>(null);
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [scans, setScans] = useState<ScanOut[]>([]);
@@ -39,6 +44,7 @@ export const Dashboard: React.FC = () => {
 
   // Load telemetry from backend
   const loadData = async () => {
+    setLoadError(null);
     try {
       const [projList, scanList] = await Promise.all([
         api.getProjects().catch(() => []),
@@ -48,6 +54,11 @@ export const Dashboard: React.FC = () => {
       setScans(scanList);
       setIsBackendOffline(false);
     } catch (err: unknown) {
+      const apiErr = err instanceof ApiError ? err : new Error(String(err));
+      setLoadError(apiErr);
+      if (err instanceof ApiError && err.errorType === 'UNAUTHORIZED') {
+        handleUnauthorized();
+      }
       console.warn('[Dashboard] Backend unavailable, loading development data:', err);
       setIsBackendOffline(true);
       // Fallback only when backend is offline, clearly labeled as Development data
@@ -135,7 +146,8 @@ export const Dashboard: React.FC = () => {
     <>
       <PageHeader
         title="Security overview"
-        description="Application vulnerabilities, post-quantum readiness and cryptographic inventory in one view."
+        badge={<MockDataBadge size="sm" label="DEVELOPMENT / MOCK DATA" />}
+        description="Development / Mock Data: Application vulnerabilities, post-quantum readiness, and cryptographic inventory in one view."
         actions={
           <>
             {isBackendOffline && (
@@ -167,6 +179,32 @@ export const Dashboard: React.FC = () => {
           </>
         }
       />
+
+      {/* Backend error notice — shown when API unreachable, metrics show development data */}
+      {loadError && !isRefreshing && (
+        <div
+          role="alert"
+          className="flex items-center gap-3 rounded-xl px-4 py-3 text-[13px] mb-4"
+          style={{
+            background: 'rgba(71, 85, 105, 0.07)',
+            border: '1px solid rgba(71, 85, 105, 0.18)',
+            color: '#475569',
+          }}
+        >
+          <WifiOff size={15} className="shrink-0" />
+          <span>
+            <strong>Backend unavailable</strong> — viewing development data.{' '}
+            {loadError instanceof ApiError ? loadError.userMessage : ''}
+          </span>
+          <button
+            onClick={loadData}
+            className="ml-auto text-xs font-semibold hover:underline"
+            style={{ color: '#2A9D8F' }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Loading Skeletons */}
       {isLoading ? (
@@ -312,7 +350,12 @@ export const Dashboard: React.FC = () => {
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel
           title="Overall security score"
-          sub="AST syntax validation, dependency CVEs and configuration exposure."
+          sub={
+            isBackendOffline
+              ? "Development / Mock Data — AST syntax validation, dependency CVEs and configuration exposure."
+              : "AST syntax validation, dependency CVEs and configuration exposure."
+          }
+          right={isBackendOffline ? <MockDataBadge size="xs" label="DEVELOPMENT / MOCK DATA" /> : undefined}
         >
           <div className="flex items-center justify-between gap-6">
             <div>
@@ -344,11 +387,18 @@ export const Dashboard: React.FC = () => {
 
         <Panel
           title="PQC readiness index"
-          sub="NIST FIPS 203 / 204 readiness heuristics."
+          sub={
+            isBackendOffline
+              ? "Development / Mock Data — NIST FIPS 203 / 204 readiness baseline."
+              : "NIST FIPS 203 / 204 readiness heuristics."
+          }
           right={
-            <span className="tabular font-semibold text-purple-700">
-              58% quantum safe
-            </span>
+            <div className="flex items-center gap-2">
+              {isBackendOffline && <MockDataBadge size="xs" label="DEVELOPMENT / MOCK DATA" />}
+              <span className="tabular font-semibold text-purple-700">
+                58% quantum safe
+              </span>
+            </div>
           }
         >
           <SegmentBar
@@ -422,11 +472,18 @@ export const Dashboard: React.FC = () => {
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Panel
           title="Post-quantum cryptographic risk"
-          sub="Components classified against Shor and Grover threats."
+          sub={
+            isBackendOffline
+              ? "Development / Mock Data — Components classified against Shor and Grover threats."
+              : "Components classified against Shor and Grover threats."
+          }
           right={
-            <span className="tabular font-semibold text-purple-700">
-              25 components
-            </span>
+            <div className="flex items-center gap-2">
+              {isBackendOffline && <MockDataBadge size="xs" label="DEVELOPMENT / MOCK DATA" />}
+              <span className="tabular font-semibold text-purple-700">
+                25 components
+              </span>
+            </div>
           }
           footer={
             <button

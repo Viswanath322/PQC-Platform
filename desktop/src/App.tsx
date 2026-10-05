@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { UserProvider } from './context/UserContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { LoginPage } from './pages/LoginPage';
 import { Dashboard } from './pages/Dashboard';
 import { Projects } from './pages/Projects';
 import { Scans } from './pages/Scans';
@@ -14,8 +17,11 @@ import { Profile } from './pages/Profile';
 import { ScanDetail } from './pages/ScanDetail';
 import { mockProjectMetadata } from './data/pqcMockData';
 import { api } from './services/api';
-import { Info, X } from 'lucide-react';
+import { Info, X, Loader2 } from 'lucide-react';
 
+// ──────────────────────────────────────────────
+// Authenticated shell — only rendered after login
+// ──────────────────────────────────────────────
 const AppLayout: React.FC = () => {
   const location = useLocation();
   const [isOnline, setIsOnline] = useState(false);
@@ -51,16 +57,25 @@ const AppLayout: React.FC = () => {
     }, 4000);
   };
 
-  const handleRefreshScan = () => {
+  const handleRefreshScan = async () => {
     setIsRefreshing(true);
-    showToast('Synchronizing telemetry and AST verification pipeline…');
-    setTimeout(() => {
+    try {
+      const res = await api.health();
+      const online = res.status === 'healthy' || res.status === 'ok';
+      setIsOnline(online);
+      if (online) {
+        showToast('Backend connection verified. Telemetry synchronized.');
+      } else {
+        showToast('Backend is not reachable. Check the server status.');
+      }
+    } catch {
+      setIsOnline(false);
+      showToast('Backend is not reachable. Check the server status.');
+    } finally {
       setIsRefreshing(false);
-      showToast('Synchronization complete: 25 cryptographic components verified.');
-    }, 1000);
+    }
   };
 
-  // Derive current page title from route
   const getPageTitle = () => {
     const path = location.pathname.toLowerCase();
     if (path.includes('/profile')) return 'Auditor Profile';
@@ -120,13 +135,48 @@ const AppLayout: React.FC = () => {
   );
 };
 
+// ──────────────────────────────────────────────
+// Auth-gated root — renders LoginPage or AppLayout
+// ──────────────────────────────────────────────
+const AuthGate: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    // Boot splash while we validate the stored token
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center gap-3"
+        style={{
+          background: 'linear-gradient(135deg, hsl(210 40% 98%) 0%, hsl(214 32% 93%) 50%, hsl(220 30% 95%) 100%)',
+        }}
+      >
+        <Loader2 size={28} className="animate-spin" style={{ color: '#2A9D8F' }} />
+        <p style={{ fontSize: 13, color: '#687587' }}>Verifying session…</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  return <AppLayout />;
+};
+
+// ──────────────────────────────────────────────
+// Root App
+// ──────────────────────────────────────────────
 export const App: React.FC = () => {
   return (
-    <HashRouter>
-      <UserProvider>
-        <AppLayout />
-      </UserProvider>
-    </HashRouter>
+    <ErrorBoundary>
+      <HashRouter>
+        <AuthProvider>
+          <UserProvider>
+            <AuthGate />
+          </UserProvider>
+        </AuthProvider>
+      </HashRouter>
+    </ErrorBoundary>
   );
 };
 

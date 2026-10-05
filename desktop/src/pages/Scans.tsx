@@ -4,18 +4,22 @@ import { Plus, Scan as ScanIcon, RefreshCw, Filter, Search } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ScanTable } from '@/components/scans/ScanTable';
 import { NewScanModal } from '@/components/scans/NewScanModal';
-import { api } from '@/services/api';
+import { ApiErrorBanner } from '@/components/common/ApiErrorBanner';
+import { api, ApiError } from '@/services/api';
+import { useAuth } from '@/context/AuthContext';
 import type { Scan, Project } from '@/types';
 import { isTerminalStatus } from '@/types/scan';
 
 export const Scans: React.FC = () => {
   const navigate = useNavigate();
+  const { handleUnauthorized } = useAuth();
   const [searchParams] = useSearchParams();
   const projectFilter = searchParams.get('project');
 
   const [scans, setScans] = useState<Scan[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<ApiError | Error | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isNewScanOpen, setIsNewScanOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,6 +27,7 @@ export const Scans: React.FC = () => {
 
   const loadData = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       const [scanList, projList] = await Promise.all([
         api.getScans(),
@@ -31,6 +36,12 @@ export const Scans: React.FC = () => {
       setScans(scanList);
       setProjects(projList);
     } catch (err) {
+      // Surface real error — NEVER substitute mock data
+      const apiErr = err instanceof ApiError ? err : new Error(String(err));
+      setLoadError(apiErr);
+      if (err instanceof ApiError && err.errorType === 'UNAUTHORIZED') {
+        handleUnauthorized();
+      }
       console.error('[Scans] Failed to load scans:', err);
     } finally {
       setIsLoading(false);
@@ -64,6 +75,11 @@ export const Scans: React.FC = () => {
       const updated = await api.getScans();
       setScans(updated);
     } catch (err) {
+      const apiErr = err instanceof ApiError ? err : new Error(String(err));
+      setLoadError(apiErr);
+      if (err instanceof ApiError && err.errorType === 'UNAUTHORIZED') {
+        handleUnauthorized();
+      }
       console.error('[Scans] Failed to refresh scans:', err);
     } finally {
       setIsRefreshing(false);
@@ -97,10 +113,10 @@ export const Scans: React.FC = () => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
-        s.id.toLowerCase().includes(q) ||
-        s.project_name.toLowerCase().includes(q) ||
-        s.repository_name.toLowerCase().includes(q) ||
-        s.branch.toLowerCase().includes(q)
+        (s.id ?? '').toLowerCase().includes(q) ||
+        (s.project_name ?? '').toLowerCase().includes(q) ||
+        (s.repository_name ?? '').toLowerCase().includes(q) ||
+        (s.branch ?? '').toLowerCase().includes(q)
       );
     }
     return true;
@@ -183,6 +199,12 @@ export const Scans: React.FC = () => {
               <div key={i} className="card h-16 skeleton" />
             ))}
           </div>
+        ) : loadError ? (
+          <ApiErrorBanner
+            error={loadError}
+            onRetry={loadData}
+            onSignIn={loadError instanceof ApiError && loadError.errorType === 'UNAUTHORIZED' ? handleUnauthorized : undefined}
+          />
         ) : filteredScans.length === 0 ? (
           <div className="card flex flex-col items-center justify-center p-12 text-center">
             <div className="grid h-12 w-12 place-items-center rounded-xl bg-surface-2 text-muted-foreground">

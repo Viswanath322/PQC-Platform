@@ -10,12 +10,15 @@ import { RiskDistribution } from '@/components/pqc/RiskDistribution';
 import { CryptoInventoryTable } from '@/components/pqc/CryptoInventoryTable';
 import { CBOMTable } from '@/components/pqc/CBOMTable';
 import { MigrationCandidates } from '@/components/pqc/MigrationCandidates';
+import { KeyInsights } from '@/components/pqc/KeyInsights';
+import { MockDataBadge } from '@/components/pqc/MockDataBadge';
 import { ScoreRing } from '@/components/dashboard/ScoreRing';
 import {
   mockRiskSummary,
   mockCryptoInventory,
   mockCBOM,
   mockMigrationCandidates,
+  mockKeyInsights,
 } from '@/data/pqcMockData';
 
 interface PQCPageProps {
@@ -44,7 +47,8 @@ export const PQC: React.FC<PQCPageProps> = ({
     <>
       <PageHeader
         title="PQC security assessment"
-        description="Quantum readiness, Shor/Grover vulnerability evaluation, and NIST FIPS 203/204 migration candidates."
+        badge={<MockDataBadge label="DEVELOPMENT / MOCK DATA" />}
+        description="Development / Mock Data: Example quantum risk metrics (High: 5, Medium: 8, Low: 12) and readiness index for demonstration purposes."
         actions={
           <>
             <button onClick={handleNavInventory} className="btn">
@@ -58,6 +62,7 @@ export const PQC: React.FC<PQCPageProps> = ({
           </>
         }
       />
+
 
       <div className="flex flex-col gap-6">
         {/* 1. Top Risk Cards Grid (High / Medium / Low + Quantum Readiness Summary) */}
@@ -110,7 +115,7 @@ export const PQC: React.FC<PQCPageProps> = ({
               <ScoreRing value={mockRiskSummary.readinessPercentage} size={72} />
             </div>
             <p className="mt-3 truncate text-[12px] text-muted-foreground">
-              Based on FIPS 203/204 algorithm standards
+              Development baseline · FIPS 203/204 standards
             </p>
           </div>
         </div>
@@ -118,17 +123,20 @@ export const PQC: React.FC<PQCPageProps> = ({
         {/* 2. Risk Distribution Chart */}
         <RiskDistribution summary={mockRiskSummary} selectedRisk={selectedRiskFilter} />
 
-        {/* 3. Migration Candidates */}
+        {/* 3. Key Security Insights (Development / Mock Data) */}
+        <KeyInsights insights={mockKeyInsights} />
+
+        {/* 4. Migration Candidates */}
         <MigrationCandidates
           candidates={mockMigrationCandidates}
           onAssessCandidate={(c) => {
             if (onShowToast) {
-              onShowToast(`Selected blueprint for ${c.recommendation} migration.`);
+              onShowToast(`Migration blueprint for ${c.recommendation} is not implemented yet. This is a Day 1 UI placeholder.`);
             }
           }}
         />
 
-        {/* 4. Tabbed Table Section */}
+        {/* 5. Tabbed Table Section */}
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between border-b border-border pb-2">
             <div className="flex items-center gap-2">
