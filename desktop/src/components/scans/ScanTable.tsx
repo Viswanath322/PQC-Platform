@@ -1,7 +1,7 @@
 import React from 'react';
 import { Eye, Ban, FileArchive, CheckCircle2 } from 'lucide-react';
 import type { Scan } from '../../types';
-import { ScanStatusBadge } from './ScanStatusBadge';
+import { ScanStatusPill } from './ScanStatusPill';
 
 interface ScanTableProps {
   scans: Scan[];
@@ -24,6 +24,7 @@ export const ScanTable: React.FC<ScanTableProps> = ({
               <th className="py-3 px-4">Project</th>
               <th className="py-3 px-4">Repository</th>
               <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">Files</th>
               <th className="py-3 px-4">Created</th>
               <th className="py-3 px-4">Findings</th>
               <th className="py-3 px-4 text-right">Actions</th>
@@ -38,6 +39,12 @@ export const ScanTable: React.FC<ScanTableProps> = ({
                 scan.status === 'PROCESSING' ||
                 scan.status === 'AI_ANALYSIS';
 
+              const filesDisplay =
+                (scan as { files_analyzed?: number | null }).files_analyzed !== undefined &&
+                (scan as { files_analyzed?: number | null }).files_analyzed !== null
+                  ? (scan as { files_analyzed?: number | null }).files_analyzed
+                  : 'Not reported';
+
               return (
                 <tr
                   key={scan.id}
@@ -50,7 +57,7 @@ export const ScanTable: React.FC<ScanTableProps> = ({
                   </td>
 
                   {/* Project */}
-                  <td className="py-3.5 px-4 min-w-[160px]">
+                  <td className="py-3.5 px-4 min-w-[150px]">
                     <div className="font-medium text-slate-900">{scan.project_name}</div>
                     <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
                       <span>branch:</span>
@@ -59,18 +66,23 @@ export const ScanTable: React.FC<ScanTableProps> = ({
                   </td>
 
                   {/* Repository / File */}
-                  <td className="py-3.5 px-4 min-w-[180px]">
+                  <td className="py-3.5 px-4 min-w-[160px]">
                     <div className="flex items-center gap-1.5 text-slate-500">
                       <FileArchive className="w-3.5 h-3.5 shrink-0" />
-                      <span className="font-mono text-[12px] truncate max-w-[220px]">
+                      <span className="font-mono text-[12px] truncate max-w-[200px]">
                         {scan.repository_name}
                       </span>
                     </div>
                   </td>
 
-                  {/* Status Badge */}
-                  <td className="py-3.5 px-4">
-                    <ScanStatusBadge status={scan.status} size="sm" />
+                  {/* Status Pill */}
+                  <td className="py-3.5 px-4 whitespace-nowrap">
+                    <ScanStatusPill status={scan.status} size="sm" />
+                  </td>
+
+                  {/* Files Analyzed */}
+                  <td className="py-3.5 px-4 font-mono text-[12px] text-muted-foreground whitespace-nowrap">
+                    {filesDisplay}
                   </td>
 
                   {/* Created At */}
@@ -121,7 +133,7 @@ export const ScanTable: React.FC<ScanTableProps> = ({
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         onClick={() => onViewScan(scan)}
-                        className="btn h-7 px-2.5 text-[12px]"
+                        className="btn h-7 px-2.5 text-[12px] cursor-pointer"
                         title="View Scan Details"
                         aria-label="View Scan Details"
                       >
@@ -132,7 +144,7 @@ export const ScanTable: React.FC<ScanTableProps> = ({
                       {canCancel && (
                         <button
                           onClick={() => onCancelScan(scan)}
-                          className="h-7 px-2 text-[12px] inline-flex items-center gap-1 rounded-lg border border-critical/30 bg-critical/10 text-critical hover:bg-critical/20"
+                          className="h-7 px-2 text-[12px] inline-flex items-center gap-1 rounded-lg border border-critical/30 bg-critical/10 text-critical hover:bg-critical/20 cursor-pointer"
                           title="Cancel ongoing scan"
                           aria-label="Cancel ongoing scan"
                         >

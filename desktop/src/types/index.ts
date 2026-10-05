@@ -1,12 +1,5 @@
-export type ScanStatus =
-  | 'QUEUED'
-  | 'INGESTING'
-  | 'ANALYZING'
-  | 'PROCESSING'
-  | 'AI_ANALYSIS'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED';
+import type { ScanStatus } from './scan';
+export * from './scan';
 
 export type FindingSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 

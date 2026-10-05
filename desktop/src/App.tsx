@@ -11,6 +11,7 @@ import { CryptoInventory } from './pages/CryptoInventory';
 import { Reports } from './pages/Reports';
 import { Settings } from './pages/Settings';
 import { Profile } from './pages/Profile';
+import { ScanDetail } from './pages/ScanDetail';
 import { mockProjectMetadata } from './data/pqcMockData';
 import { api } from './services/api';
 import { Info, X } from 'lucide-react';
@@ -64,6 +65,7 @@ const AppLayout: React.FC = () => {
     const path = location.pathname.toLowerCase();
     if (path.includes('/profile')) return 'Auditor Profile';
     if (path.includes('/projects')) return 'Projects';
+    if (path.includes('/scans/')) return 'Scan Details';
     if (path.includes('/scans')) return 'Scans';
     if (path.includes('/findings')) return 'Findings';
     if (path.includes('/pqc')) return 'PQC Assessment';
@@ -89,6 +91,7 @@ const AppLayout: React.FC = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/projects" element={<Projects />} />
         <Route path="/scans" element={<Scans />} />
+        <Route path="/scans/:id" element={<ScanDetail />} />
         <Route path="/findings" element={<Findings />} />
         <Route path="/pqc" element={<PQC onShowToast={showToast} />} />
         <Route path="/inventory" element={<CryptoInventory />} />

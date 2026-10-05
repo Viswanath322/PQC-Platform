@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Plus, Scan as ScanIcon, RefreshCw, Filter, Search, X } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Plus, Scan as ScanIcon, RefreshCw, Filter, Search } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { ScanTable } from '@/components/scans/ScanTable';
 import { NewScanModal } from '@/components/scans/NewScanModal';
 import { api } from '@/services/api';
 import type { Scan, Project } from '@/types';
+import { isTerminalStatus } from '@/types/scan';
 
 export const Scans: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const projectFilter = searchParams.get('project');
 
@@ -18,19 +20,18 @@ export const Scans: React.FC = () => {
   const [isNewScanOpen, setIsNewScanOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  const [selectedScanForDetails, setSelectedScanForDetails] = useState<Scan | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
       const [scanList, projList] = await Promise.all([
         api.getScans(),
-        api.getProjects(),
+        api.getProjects().catch(() => []),
       ]);
       setScans(scanList);
       setProjects(projList);
     } catch (err) {
-      console.error('Failed to load scans:', err);
+      console.error('[Scans] Failed to load scans:', err);
     } finally {
       setIsLoading(false);
     }
@@ -40,13 +41,30 @@ export const Scans: React.FC = () => {
     loadData();
   }, []);
 
+  // Poll the scans list lightly (every 10s) only while any scan row is non-terminal
+  useEffect(() => {
+    const hasActiveScans = scans.some((s) => !isTerminalStatus(s.status));
+    if (!hasActiveScans) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const updated = await api.getScans();
+        setScans(updated);
+      } catch (err) {
+        console.warn('[Scans] Light background poll failed:', err);
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [scans]);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
       const updated = await api.getScans();
       setScans(updated);
     } catch (err) {
-      console.error('Failed to refresh scans:', err);
+      console.error('[Scans] Failed to refresh scans:', err);
     } finally {
       setIsRefreshing(false);
     }
@@ -54,6 +72,8 @@ export const Scans: React.FC = () => {
 
   const handleScanCreated = (newScan: Scan) => {
     setScans((prev) => [newScan, ...prev]);
+    // Optionally navigate immediately to inspect the new scan
+    navigate(`/scans/${newScan.id}`);
   };
 
   const handleCancelScan = async (scan: Scan) => {
@@ -63,8 +83,12 @@ export const Scans: React.FC = () => {
         prev.map((s) => (s.id === scan.id ? { ...s, status: 'CANCELLED' } : s))
       );
     } catch (err) {
-      console.error('Failed to cancel scan:', err);
+      console.error('[Scans] Failed to cancel scan:', err);
     }
+  };
+
+  const handleViewScan = (scan: Scan) => {
+    navigate(`/scans/${scan.id}`);
   };
 
   const filteredScans = scans.filter((s) => {
@@ -92,7 +116,7 @@ export const Scans: React.FC = () => {
             <button
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="btn"
+              className="btn transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:opacity-50"
               title="Refresh scans status"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />
@@ -101,7 +125,7 @@ export const Scans: React.FC = () => {
 
             <button
               onClick={() => setIsNewScanOpen(true)}
-              className="btn-primary"
+              className="btn-primary transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
               <Plus className="h-4 w-4" />
               <span>New scan</span>
@@ -181,75 +205,11 @@ export const Scans: React.FC = () => {
         ) : (
           <ScanTable
             scans={filteredScans}
-            onViewScan={(scan) => setSelectedScanForDetails(scan)}
+            onViewScan={handleViewScan}
             onCancelScan={handleCancelScan}
           />
         )}
       </div>
-
-      {/* Details Flyout Modal */}
-      {selectedScanForDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-          <div className="card w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 shadow-2xl animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-4 border-b border-border">
-              <div>
-                <span className="eyebrow">Scan Telemetry</span>
-                <h3 className="font-mono text-[20px] font-semibold text-purple-700 mt-0.5">
-                  {selectedScanForDetails.id}
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedScanForDetails(null)}
-                className="grid h-8 w-8 place-items-center rounded-lg border bg-surface hover:bg-surface-2"
-                aria-label="Close scan details"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="mt-5 space-y-4 text-[13px]">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-surface-2/60 p-3.5 border border-border">
-                  <span className="text-[11px] text-muted-foreground uppercase">Target Project</span>
-                  <div className="font-medium text-foreground mt-1">
-                    {selectedScanForDetails.project_name}
-                  </div>
-                  <div className="font-mono text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                    <span>Branch:</span>
-                    <span className="rounded bg-purple-100/70 border border-purple-200/80 px-1.5 font-mono text-[10.5px] text-purple-700 font-semibold">{selectedScanForDetails.branch}</span>
-                  </div>
-                </div>
-
-                <div className="rounded-lg bg-surface-2/60 p-3.5 border border-border">
-                  <span className="text-[11px] text-muted-foreground uppercase">Execution Status</span>
-                  <div className="font-semibold text-primary mt-1">
-                    {selectedScanForDetails.status}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground mt-0.5 tabular">
-                    Total Findings: {selectedScanForDetails.total_findings}
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-surface-2/60 p-4 border border-border">
-                <span className="text-[11px] text-muted-foreground uppercase">AST Ruleset & Execution Engine</span>
-                <p className="text-[13px] text-muted-foreground mt-1 leading-relaxed">
-                  Scanned repository file <code className="font-mono text-purple-700 bg-purple-50/70 border border-purple-200/60 px-1.5 py-0.5 rounded font-semibold text-[12px]">{selectedScanForDetails.repository_name}</code> using local AST static analyzer and NIST FIPS 203 / 204 detection heuristics.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3">
-                <button
-                  onClick={() => setSelectedScanForDetails(null)}
-                  className="btn"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* New Scan Modal */}
       <NewScanModal

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Inbox } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
   icon?: LucideIcon;
@@ -8,6 +9,8 @@ interface EmptyStateProps {
   description: string;
   actionText?: string;
   onAction?: () => void;
+  children?: React.ReactNode;
+  className?: string;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
@@ -16,22 +19,36 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   description,
   actionText,
   onAction,
+  children,
+  className,
 }) => {
   return (
-    <div className="flex flex-col items-center justify-center p-12 text-center border border-dashed border-slate-700/60 rounded-xl bg-slate-900/30">
-      <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center mb-4 text-slate-400">
-        <Icon className="w-6 h-6" />
+    <div
+      className={cn(
+        'card flex flex-col items-center justify-center p-10 text-center',
+        className
+      )}
+    >
+      <div className="grid h-12 w-12 place-items-center rounded-xl border border-white/80 bg-white/70 text-slate-500 shadow-2xs backdrop-blur-md">
+        <Icon className="h-6 w-6 stroke-[1.75]" />
       </div>
-      <h3 className="text-base font-semibold text-slate-200 mb-1">{title}</h3>
-      <p className="text-xs text-slate-400 max-w-sm mb-6 leading-relaxed">{description}</p>
+      <h3 className="mt-4 text-[16px] font-semibold text-foreground tracking-tight">
+        {title}
+      </h3>
+      <p className="mt-1 max-w-md text-[13px] text-muted-foreground leading-relaxed">
+        {description}
+      </p>
       {actionText && onAction && (
         <button
           onClick={onAction}
-          className="btn-teal px-4 py-2 text-xs font-semibold rounded-lg"
+          className="btn-primary mt-5 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
         >
           {actionText}
         </button>
       )}
+      {children && <div className="mt-4">{children}</div>}
     </div>
   );
 };
+
+export default EmptyState;
