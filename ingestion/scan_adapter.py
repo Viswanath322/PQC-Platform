@@ -1,6 +1,7 @@
 """Adapter for the projects/scans upload contract used by the backend API."""
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Protocol
 import uuid
@@ -65,8 +66,20 @@ def ingest_scan_upload(repository_path: str | Path, scan_id: str, storage_root: 
 
     # Issue #3: Confine repository_path to uploads folder
     repo_path = Path(repository_path)
-    if repo_path.is_symlink():
-        raise ValueError("Invalid upload path: symlink not allowed")
+    if not repo_path.is_absolute():
+        raise ValueError("Invalid upload path")
+    if uploads_root is not None:
+        try:
+            uploads = Path(uploads_root).resolve(strict=True)
+            lexical_path = Path(os.path.abspath(repo_path))
+            lexical_path.relative_to(uploads)
+            current = lexical_path
+            while current != uploads:
+                if current.is_symlink():
+                    raise ValueError("Invalid upload path")
+                current = current.parent
+        except (ValueError, OSError, RuntimeError) as exc:
+            raise ValueError("Invalid upload path") from exc
     
     try:
         repo_path = repo_path.resolve(strict=True)

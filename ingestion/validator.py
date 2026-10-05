@@ -99,5 +99,5 @@ def validate_zip(path: str | Path, limits: ZipLimits = DEFAULT_ZIP_LIMITS) -> Pa
             if total_actual != sum(info.file_size for info in infos if not info.is_dir()):
                 raise InvalidArchiveError("ZIP member sizes do not match the central directory")
     except (EOFError, OSError, RuntimeError, zipfile.BadZipFile, lzma.LZMAError, zlib.error) as exc:
-        raise InvalidArchiveError(f"Unable to read ZIP file: {archive}") from exc
+        raise InvalidArchiveError("Unable to read ZIP file") from exc
     return archive
