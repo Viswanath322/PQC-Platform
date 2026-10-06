@@ -134,10 +134,11 @@ class SASTEngine(AnalysisEngine):
                                     evidence=evidence or line.strip()[:_MAX_EVIDENCE_CHARS],
                                     confidence=rule.confidence,
                                     recommendation=rule.recommendation,
-                                    explanation=rule.explanation if hasattr(rule, "explanation") else None,                                    is_development=False,
+                                    explanation=rule.explanation if hasattr(rule, "explanation") else None,
+                                    is_development=False,
                                     rule_id=rule.rule_id,
                                     rule_version=RULE_VERSION,
-                                    group_key=f"{rule.rule_id}:{relative_path.as_posix()}",
+                                    group_key=f"{rule.rule_id}:{file_path.as_posix()}",
                                 )
                             )
             except OSError as exc:
