@@ -9,12 +9,27 @@ if repository_root not in sys.path:
 
 from database.models import (  # noqa: E402
     Base,
+    CBOMComponent,
     Finding,
+    FindingCorrelation,
     Organization,
     Project,
+    SBOMComponent,
     Scan,
     ScanFile,
     User,
 )
 
-__all__ = ["Base", "Finding", "Organization", "Project", "Scan", "ScanFile", "User"]
+__all__ = [
+    "Base",
+    "CBOMComponent",
+    "Finding",
+    "FindingCorrelation",
+    "Organization",
+    "Project",
+    "SBOMComponent",
+    "Scan",
+    "ScanFile",
+    "User",
+]
+

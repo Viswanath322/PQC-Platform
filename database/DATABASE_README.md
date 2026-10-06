@@ -1,10 +1,10 @@
 # PQC Security Assessment Platform — Database Manual & Setup Guide
 
-**Owner:** Vamsi (Database Engineer)  
-**Target Engine:** Local MySQL 8.0+  
-**Default Port:** `3306`  
-**Target Database:** `pqc`  
-**Branch:** `vamsi`  
+**Owner:** Vamsi (Database Engineer)
+**Target Engine:** Local MySQL 8.0+
+**Default Port:** `3306`
+**Target Database:** `pqc`
+**Branch:** `vamsi`
 **Architecture:** Desktop / Air-Gapped Local Deployment (Zero Cloud Dependencies)
 
 ---
@@ -34,7 +34,7 @@
 | `pqc_user` | `localhost` | **REQUIRED** | Application runtime user for the FastAPI backend connecting via local socket / named pipe. |
 | `pqc_user` | `127.0.0.1` | **REQUIRED** | Application runtime user for the FastAPI backend connecting via TCP/IP loopback (`127.0.0.1:3306`). |
 
-> **Why are both `localhost` and `127.0.0.1` required?**  
+> **Why are both `localhost` and `127.0.0.1` required?**
 > In MySQL on Windows, `'user'@'localhost'` authenticates via local named pipes or sockets, while `'user'@'127.0.0.1'` authenticates via TCP/IP networking. Python libraries (such as SQLAlchemy, PyMySQL, or async engines) frequently resolve `localhost` to `127.0.0.1`. If only `'localhost'` exists, connecting to `127.0.0.1` will fail with `Access denied for user 'pqc_user'@'127.0.0.1'`. Creating both prevents authentication mismatch.
 
 ---
@@ -42,8 +42,7 @@
 ### Databases
 | Database | Status | Purpose |
 | :--- | :--- | :--- |
-| `pqc` | **REQUIRED** | The primary database for the PQC Platform storing all application entities. |
-| `pqc_security` | **Optional / Compat** | Backwards-compatibility database created for legacy tests/references. Points to same structure. |
+| `pqc_security` | **REQUIRED** | The primary database for the PQC Platform storing all application entities. |
 | `sys`, `mysql`, `information_schema`, `performance_schema` | **System DBs** | Built-in MySQL internal catalogs. Do **not** drop or modify. |
 
 ---
@@ -51,14 +50,15 @@
 ### Repository Files (Branch: `vamsi`)
 | File / Directory | Status | Notes |
 | :--- | :--- | :--- |
-| `database/schema.sql` | **REQUIRED** | Primary DDL definition for all 6 tables, UUID generation, foreign keys, and indexes. |
-| `database/seed.sql` | **REQUIRED** | Development seed data with Argon2id admin credentials and completed demo scan. |
-| `database/models.py` | **REQUIRED** | SQLAlchemy 2.0 ORM models matching MySQL DDL with microsecond timestamp precision. |
-| `database/verify_db.py` | **REQUIRED** | Standalone verification script. Strictly tests MySQL (fails fast, zero SQLite fallback). |
+| `database/schema.sql` | **REQUIRED** | Primary canonical DDL definition for all 9 tables, UUID generation, foreign keys, and indexes. |
+| `database/migrations/` | **REQUIRED** | Versioned migration scripts: `001_day1_core_schema.sql` (baseline) and `002_day3_expansion.sql` (additive). |
+| `database/seed.sql` | **REQUIRED** | Development seed data with admin credentials, demo scans (QUEUED & COMPLETED), findings, SBOM, and CBOM. |
+| `database/models.py` | **REQUIRED** | SQLAlchemy 2.0 ORM models matching MySQL DDL (`Finding`, `SBOMComponent`, `CBOMComponent`, `FindingCorrelation`). |
+| `database/verify_db.py` | **REQUIRED** | Standalone Day 3 verification script. Strictly tests live MySQL (fails fast, zero SQLite fallback). |
 | `database/run_combined_flow.py`| **REQUIRED** | End-to-end integration and verification script with automatic teardown. |
-| `backend/` stub files | **PROHIBITED** | Must **NOT** exist on branch `vamsi`. Backend code belongs to Aakash (`backend/aakash-port`). |
 | `schema_postgres.sql`, `seed_postgres.sql` | **PROHIBITED** | PostgreSQL is forbidden. Target is local MySQL only. |
 | `*.db` (SQLite files) | **PROHIBITED** | SQLite fallback is forbidden. The platform is strictly MySQL. |
+
 
 ---
 
@@ -85,34 +85,17 @@ Or start the daemon manually with your `my.ini` configuration:
 
 ## 3. Step-by-Step Initialization Guide
 
-### Step 1: Create Database & Dedicated Application User
-Open MySQL Workbench (connecting as `root`), or open PowerShell / Command Prompt and run:
+### Step 1: Create the Database and Application User
+Use the single canonical database name `pqc_security`:
 ```sql
--- 1. Create target database
-CREATE DATABASE IF NOT EXISTS `pqc` 
-    CHARACTER SET utf8mb4 
-    COLLATE utf8mb4_unicode_ci;
-
--- 2. Create compatibility database (optional)
-CREATE DATABASE IF NOT EXISTS `pqc_security` 
-    CHARACTER SET utf8mb4 
-    COLLATE utf8mb4_unicode_ci;
-
--- 3. Create application user for both localhost and 127.0.0.1
+CREATE DATABASE IF NOT EXISTS `pqc_security`
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS 'pqc_user'@'localhost' IDENTIFIED BY 'your_password';
 CREATE USER IF NOT EXISTS 'pqc_user'@'127.0.0.1' IDENTIFIED BY 'your_password';
-
--- 4. Grant privileges on pqc and pqc_security
-GRANT ALL PRIVILEGES ON `pqc`.* TO 'pqc_user'@'localhost';
-GRANT ALL PRIVILEGES ON `pqc`.* TO 'pqc_user'@'127.0.0.1';
 GRANT ALL PRIVILEGES ON `pqc_security`.* TO 'pqc_user'@'localhost';
 GRANT ALL PRIVILEGES ON `pqc_security`.* TO 'pqc_user'@'127.0.0.1';
-
--- 5. Apply privilege changes
 FLUSH PRIVILEGES;
 ```
-
----
 
 ### Step 2: Configure Environment Variables (`.env`)
 Create a `.env` file in your project root (or set environment variables):
@@ -120,17 +103,17 @@ Create a `.env` file in your project root (or set environment variables):
 # Database Connection Parameters
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_NAME=pqc
+DB_NAME=pqc_security
 DB_USER=pqc_user
 DB_PASSWORD=your_password
 
 # Database URL for SQLAlchemy (note: encode special characters such as @ as %40)
-DATABASE_URL=mysql+pymysql://pqc_user:your_password@127.0.0.1:3306/pqc
+DATABASE_URL=mysql+pymysql://pqc_user:your_password@127.0.0.1:3306/pqc_security
 ```
 
-> **Special Character Warning in Passwords:**  
-> If your password contains `@` (e.g. `Vsvg@mysql`), you must URL-encode it as `%40` in `DATABASE_URL`:  
-> `mysql+pymysql://pqc_user:Vsvg%40mysql@127.0.0.1:3306/pqc`  
+> **Special Character Warning in Passwords:**
+> If your password contains `@` (e.g. `Vsvg@mysql`), you must URL-encode it as `%40` in `DATABASE_URL`:
+> `mysql+pymysql://pqc_user:Vsvg%40mysql@127.0.0.1:3306/pqc_security`
 > In discrete `DB_PASSWORD=Vsvg@mysql`, write it normally without URL encoding.
 
 ---
@@ -139,7 +122,7 @@ DATABASE_URL=mysql+pymysql://pqc_user:your_password@127.0.0.1:3306/pqc
 Run the schema script to create all 6 tables and default organization:
 ```powershell
 # Using MySQL CLI
-mysql -u pqc_user -p pqc < database/schema.sql
+mysql -u pqc_user -p pqc_security < database/schema.sql
 
 # Or open database/schema.sql in MySQL Workbench and execute all statements
 ```
@@ -150,7 +133,7 @@ mysql -u pqc_user -p pqc < database/schema.sql
 Populate initial development data:
 ```powershell
 # Using MySQL CLI
-mysql -u pqc_user -p pqc < database/seed.sql
+mysql -u pqc_user -p pqc_security < database/seed.sql
 
 # Or open database/seed.sql in MySQL Workbench and execute all statements
 ```
@@ -164,7 +147,7 @@ python database/verify_db.py
 ```
 **Expected Output:**
 ```text
-Connecting to MySQL at 127.0.0.1:3306/pqc...
+Connecting to MySQL at 127.0.0.1:3306/pqc_security...
 [OK] Connected to MySQL successfully.
 [OK] Table 'organizations' verified.
 [OK] Table 'users' verified.
@@ -188,18 +171,14 @@ Below is the complete, official SQL schema for the PQC platform:
 -- PQC Security Assessment Platform - Core Database Schema
 -- Author: Vamsi (Database Engineer)
 -- Target: MySQL 8.0+
--- Database: pqc
+-- Database: pqc_security
 -- =============================================================================
-
-CREATE DATABASE IF NOT EXISTS `pqc`
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
 
 CREATE DATABASE IF NOT EXISTS `pqc_security`
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
-USE `pqc`;
+USE `pqc_security`;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -361,7 +340,7 @@ CREATE TABLE `findings` (
 -- Default Seed: Organization (Standard UUID-compatible string)
 -- -----------------------------------------------------------------------------
 INSERT INTO `organizations` (`id`, `name`, `created_at`, `updated_at`)
-VALUES 
+VALUES
     ('org-default-001', 'Default Organization', NOW(6), NOW(6))
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
@@ -371,13 +350,13 @@ SET FOREIGN_KEY_CHECKS = 1;
 ---
 
 ### Architectural Design Standards
-1. **Unified UUID Primary Keys (`CHAR(36)` / `VARCHAR(36)`):**  
+1. **Unified UUID Primary Keys (`CHAR(36)` / `VARCHAR(36)`):**
    All tables use standard 36-character UUID strings with automatic generation via `DEFAULT (UUID())`. Auto-incrementing integers are forbidden. This supports distributed agents and offline air-gapped sync without collision.
-2. **High-Precision Microsecond Timestamps (`DATETIME(6)`):**  
+2. **High-Precision Microsecond Timestamps (`DATETIME(6)`):**
    Every `created_at` and `updated_at` column defines `DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)` to ensure microsecond ordering accuracy during rapid sequential automated scans.
-3. **No Binary Blobs in Database:**  
+3. **No Binary Blobs in Database:**
    Uploaded ZIP files and extracted codebases reside strictly on the local filesystem (`storage/uploads/`). The `scans.repository_path` column stores only the local filesystem path string.
-4. **Scan Diagnostics Column (`error_message`):**  
+4. **Scan Diagnostics Column (`error_message`):**
    The `scans` table includes an `error_message TEXT NULL` column to record the exact stack trace / reason if a scan transitions to `FAILED`.
 
 ---
@@ -387,14 +366,14 @@ SET FOREIGN_KEY_CHECKS = 1;
 ```sql
 -- =============================================================================
 -- PQC Security Assessment Platform - Development Seed Data
--- Database: pqc
+-- Database: pqc_security
 -- =============================================================================
 
-USE `pqc`;
+USE `pqc_security`;
 
 -- 1. Default Organization
 INSERT INTO `organizations` (`id`, `name`, `created_at`, `updated_at`)
-VALUES 
+VALUES
     ('org-default-001', 'Default Organization', NOW(6), NOW(6))
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
@@ -533,14 +512,14 @@ What it verifies:
   `[Errno 11001] getaddrinfo failed` because the URL parser thinks `@mysql` is part of the host address.
 * **Solution:** URL-encode the password in `DATABASE_URL`:
   Replace `@` with `%40`:
-  `DATABASE_URL=mysql+pymysql://pqc_user:Vsvg%40mysql@127.0.0.1:3306/pqc`
+  `DATABASE_URL=mysql+pymysql://pqc_user:Vsvg%40mysql@127.0.0.1:3306/pqc_security`
 
 ### Gotcha 2: `Access denied for user 'pqc_user'@'127.0.0.1'`
 * **Problem:** User was created with `'pqc_user'@'localhost'`, but the application connects via TCP loopback (`127.0.0.1`).
 * **Solution:** Run in MySQL Workbench as root:
   ```sql
   CREATE USER IF NOT EXISTS 'pqc_user'@'127.0.0.1' IDENTIFIED BY 'your_password';
-  GRANT ALL PRIVILEGES ON pqc.* TO 'pqc_user'@'127.0.0.1';
+  GRANT ALL PRIVILEGES ON pqc_security.* TO 'pqc_user'@'127.0.0.1';
   FLUSH PRIVILEGES;
   ```
 
@@ -564,10 +543,10 @@ To integrate the database layer into the main backend:
    ```ini
    DB_HOST=127.0.0.1
    DB_PORT=3306
-   DB_NAME=pqc
+   DB_NAME=pqc_security
    DB_USER=pqc_user
    DB_PASSWORD=your_password
-   DATABASE_URL=mysql+pymysql://pqc_user:your_password@127.0.0.1:3306/pqc
+   DATABASE_URL=mysql+pymysql://pqc_user:your_password@127.0.0.1:3306/pqc_security
    ```
 
 **Hand-off Message:**

@@ -142,9 +142,9 @@ def persist_findings(
         db_finding = DBFinding(
             id=f.finding_id,
             scan_id=scan_id,
-            engine=str(f.engine.value),
+            engine=str(f.engine.value) if hasattr(f.engine, "value") else str(f.engine),
             category=f.category,
-            severity=str(f.severity.value),
+            severity=str(f.severity.value) if hasattr(f.severity, "value") else str(f.severity),
             title=f.title,
             file_path=f.file_path,
             line_number=f.line_number,
@@ -153,9 +153,126 @@ def persist_findings(
             confidence=f.confidence,
             recommendation=f.recommendation,
             is_development=f.is_development,
+            rule_id=getattr(f, "rule_id", None),
+            rule_version=getattr(f, "rule_version", None),
+            group_key=getattr(f, "group_key", None),
+            correlation_id=getattr(f, "group_key", None) or getattr(f, "correlation_id", None),
         )
         db.add(db_finding)
         inserted += 1
 
     db.commit()
     return inserted
+
+
+def persist_sbom_components(
+    db: Session,
+    scan_id: str,
+    components: "tuple | list",
+) -> int:
+    """
+    Persist a sequence of SBOM dependency components scoped to a scan.
+    """
+    from uuid import uuid4
+    from app.models import SBOMComponent as DBSBOMComponent
+
+    inserted = 0
+    existing_ids: set[str] = set()
+    rows = db.execute(
+        text("SELECT id FROM sbom_components WHERE scan_id = :scan_id"),
+        {"scan_id": scan_id},
+    ).mappings()
+    for row in rows:
+        existing_ids.add(str(row["id"]))
+
+    for c in components:
+        comp_id = (
+            getattr(c, "id", None)
+            or getattr(c, "component_id", None)
+            or (c.get("id") if isinstance(c, dict) else None)
+            or str(uuid4())
+        )
+        if comp_id in existing_ids:
+            continue
+        name = getattr(c, "name", None) if not isinstance(c, dict) else c.get("name")
+        if not name:
+            continue
+        db_comp = DBSBOMComponent(
+            id=comp_id,
+            scan_id=scan_id,
+            name=name,
+            version=getattr(c, "version", None) if not isinstance(c, dict) else c.get("version"),
+            package_type=getattr(c, "package_type", "pypi") if not isinstance(c, dict) else c.get("package_type", "pypi"),
+            source_file=getattr(c, "source_file", "") if not isinstance(c, dict) else c.get("source_file", ""),
+            line_number=getattr(c, "line_number", None) if not isinstance(c, dict) else c.get("line_number"),
+            license=getattr(c, "license", None) if not isinstance(c, dict) else c.get("license"),
+            is_direct=getattr(c, "is_direct", True) if not isinstance(c, dict) else c.get("is_direct", True),
+            detection_method=getattr(c, "detection_method", "manifest_parser") if not isinstance(c, dict) else c.get("detection_method", "manifest_parser"),
+            confidence=getattr(c, "confidence", 1.0) if not isinstance(c, dict) else c.get("confidence", 1.0),
+            is_development=getattr(c, "is_development", False) if not isinstance(c, dict) else c.get("is_development", False),
+        )
+        db.add(db_comp)
+        inserted += 1
+
+    db.commit()
+    return inserted
+
+
+def persist_cbom_components(
+    db: Session,
+    scan_id: str,
+    components: "tuple | list",
+) -> int:
+    """
+    Persist a sequence of CBOM cryptographic components scoped to a scan.
+    """
+    from uuid import uuid4
+    from app.models import CBOMComponent as DBCBOMComponent
+
+    inserted = 0
+    existing_ids: set[str] = set()
+    rows = db.execute(
+        text("SELECT id FROM cbom_components WHERE scan_id = :scan_id"),
+        {"scan_id": scan_id},
+    ).mappings()
+    for row in rows:
+        existing_ids.add(str(row["id"]))
+
+    for c in components:
+        comp_id = (
+            getattr(c, "component_id", None)
+            or getattr(c, "id", None)
+            or (c.get("component_id") or c.get("id") if isinstance(c, dict) else None)
+            or str(uuid4())
+        )
+        if comp_id in existing_ids:
+            continue
+        algo = getattr(c, "algorithm", None) if not isinstance(c, dict) else c.get("algorithm")
+        if not algo:
+            continue
+        db_comp = DBCBOMComponent(
+            id=comp_id,
+            scan_id=scan_id,
+            algorithm=algo,
+            category=getattr(c, "category", "general") if not isinstance(c, dict) else c.get("category", "general"),
+            library=getattr(c, "library", None) if not isinstance(c, dict) else c.get("library"),
+            version=getattr(c, "version", None) if not isinstance(c, dict) else c.get("version"),
+            file_path=getattr(c, "file_path", "") if not isinstance(c, dict) else c.get("file_path", ""),
+            line_number=getattr(c, "line_number", None) if not isinstance(c, dict) else c.get("line_number"),
+            usage_context=getattr(c, "usage_context", None) if not isinstance(c, dict) else c.get("usage_context"),
+            detection_method=getattr(c, "detection_method", "engine") if not isinstance(c, dict) else c.get("detection_method", "engine"),
+            confidence=getattr(c, "confidence", 1.0) if not isinstance(c, dict) else c.get("confidence", 1.0),
+            quantum_risk=getattr(c, "quantum_risk", "unknown") if not isinstance(c, dict) else c.get("quantum_risk", "unknown"),
+            nist_migration_target=getattr(c, "nist_migration_target", None) if not isinstance(c, dict) else c.get("nist_migration_target"),
+            pqc_mapping_version=getattr(c, "pqc_mapping_version", "1.0") if not isinstance(c, dict) else c.get("pqc_mapping_version", "1.0"),
+            pqc_mapping_source=getattr(c, "pqc_mapping_source", "NIST FIPS 203/204/205") if not isinstance(c, dict) else c.get("pqc_mapping_source", "NIST FIPS 203/204/205"),
+            rule_id=getattr(c, "rule_id", None) if not isinstance(c, dict) else c.get("rule_id"),
+            rule_version=getattr(c, "rule_version", None) if not isinstance(c, dict) else c.get("rule_version"),
+            is_development=getattr(c, "is_development", False) if not isinstance(c, dict) else c.get("is_development", False),
+        )
+        db.add(db_comp)
+        inserted += 1
+
+    db.commit()
+    return inserted
+

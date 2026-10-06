@@ -1,16 +1,20 @@
 """
 Combined Flow Verification Script
 Executes: register -> login -> project -> upload -> scan -> SELECT scans row
-Directly connects to the active database (PostgreSQL 18 / MySQL 8) and Redis.
+Uses the configured SQLAlchemy database (MySQL for the Day 1 deployment) and Redis.
 """
 
 import io
 import os
 import sys
-import uuid
 import zipfile
+from uuid import uuid4
 from pathlib import Path
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:  # dotenv is optional when variables are exported by the shell
+    def load_dotenv(*args, **kwargs):
+        return False
 
 # Add backend directory to sys.path
 backend_dir = Path(__file__).resolve().parent.parent / "backend"
@@ -46,7 +50,7 @@ def make_sample_zip() -> bytes:
 
 def run_flow():
     print("=" * 80)
-    print(" COMBINED FLOW VERIFICATION: Register -> Login -> Project -> Upload -> Scan")
+    print(" COMBINED FLOW VERIFICATION: Login -> Project -> Upload -> Scan")
     print("=" * 80)
 
     if app is None or engine is None:
@@ -57,7 +61,6 @@ def run_flow():
     settings = get_settings()
     dialect = engine.dialect.name
     print(f"[*] Active Database Dialect : {dialect.upper()}")
-    print(f"[*] Database URL            : {settings.database_url}")
 
     with engine.connect() as conn:
         version_row = conn.execute(text("SELECT version()")).fetchone()
@@ -70,41 +73,31 @@ def run_flow():
         r = get_redis()
         if r and r.ping():
             redis_status = f"Connected (queue length: {r.llen(QUEUE_KEY)})"
-    except Exception as exc:
-        redis_status = f"Unavailable ({exc})"
+    except Exception:
+        redis_status = "Unavailable"
     print(f"[*] Redis Status            : {redis_status}")
     print("-" * 80)
 
     client = TestClient(app)
     api = "/api/v1"
 
-    user_id = None
     project_id = None
     scan_id = None
-    unique_suffix = uuid.uuid4().hex[:8]
-    email = f"qa.vamsi.{unique_suffix}@pqc.example"
-    password = "example-dev-password-for-test-only"  # pragma: allowlist secret
+    upload_id = None
+    email = os.environ.get("QA_ADMIN_EMAIL", "admin@pqc.example")
+    password = os.environ.get("QA_ADMIN_PASSWORD", "change_me_locally")  # pragma: allowlist secret
+    org_id = "org-default-001"
+
 
     try:
-        # Step 1: Register
-        print(f"\n[Step 1] Registering user: {email}...")
-        reg_resp = client.post(f"{api}/auth/register", json={"email": email, "password": password})
-        print(f"   --> HTTP Status: {reg_resp.status_code}")
-        assert reg_resp.status_code == 201, f"Register failed: {reg_resp.text}"
-        user_data = reg_resp.json()
-        user_id = user_data["id"]
-        org_id = user_data["organization_id"]
-        print(f"   --> Registered User ID: {user_id}")
-        print(f"   --> Organization ID   : {org_id}")
-
-        # Step 2: Login
+        # The seeded development admin is used because public registration is disabled by default.
         print(f"\n[Step 2] Logging in as: {email}...")
         login_resp = client.post(f"{api}/auth/login", json={"email": email, "password": password})
         print(f"   --> HTTP Status: {login_resp.status_code}")
         assert login_resp.status_code == 200, f"Login failed: {login_resp.text}"
         token = login_resp.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
-        print(f"   --> JWT Access Token obtained (length={len(token)}, begins: {token[:20]}...)")
+        print("   --> JWT access token obtained.")
 
         # Verify /auth/me
         me_resp = client.get(f"{api}/auth/me", headers=headers)
@@ -112,6 +105,7 @@ def run_flow():
         print(f"   --> Authenticated session verified: {me_resp.json()['email']}")
 
         # Step 3: Create Project
+        unique_suffix = uuid4().hex[:8]
         project_name = f"Enterprise Payment Gateway {unique_suffix}"
         print(f"\n[Step 3] Creating Project: '{project_name}'...")
         proj_resp = client.post(
@@ -215,22 +209,14 @@ def run_flow():
                 if project_id:
                     conn.execute(text("DELETE FROM projects WHERE id = :pid"), {"pid": project_id})
                     print(f"   --> Deleted project row: {project_id}")
-                if user_id:
-                    conn.execute(text("DELETE FROM users WHERE id = :uid"), {"uid": user_id})
-                    print(f"   --> Deleted user row: {user_id}")
         except Exception as exc:
             print(f"   --> Warning: Database cleanup error: {exc}")
 
-        # 3. Clean uploaded storage file if any
+        # 3. Clean uploaded storage file if any.
         try:
-            storage_dir = getattr(settings, "storage_dir", None)
-            if storage_dir:
-                upload_dir = Path(storage_dir) / "uploads"
-                for p in upload_dir.glob(f"*{unique_suffix}*"):
-                    try:
-                        p.unlink()
-                    except OSError:
-                        pass
+            if upload_id and org_id:
+                from app.services.storage_service import get_upload_path
+                get_upload_path(upload_id, org_id).unlink(missing_ok=True)
         except Exception:
             pass
 
