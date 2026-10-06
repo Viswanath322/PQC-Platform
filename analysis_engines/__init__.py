@@ -13,12 +13,16 @@ from .dummy_engine import DummyEngine
 from .runner import AnalysisPipeline, PipelineResult
 from .sast.engine import SASTEngine
 from .crypto.engine import CryptoEngine
+from .dependency.engine import DependencyEngine
+from .configuration.engine import ConfigurationEngine
 
 __all__ = [
     "AnalysisEngine",
     "AnalysisPipeline",
     "AnalysisResult",
+    "ConfigurationEngine",
     "CryptoEngine",
+    "DependencyEngine",
     "DummyEngine",
     "EngineName",
     "Finding",

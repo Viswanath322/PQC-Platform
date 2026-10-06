@@ -133,8 +133,16 @@ def fake_queue(request, monkeypatch):
     from app.api.v1 import scans as scans_module
 
     FAKE_QUEUE.clear()
-    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid: FAKE_QUEUE.append(sid) or True)
-    monkeypatch.setattr(scans_module, "dequeue_scan", lambda sid: sid in FAKE_QUEUE and FAKE_QUEUE.remove(sid) or True)
+    monkeypatch.setattr(
+        scans_module,
+        "enqueue_scan",
+        lambda item: FAKE_QUEUE.append(getattr(item, "scan_id", item)) or True,
+    )
+    monkeypatch.setattr(
+        scans_module,
+        "dequeue_scan",
+        lambda sid: (sid in FAKE_QUEUE and FAKE_QUEUE.remove(sid)) or True,
+    )
 
 
 @pytest.fixture(scope="module")

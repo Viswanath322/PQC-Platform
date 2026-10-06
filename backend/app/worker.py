@@ -53,15 +53,15 @@ def run_worker() -> None:
             if item is None:
                 continue
 
-            _, scan_id = item
-            logger.info("Worker picked up scan: %s", scan_id)
+            _, job_item = item
+            logger.info("Worker picked up scan job: %s", job_item)
 
             db = SessionLocal()
             try:
-                success = process_scan(scan_id, db)
-                logger.info("Scan %s completed with result: %s", scan_id, success)
+                success = process_scan(job_item, db)
+                logger.info("Scan job completed with result: %s", success)
             except Exception as exc:  # noqa: BLE001
-                logger.exception("Unexpected error processing scan %s: %s", scan_id, exc)
+                logger.exception("Unexpected error processing scan job: %s", exc)
             finally:
                 db.close()
 

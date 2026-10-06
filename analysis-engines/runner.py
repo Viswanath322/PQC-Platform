@@ -33,8 +33,17 @@ from .base.finding import EngineName, Finding
 from .base.result import AnalysisResult
 from .crypto.engine import CryptoEngine
 from .sast.engine import SASTEngine
+from .dependency.engine import DependencyEngine
+from .configuration.engine import ConfigurationEngine
 
 logger = logging.getLogger(__name__)
+
+ENGINE_REGISTRY: dict[str, type[AnalysisEngine]] = {
+    "sast": SASTEngine,
+    "crypto": CryptoEngine,
+    "dependency": DependencyEngine,
+    "configuration": ConfigurationEngine,
+}
 
 
 @dataclass
@@ -44,6 +53,7 @@ class PipelineResult:
     findings_by_engine: dict[str, tuple[Finding, ...]] = field(default_factory=dict)
     files_processed_by_engine: dict[str, int] = field(default_factory=dict)
     errors_by_engine: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    engine_statuses: dict[str, str] = field(default_factory=dict)
     total_files: int = 0
 
     @property
@@ -77,20 +87,17 @@ class PipelineResult:
             "findings_by_engine": {k: len(v) for k, v in self.findings_by_engine.items()},
             "total_files_processed": self.total_files,
             "engines_run": list(self.findings_by_engine.keys()),
+            "engine_statuses": dict(self.engine_statuses),
             "errors": list(self.all_errors),
         }
 
 
 class AnalysisPipeline:
     """
-    Runs all configured engines against a list of file paths.
+    Runs configured engines against a list of file paths.
 
     The default configuration runs SAST and Crypto engines.
-    Engines are run sequentially; each receives the full file list
-    and filters internally by supported extension.
-
-    An engine failure is caught, logged, and recorded in errors —
-    it does not abort the pipeline.
+    Engines can also be selected by name or passed explicitly.
     """
 
     DEFAULT_ENGINES: tuple[AnalysisEngine, ...] = (
@@ -98,39 +105,74 @@ class AnalysisPipeline:
         CryptoEngine(),
     )
 
-    def __init__(self, engines: Sequence[AnalysisEngine] | None = None) -> None:
-        self._engines: tuple[AnalysisEngine, ...] = (
-            tuple(engines) if engines is not None else self.DEFAULT_ENGINES
-        )
+    def __init__(
+        self,
+        engines: Sequence[AnalysisEngine] | None = None,
+        selected_engines: Sequence[str] | None = None,
+    ) -> None:
+        if selected_engines is not None:
+            instantiated: list[AnalysisEngine] = []
+            for name in selected_engines:
+                clean = name.strip().lower()
+                if clean in ENGINE_REGISTRY:
+                    instantiated.append(ENGINE_REGISTRY[clean]())
+                else:
+                    logger.warning("AnalysisPipeline: unknown engine name '%s' ignored", name)
+            self._engines: tuple[AnalysisEngine, ...] = tuple(instantiated)
+        elif engines is not None:
+            self._engines: tuple[AnalysisEngine, ...] = tuple(engines)
+        else:
+            self._engines: tuple[AnalysisEngine, ...] = self.DEFAULT_ENGINES
 
-    def run(self, files: Iterable[Path]) -> PipelineResult:
+    def run(
+        self,
+        files: Iterable[Path],
+        on_engine_start=None,
+        on_engine_complete=None,
+        is_cancelled=None,
+    ) -> PipelineResult:
         """
         Run all engines against the supplied file paths.
-
-        Parameters
-        ----------
-        files:
-            Absolute or scan-relative paths to extracted repository files.
-            The pipeline does not filter out non-source files — each engine
-            does its own extension filtering.
         """
         file_list = list(files)
         result = PipelineResult(total_files=len(file_list))
 
         for engine in self._engines:
+            if is_cancelled and is_cancelled():
+                logger.info("Pipeline: cancellation detected; stopping before engine %s", engine.name.value)
+                break
+
             engine_name = engine.name.value
             logger.info("Pipeline: running engine=%s files=%d", engine_name, len(file_list))
+            result.engine_statuses[engine_name] = "RUNNING"
+            if on_engine_start:
+                try:
+                    on_engine_start(engine_name)
+                except Exception as cb_exc:  # noqa: BLE001
+                    logger.debug("on_engine_start callback error: %s", cb_exc)
+
             try:
                 engine_result: AnalysisResult = engine.analyze(iter(file_list))
                 result.findings_by_engine[engine_name] = engine_result.findings
                 result.files_processed_by_engine[engine_name] = engine_result.files_processed
                 result.errors_by_engine[engine_name] = engine_result.errors
+
+                if engine_result.errors:
+                    result.engine_statuses[engine_name] = "FAILED"
+                    if on_engine_complete:
+                        on_engine_complete(engine_name, False, "; ".join(engine_result.errors))
+                else:
+                    result.engine_statuses[engine_name] = "COMPLETED"
+                    if on_engine_complete:
+                        on_engine_complete(engine_name, True, None)
+
                 logger.info(
-                    "Pipeline: engine=%s findings=%d errors=%d files_processed=%d",
+                    "Pipeline: engine=%s findings=%d errors=%d files_processed=%d status=%s",
                     engine_name,
                     len(engine_result.findings),
                     len(engine_result.errors),
                     engine_result.files_processed,
+                    result.engine_statuses[engine_name],
                 )
             except Exception as exc:  # noqa: BLE001
                 msg = f"Engine {engine_name} raised an unexpected error: {exc}"
@@ -138,5 +180,8 @@ class AnalysisPipeline:
                 result.findings_by_engine[engine_name] = ()
                 result.files_processed_by_engine[engine_name] = 0
                 result.errors_by_engine[engine_name] = (msg,)
+                result.engine_statuses[engine_name] = "FAILED"
+                if on_engine_complete:
+                    on_engine_complete(engine_name, False, msg)
 
         return result

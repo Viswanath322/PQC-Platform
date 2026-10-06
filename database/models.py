@@ -116,6 +116,9 @@ class Scan(Base):
     created_at = Column(DateTime6, server_default=func.now(), default=datetime.utcnow, nullable=False, index=True)
     started_at = Column(DateTime6, nullable=True)
     completed_at = Column(DateTime6, nullable=True)
+    engine_statuses = Column(Text, nullable=True)
+    attempt_count = Column(Integer, server_default=text("1"), default=1, nullable=False)
+    max_retries = Column(Integer, server_default=text("3"), default=3, nullable=False)
 
     # Relationships
     project = relationship("Project", back_populates="scans")
