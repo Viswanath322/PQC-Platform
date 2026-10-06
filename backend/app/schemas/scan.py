@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
 
 from app.schemas.common import UuidStr
 
@@ -57,6 +57,11 @@ class ScanOut(BaseModel):
     completed_at: datetime | None = None
     error_message: str | None = None
     engine_statuses: dict[str, EngineExecutionStatus] = Field(default_factory=dict)
+
+    @field_validator("engine_statuses", mode="before")
+    @classmethod
+    def _coerce_engine_statuses(cls, v: object) -> dict[str, EngineExecutionStatus]:
+        return v if isinstance(v, dict) else {}
 
     @computed_field
     @property

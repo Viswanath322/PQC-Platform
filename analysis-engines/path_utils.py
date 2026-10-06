@@ -42,8 +42,11 @@ def normalize_path(file_path: Path, scan_root: Path) -> str:
     PathNormalizationError
         If file_path does not fall under scan_root.
     """
+    path_obj = Path(file_path)
+    if not path_obj.is_absolute():
+        return PurePosixPath(path_obj).as_posix()
     try:
-        resolved_file = file_path.resolve()
+        resolved_file = path_obj.resolve()
         resolved_root = scan_root.resolve()
         relative = resolved_file.relative_to(resolved_root)
         return PurePosixPath(relative).as_posix()
@@ -86,6 +89,11 @@ def normalize_findings_paths(
                     recommendation=f.recommendation,
                     explanation=f.explanation,
                     is_development=f.is_development,
+                    rule_id=getattr(f, "rule_id", None),
+                    rule_version=getattr(f, "rule_version", None),
+                    group_key=getattr(f, "group_key", None),
+                    source_engine=getattr(f, "source_engine", None),
+                    correlation_group_id=getattr(f, "correlation_group_id", None),
                 )
             )
         except PathNormalizationError:

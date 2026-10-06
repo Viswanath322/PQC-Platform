@@ -113,10 +113,14 @@ class AnalysisPipeline:
     ) -> None:
         if engines is not None:
             self._engines = tuple(engines)
+            if scan_id:
+                for eng in self._engines:
+                    if hasattr(eng, "_scan_id"):
+                        eng._scan_id = scan_id
         elif scan_id:
             self._engines = self._make_default_engines(scan_id)
         else:
-            self._engines = self.DEFAULT_ENGINES
+            self._engines = self._make_default_engines()
 
     def run(
         self,
@@ -145,8 +149,11 @@ class AnalysisPipeline:
 
         for engine in self._engines:
             # Forward root_dir via set_root_dir if the engine supports it
-            if root_dir is not None and hasattr(engine, "set_root_dir"):
-                engine.set_root_dir(root_dir)
+            if hasattr(engine, "set_root_dir"):
+                if root_dir is not None:
+                    engine.set_root_dir(root_dir)
+                else:
+                    setattr(engine, "root_dir", None)
 
             engine_name = engine.name.value
             logger.info(

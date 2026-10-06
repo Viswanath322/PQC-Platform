@@ -223,12 +223,16 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
             unknown = set(selected_engine_names) - set(available)
             if unknown or len(set(selected_engine_names)) != len(selected_engine_names):
                 raise ValueError("Scan job contains unsupported or duplicate engines")
-            pipeline = AnalysisPipeline(engines=tuple(available[name] for name in selected_engine_names))
+            pipeline = AnalysisPipeline(
+                engines=tuple(available[name] for name in selected_engine_names),
+                scan_id=scan_id,
+            )
         else:
-            pipeline = AnalysisPipeline()
+            pipeline = AnalysisPipeline(scan_id=scan_id)
         pipeline_result = pipeline.run(
             file_paths,
             on_engine_status=lambda name, status: _record_engine_status(scan, name, status, db),
+            root_dir=scan_dir,
         )
     except ScanCancelledError:
         logger.info("process_scan: scan %s cancelled during engine execution", scan_id)
@@ -240,7 +244,7 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
         return False
 
     # ------------------------------------------------------------------
-    # 4. PROCESSING — normalize paths and persist findings
+    # 4. PROCESSING — normalize paths and persist findings & components
     # ------------------------------------------------------------------
     if not _set_status(scan, "PROCESSING", db):
         return False
@@ -248,7 +252,8 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
 
     persisted = 0
     try:
-        from app.models import Finding as DBFinding
+        from app.models import Finding as DBFinding, ScanComponent
+        from app.services.finding_service import persist_cbom_components, persist_sbom_components
 
         for f in all_findings:
             db_finding = DBFinding(
@@ -273,9 +278,71 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
             db.add(db_finding)
             persisted += 1
 
+        # Persist CBOM components from CryptoEngine
+        if pipeline_result.components:
+            persist_cbom_components(db, scan_id, pipeline_result.components)
+            for comp in pipeline_result.components:
+                db.add(
+                    ScanComponent(
+                        id=comp.component_id,
+                        scan_id=scan_id,
+                        component_kind="crypto",
+                        component_type="algorithm",
+                        name=comp.algorithm,
+                        source_file=comp.file_path,
+                        line_number=comp.line_number,
+                        detection_method=comp.detection_method,
+                        confidence=comp.confidence,
+                        metadata_json={
+                            "quantum_risk": comp.quantum_risk,
+                            "nist_migration_target": comp.nist_migration_target,
+                            "category": comp.category,
+                        },
+                    )
+                )
+
+        # Inventory SBOM components from dependency manifests
+        sbom_list = []
+        for file_p in file_paths:
+            if file_p.name.lower() == "requirements.txt" and file_p.is_file():
+                try:
+                    rel_src = str(file_p.relative_to(scan_dir)).replace("\\", "/")
+                    for lnum, raw_line in enumerate(file_p.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+                        stripped = raw_line.strip()
+                        if stripped and not stripped.startswith("#") and "==" in stripped:
+                            pname, pver = stripped.split("==", 1)
+                            pname, pver = pname.strip(), pver.strip()
+                            comp_dict = {
+                                "name": pname,
+                                "version": pver,
+                                "package_type": "pypi",
+                                "source_file": rel_src,
+                                "line_number": lnum,
+                            }
+                            sbom_list.append(comp_dict)
+                            db.add(
+                                ScanComponent(
+                                    scan_id=scan_id,
+                                    component_kind="dependency",
+                                    component_type="library",
+                                    name=pname,
+                                    version=pver,
+                                    purl=f"pkg:pypi/{pname}@{pver}",
+                                    source_file=rel_src,
+                                    line_number=lnum,
+                                    detection_method="manifest",
+                                    confidence=1.0,
+                                )
+                            )
+                except Exception as sbom_err:
+                    logger.warning("SBOM parsing error on %s: %s", file_p, sbom_err)
+        if sbom_list:
+            persist_sbom_components(db, scan_id, sbom_list)
+
         db.commit()
         logger.info(
-            "process_scan: scan %s — persisted %d findings", scan_id, persisted
+            "process_scan: scan %s — persisted %d findings, %d cbom, %d sbom",
+            scan_id, persisted, len(pipeline_result.components), len(sbom_list),
         )
     except Exception as exc:  # noqa: BLE001
         err = "Analysis results could not be saved."

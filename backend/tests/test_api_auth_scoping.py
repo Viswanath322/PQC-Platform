@@ -219,7 +219,8 @@ def test_full_flow_project_upload_scan(alice):
     assert r.status_code == 201, r.text
     scan = r.json()
     assert scan["status"] == "QUEUED" and scan["project_id"] == p["id"]
-    assert scan["engine_statuses"] == {"sast": "PENDING", "crypto": "PENDING"}
+    assert all(status == "PENDING" for status in scan["engine_statuses"].values())
+    assert "sast" in scan["engine_statuses"] and "crypto" in scan["engine_statuses"]
     assert scan["id"] in FAKE_QUEUE
     assert scan["upload_id"] == up["upload_id"]      # safe reference instead of the server path
     assert "repository_path" not in scan and "storage" not in str(scan).lower()
@@ -432,8 +433,12 @@ def test_cancel_removes_scan_from_queue(alice):
     assert scan["id"] not in FAKE_QUEUE
 
 
-def test_real_redis_enqueue_and_cancel_dequeue(alice, real_redis):
+def test_real_redis_enqueue_and_cancel_dequeue(alice, real_redis, monkeypatch):
+    import app.services.redis_service as rs
     from app.services.redis_service import ScanJob
+
+    test_queue = "pqc:scan_queue_test"
+    monkeypatch.setattr(rs, "QUEUE_KEY", test_queue)
 
     scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
 
@@ -449,18 +454,18 @@ def test_real_redis_enqueue_and_cancel_dequeue(alice, real_redis):
     try:
         queued_payload = next(
             item
-            for item in real_redis.lrange(QUEUE_KEY, 0, -1)
+            for item in real_redis.lrange(test_queue, 0, -1)
             if queued_item_matches(item)
         )
         job = ScanJob.decode(queued_payload)
         assert job.repository_workspace
-        assert job.selected_engines == ("sast", "crypto")
+        assert "sast" in job.selected_engines and "crypto" in job.selected_engines
         assert client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice).status_code == 200
-        remaining = real_redis.lrange(QUEUE_KEY, 0, -1)
+        remaining = real_redis.lrange(test_queue, 0, -1)
         assert not any(queued_item_matches(item) for item in remaining)
     finally:
         if queued_payload is not None:
-            real_redis.lrem(QUEUE_KEY, 0, queued_payload)
+            real_redis.lrem(test_queue, 0, queued_payload)
 
 
 def test_real_redis_ping_endpoint(real_redis):

@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 FindingEngine = Literal["sast", "crypto", "dependency", "configuration"]
@@ -85,6 +85,11 @@ class ComponentOut(BaseModel):
     detection_method: str
     confidence: float | None = Field(default=None, ge=0, le=1)
     metadata: dict[str, object] = Field(default_factory=dict)
+
+    @field_validator("metadata", mode="before")
+    @classmethod
+    def _coerce_metadata(cls, v: object) -> dict[str, object]:
+        return v if isinstance(v, dict) else {}
 
 
 class ReportOut(BaseModel):

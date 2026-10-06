@@ -100,8 +100,8 @@ class CryptoEngine(AnalysisEngine):
     def name(self) -> EngineName:
         return EngineName.CRYPTO
 
-    def set_root_dir(self, root_dir: Path) -> None:
-        self.root_dir = Path(root_dir).resolve()
+    def set_root_dir(self, root_dir: Path | None) -> None:
+        self.root_dir = Path(root_dir).resolve() if root_dir is not None else None
 
     def _relative_path(self, file_path: Path) -> Path:
         root_dir = getattr(self, "root_dir", None)
