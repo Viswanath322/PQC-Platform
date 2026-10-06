@@ -21,6 +21,10 @@ erDiagram
     PROJECTS ||--o{ SCANS : "undergoes"
     SCANS ||--o{ SCAN_FILES : "contains"
     SCANS ||--o{ FINDINGS : "produces"
+    SCANS ||--o{ SBOM_COMPONENTS : "inventories"
+    SCANS ||--o{ CBOM_COMPONENTS : "catalogs"
+    SCANS ||--o{ FINDING_CORRELATIONS : "tracks"
+    FINDINGS ||--o{ FINDING_CORRELATIONS : "primary"
 
     ORGANIZATIONS {
         VARCHAR(36) id PK "UUID / seed: org-default-001"
@@ -33,7 +37,7 @@ erDiagram
         CHAR(36) id PK "UUID"
         VARCHAR(36) organization_id FK
         VARCHAR(255) email UK
-        VARCHAR(255) password_hash "Argon2id"
+        VARCHAR(255) password_hash "Bcrypt / Argon2id"
         VARCHAR(50) role
         DATETIME(6) created_at
         DATETIME(6) updated_at
@@ -83,6 +87,59 @@ erDiagram
         FLOAT confidence "0.0 - 1.0"
         TEXT recommendation
         BOOLEAN is_development
+        VARCHAR(100) rule_id "Day 3: Rule ID"
+        VARCHAR(50) rule_version "Day 3: Rule version"
+        VARCHAR(255) group_key "Day 3: Deduplication key"
+        VARCHAR(255) correlation_id "Day 3: Correlation ID"
+        DATETIME(6) created_at
+    }
+
+    SBOM_COMPONENTS {
+        CHAR(36) id PK "UUID"
+        CHAR(36) scan_id FK "REFERENCES scans(id)"
+        VARCHAR(255) name "Package name"
+        VARCHAR(100) version "Package version"
+        VARCHAR(50) package_type "pypi, npm, etc."
+        VARCHAR(1024) source_file "Manifest path"
+        INT line_number
+        VARCHAR(100) license
+        BOOLEAN is_direct
+        VARCHAR(100) detection_method
+        FLOAT confidence
+        BOOLEAN is_development
+        DATETIME(6) created_at
+    }
+
+    CBOM_COMPONENTS {
+        CHAR(36) id PK "UUID"
+        CHAR(36) scan_id FK "REFERENCES scans(id)"
+        VARCHAR(100) algorithm "RSA, ECDSA, AES-256, etc."
+        VARCHAR(50) category "asymmetric, symmetric, hash, etc."
+        VARCHAR(100) library "cryptography, pycryptodome, etc."
+        VARCHAR(50) version
+        VARCHAR(1024) file_path
+        INT line_number
+        TEXT usage_context
+        VARCHAR(100) detection_method
+        FLOAT confidence
+        ENUM quantum_risk "quantum_vulnerable, weakened, safe, deprecated, unknown"
+        VARCHAR(255) nist_migration_target "e.g. ML-KEM (FIPS 203)"
+        VARCHAR(50) pqc_mapping_version "1.0"
+        VARCHAR(100) pqc_mapping_source "NIST FIPS 203/204/205"
+        VARCHAR(100) rule_id
+        VARCHAR(50) rule_version
+        BOOLEAN is_development
+        DATETIME(6) created_at
+    }
+
+    FINDING_CORRELATIONS {
+        CHAR(36) id PK "UUID"
+        CHAR(36) scan_id FK "REFERENCES scans(id)"
+        VARCHAR(255) group_key
+        CHAR(36) primary_finding_id FK "REFERENCES findings(id)"
+        CHAR(36) related_finding_id FK "REFERENCES findings(id)"
+        VARCHAR(50) correlation_type
+        TEXT explanation
         DATETIME(6) created_at
     }
 ```
@@ -92,12 +149,15 @@ erDiagram
 ## 2. Table Specifications & Identifier Standard
 
 ### Identifier Standard (Agreed Contract)
-All entities (`organizations`, `users`, `projects`, `scans`, `scan_files`, `findings`) strictly use **standard 36-character UUID strings (`VARCHAR(36)` / `CHAR(36)`)** with automatic generation `DEFAULT (UUID())`. Auto-incrementing integer IDs are deprecated across all routes and models.
+All entities (`organizations`, `users`, `projects`, `scans`, `scan_files`, `findings`, `sbom_components`, `cbom_components`, `finding_correlations`) strictly use **standard 36-character UUID strings (`VARCHAR(36)` / `CHAR(36)`)** with automatic generation `DEFAULT (UUID())`. Auto-incrementing integer IDs are deprecated across all routes and models.
 * **Project IDs:** Standard 36-char lowercase UUID string (`VARCHAR(36)`), e.g. `00000000-0000-0000-0001-000000000001`. Validated in FastAPI routes via `UUID_PATTERN`.
-* **Organization IDs:** Standard 36-char string (`VARCHAR(36)`). Standardized on the single default organization `'org-default-001'`. The legacy numeric compatibility row `'1'` has been dropped (resolving DB-11).
-* **Scan & Finding IDs:** Standard 36-char UUID string (`CHAR(36)`).
+* **Organization IDs:** Standard 36-char string (`VARCHAR(36)`). Standardized on the single default organization `'org-default-001'`.
+* **Scan, Finding, and Component IDs:** Standard 36-char UUID string (`CHAR(36)`).
+* **Day 3 Multi-Engine & Correlation Support:** Findings include `rule_id`, `rule_version`, `group_key`, and `correlation_id` columns with supporting multi-column indexes.
+* **SBOM & CBOM Storage:** Full scan-scoped dependency and cryptographic component inventory tables with deterministic cascade teardown.
 * **High-Precision Timestamps:** All `created_at` and `updated_at` columns use `DATETIME(6)` microsecond precision with `CURRENT_TIMESTAMP(6)` to guarantee deterministic and stable sorting for newest-first queries.
 * **Scan Error Reporting:** The `scans` table includes `error_message TEXT NULL` so failed scans capture worker and ingestion failure reasons.
+
 * **Findings Schema Alignment:** Includes `explanation TEXT NULL` (for API queries), `confidence FLOAT NULL` (0.0 to 1.0, matching analysis engine contract), and `is_development BOOLEAN NOT NULL DEFAULT FALSE` (distinguishing synthetic fixtures).
 
 ---

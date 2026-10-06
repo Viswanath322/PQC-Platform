@@ -159,16 +159,127 @@ CREATE TABLE `findings` (
     `confidence` FLOAT NULL,
     `recommendation` TEXT NULL,
     `is_development` BOOLEAN NOT NULL DEFAULT FALSE,
+    `rule_id` VARCHAR(100) NULL,
+    `rule_version` VARCHAR(50) NULL,
+    `group_key` VARCHAR(255) NULL,
+    `correlation_id` VARCHAR(255) NULL,
     `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (`id`),
     KEY `idx_findings_scan_id` (`scan_id`),
     KEY `idx_findings_severity` (`severity`),
     KEY `idx_findings_engine` (`engine`),
     KEY `idx_findings_category` (`category`),
+    KEY `idx_findings_rule` (`scan_id`, `rule_id`),
+    KEY `idx_findings_group_key` (`scan_id`, `group_key`),
     KEY `idx_findings_scan_severity` (`scan_id`, `severity`),
     KEY `idx_findings_scan_engine` (`scan_id`, `engine`),
+    KEY `idx_findings_scan_category` (`scan_id`, `category`),
+    KEY `idx_findings_scan_engine_severity` (`scan_id`, `engine`, `severity`),
     CONSTRAINT `fk_findings_scan`
         FOREIGN KEY (`scan_id`) REFERENCES `scans` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 7. Table: sbom_components
+-- Description: Software Bill of Materials (dependency components) per scan
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `sbom_components`;
+CREATE TABLE `sbom_components` (
+    `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+    `scan_id` CHAR(36) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `version` VARCHAR(100) NULL,
+    `package_type` VARCHAR(50) NOT NULL DEFAULT 'pypi',
+    `source_file` VARCHAR(1024) NOT NULL,
+    `line_number` INT NULL,
+    `license` VARCHAR(100) NULL,
+    `is_direct` BOOLEAN NOT NULL DEFAULT TRUE,
+    `detection_method` VARCHAR(100) NOT NULL DEFAULT 'manifest_parser',
+    `confidence` FLOAT NOT NULL DEFAULT 1.0,
+    `is_development` BOOLEAN NOT NULL DEFAULT FALSE,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (`id`),
+    KEY `idx_sbom_scan_id` (`scan_id`),
+    KEY `idx_sbom_name` (`name`),
+    KEY `idx_sbom_scan_name` (`scan_id`, `name`),
+    KEY `idx_sbom_source_file` (`scan_id`, `source_file`(255)),
+    CONSTRAINT `fk_sbom_scan`
+        FOREIGN KEY (`scan_id`) REFERENCES `scans` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 8. Table: cbom_components
+-- Description: Cryptographic Bill of Materials (crypto components) per scan
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `cbom_components`;
+CREATE TABLE `cbom_components` (
+    `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+    `scan_id` CHAR(36) NOT NULL,
+    `algorithm` VARCHAR(100) NOT NULL,
+    `category` VARCHAR(50) NOT NULL,
+    `library` VARCHAR(100) NULL,
+    `version` VARCHAR(50) NULL,
+    `file_path` VARCHAR(1024) NOT NULL,
+    `line_number` INT NULL,
+    `usage_context` TEXT NULL,
+    `detection_method` VARCHAR(100) NOT NULL DEFAULT 'engine',
+    `confidence` FLOAT NOT NULL DEFAULT 1.0,
+
+    `quantum_risk` ENUM(
+        'quantum_vulnerable',
+        'weakened',
+        'safe',
+        'deprecated',
+        'unknown'
+    ) NOT NULL DEFAULT 'unknown',
+    `nist_migration_target` VARCHAR(255) NULL,
+    `pqc_mapping_version` VARCHAR(50) NOT NULL DEFAULT '1.0',
+    `pqc_mapping_source` VARCHAR(100) NOT NULL DEFAULT 'NIST FIPS 203/204/205',
+    `rule_id` VARCHAR(100) NULL,
+    `rule_version` VARCHAR(50) NULL,
+    `is_development` BOOLEAN NOT NULL DEFAULT FALSE,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (`id`),
+    KEY `idx_cbom_scan_id` (`scan_id`),
+    KEY `idx_cbom_algorithm` (`algorithm`),
+    KEY `idx_cbom_quantum_risk` (`quantum_risk`),
+    KEY `idx_cbom_scan_risk` (`scan_id`, `quantum_risk`),
+    KEY `idx_cbom_scan_algo` (`scan_id`, `algorithm`),
+    KEY `idx_cbom_scan_file` (`scan_id`, `file_path`(255)),
+    CONSTRAINT `fk_cbom_scan`
+        FOREIGN KEY (`scan_id`) REFERENCES `scans` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 9. Table: finding_correlations
+-- Description: Explicit relationships between grouped/related findings
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `finding_correlations`;
+CREATE TABLE `finding_correlations` (
+    `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+    `scan_id` CHAR(36) NOT NULL,
+    `group_key` VARCHAR(255) NOT NULL,
+    `primary_finding_id` CHAR(36) NOT NULL,
+    `related_finding_id` CHAR(36) NOT NULL,
+    `correlation_type` VARCHAR(50) NOT NULL DEFAULT 'duplicate_or_variant',
+    `explanation` TEXT NULL,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (`id`),
+    KEY `idx_correlation_scan` (`scan_id`),
+    KEY `idx_correlation_group` (`scan_id`, `group_key`),
+    KEY `idx_correlation_primary` (`primary_finding_id`),
+    KEY `idx_correlation_related` (`related_finding_id`),
+    CONSTRAINT `fk_correlation_scan`
+        FOREIGN KEY (`scan_id`) REFERENCES `scans` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `fk_correlation_primary`
+        FOREIGN KEY (`primary_finding_id`) REFERENCES `findings` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `fk_correlation_related`
+        FOREIGN KEY (`related_finding_id`) REFERENCES `findings` (`id`)
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -182,3 +293,4 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
+

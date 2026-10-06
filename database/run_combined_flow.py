@@ -85,8 +85,9 @@ def run_flow():
     scan_id = None
     upload_id = None
     email = os.environ.get("QA_ADMIN_EMAIL", "admin@pqc.example")
-    password = os.environ.get("QA_ADMIN_PASSWORD", "dev-admin-password-2026!")  # pragma: allowlist secret
+    password = os.environ.get("QA_ADMIN_PASSWORD", "change_me_locally")  # pragma: allowlist secret
     org_id = "org-default-001"
+
 
     try:
         # The seeded development admin is used because public registration is disabled by default.

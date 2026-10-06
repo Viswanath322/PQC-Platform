@@ -48,7 +48,20 @@ VALUES (
     NOW(6)
 ) ON DUPLICATE KEY UPDATE `status` = VALUES(`status`), `started_at` = VALUES(`started_at`), `completed_at` = VALUES(`completed_at`);
 
--- 5. Mock Findings (Standard 36-char UUIDs; includes explanation & is_development fields)
+-- 4b. Seed Scan with Status QUEUED (Standard 36-char UUID; required for worker queue tests)
+INSERT INTO `scans` (`id`, `project_id`, `status`, `repository_path`, `error_message`, `created_at`, `started_at`, `completed_at`)
+VALUES (
+    'b91a9d2b-f86e-11da-bd1a-00112444be1f',
+    '00000000-0000-0000-0001-000000000001',
+    'QUEUED',
+    'uploads/demo-banking-queued.zip',
+    NULL,
+    NOW(6),
+    NULL,
+    NULL
+) ON DUPLICATE KEY UPDATE `status` = VALUES(`status`);
+
+-- 5. Mock Findings (Standard 36-char UUIDs; includes Day 3 rule_id, rule_version, group_key)
 INSERT INTO `findings` (
     `id`,
     `scan_id`,
@@ -63,6 +76,9 @@ INSERT INTO `findings` (
     `confidence`,
     `recommendation`,
     `is_development`,
+    `rule_id`,
+    `rule_version`,
+    `group_key`,
     `created_at`
 ) VALUES (
     '00000000-0000-0000-0002-000000000001',
@@ -78,6 +94,9 @@ INSERT INTO `findings` (
     0.95,
     'Upgrade to post-quantum hybrid algorithm (ML-KEM/Kyber) or minimum RSA-3072.',
     TRUE,
+    'CRYPTO-RSA-001',
+    '1.0',
+    'CRYPTO-RSA-001:src/crypto/key_generator.py',
     NOW(6)
 ),
 (
@@ -94,5 +113,119 @@ INSERT INTO `findings` (
     0.85,
     'Use parameterized queries with SQLAlchemy prepared statements.',
     TRUE,
+    'SAST-SQLI-001',
+    '1.0',
+    'SAST-SQLI-001:src/auth/service.py',
     NOW(6)
 ) ON DUPLICATE KEY UPDATE `title` = VALUES(`title`);
+
+-- 6. Seed SBOM Components (Day 3: Dependency component records)
+INSERT INTO `sbom_components` (
+    `id`,
+    `scan_id`,
+    `name`,
+    `version`,
+    `package_type`,
+    `source_file`,
+    `line_number`,
+    `license`,
+    `is_direct`,
+    `detection_method`,
+    `confidence`,
+    `is_development`,
+    `created_at`
+) VALUES (
+    '00000000-0000-0000-0003-000000000001',
+    'a8098c1a-f86e-11da-bd1a-00112444be1e',
+    'pycryptodome',
+    '3.9.0',
+    'pypi',
+    'requirements.txt',
+    4,
+    'BSD-2-Clause',
+    TRUE,
+    'manifest_parser',
+    1.0,
+    TRUE,
+    NOW(6)
+),
+(
+    '00000000-0000-0000-0003-000000000002',
+    'a8098c1a-f86e-11da-bd1a-00112444be1e',
+    'flask',
+    '0.12.2',
+    'pypi',
+    'requirements.txt',
+    1,
+    'BSD-3-Clause',
+    TRUE,
+    'manifest_parser',
+    1.0,
+    TRUE,
+    NOW(6)
+) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+
+-- 7. Seed CBOM Components (Day 3: Cryptographic component records)
+INSERT INTO `cbom_components` (
+    `id`,
+    `scan_id`,
+    `algorithm`,
+    `category`,
+    `library`,
+    `version`,
+    `file_path`,
+    `line_number`,
+    `usage_context`,
+    `detection_method`,
+    `confidence`,
+    `quantum_risk`,
+    `nist_migration_target`,
+    `pqc_mapping_version`,
+    `pqc_mapping_source`,
+    `rule_id`,
+    `rule_version`,
+    `is_development`,
+    `created_at`
+) VALUES (
+    '00000000-0000-0000-0004-000000000001',
+    'a8098c1a-f86e-11da-bd1a-00112444be1e',
+    'RSA',
+    'asymmetric',
+    'pycryptodome',
+    '3.9.0',
+    'src/crypto/key_generator.py',
+    42,
+    'Key generation and digital signatures',
+    'regex:api-call',
+    0.95,
+    'quantum_vulnerable',
+    'ML-KEM (FIPS 203) / ML-DSA (FIPS 204)',
+    '1.0',
+    'NIST FIPS 203/204/205',
+    'CRYPTO-RSA-001',
+    '1.0',
+    TRUE,
+    NOW(6)
+),
+(
+    '00000000-0000-0000-0004-000000000002',
+    'a8098c1a-f86e-11da-bd1a-00112444be1e',
+    'AES-256',
+    'symmetric',
+    'cryptography',
+    NULL,
+    'src/crypto/cipher.py',
+    18,
+    'Bulk data payload encryption',
+    'regex:api-call',
+    0.90,
+    'safe',
+    'None (Quantum resistant at 256 bits)',
+    '1.0',
+    'NIST FIPS 203/204/205',
+    'CRYPTO-AES-001',
+    '1.0',
+    TRUE,
+    NOW(6)
+) ON DUPLICATE KEY UPDATE `algorithm` = VALUES(`algorithm`);
+

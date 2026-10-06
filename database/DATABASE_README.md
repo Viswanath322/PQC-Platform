@@ -50,14 +50,15 @@
 ### Repository Files (Branch: `vamsi`)
 | File / Directory | Status | Notes |
 | :--- | :--- | :--- |
-| `database/schema.sql` | **REQUIRED** | Primary DDL definition for all 6 tables, UUID generation, foreign keys, and indexes. |
-| `database/seed.sql` | **REQUIRED** | Development seed data with Argon2id admin credentials and completed demo scan. |
-| `database/models.py` | **REQUIRED** | SQLAlchemy 2.0 ORM models matching MySQL DDL with microsecond timestamp precision. |
-| `database/verify_db.py` | **REQUIRED** | Standalone verification script. Strictly tests MySQL (fails fast, zero SQLite fallback). |
+| `database/schema.sql` | **REQUIRED** | Primary canonical DDL definition for all 9 tables, UUID generation, foreign keys, and indexes. |
+| `database/migrations/` | **REQUIRED** | Versioned migration scripts: `001_day1_core_schema.sql` (baseline) and `002_day3_expansion.sql` (additive). |
+| `database/seed.sql` | **REQUIRED** | Development seed data with admin credentials, demo scans (QUEUED & COMPLETED), findings, SBOM, and CBOM. |
+| `database/models.py` | **REQUIRED** | SQLAlchemy 2.0 ORM models matching MySQL DDL (`Finding`, `SBOMComponent`, `CBOMComponent`, `FindingCorrelation`). |
+| `database/verify_db.py` | **REQUIRED** | Standalone Day 3 verification script. Strictly tests live MySQL (fails fast, zero SQLite fallback). |
 | `database/run_combined_flow.py`| **REQUIRED** | End-to-end integration and verification script with automatic teardown. |
-| `backend/` stub files | **PROHIBITED** | Must **NOT** exist on branch `vamsi`. Backend code belongs to Aakash (`backend/aakash-port`). |
 | `schema_postgres.sql`, `seed_postgres.sql` | **PROHIBITED** | PostgreSQL is forbidden. Target is local MySQL only. |
 | `*.db` (SQLite files) | **PROHIBITED** | SQLite fallback is forbidden. The platform is strictly MySQL. |
+
 
 ---
 
