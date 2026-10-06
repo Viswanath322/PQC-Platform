@@ -5,6 +5,12 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+from pathlib import Path
+
+_BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+_REPO_ROOT = _BACKEND_DIR.parent
+
+
 class Settings(BaseSettings):
     app_env: str = "development"
     database_url: str
@@ -18,7 +24,12 @@ class Settings(BaseSettings):
     redis_url: str = "redis://127.0.0.1:6379/0"
 
     model_config = SettingsConfigDict(
-        env_file=(".env", "../.env"),
+        env_file=(
+            str(_BACKEND_DIR / ".env"),
+            str(_REPO_ROOT / ".env"),
+            ".env",
+            "../.env",
+        ),
         env_file_encoding="utf-8",
         extra="ignore",
         hide_input_in_errors=True,
