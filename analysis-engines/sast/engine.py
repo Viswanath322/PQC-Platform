@@ -28,6 +28,8 @@ from .rules import Rule, get_rules
 
 logger = logging.getLogger(__name__)
 
+RULE_VERSION = "1.0.0"  # Day 3: record rule-set version for reproducibility
+
 # Source file extensions this engine can meaningfully scan
 _SCANNABLE = {
     ".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".go",
@@ -166,7 +168,10 @@ class SASTEngine(AnalysisEngine):
                                     evidence=evidence or line.strip()[:_MAX_EVIDENCE_CHARS],
                                     confidence=rule.confidence,
                                     recommendation=rule.recommendation,
-                                    is_development=False,
+                                    explanation=rule.explanation if hasattr(rule, "explanation") else None,                                    is_development=False,
+                                    rule_id=rule.rule_id,
+                                    rule_version=RULE_VERSION,
+                                    group_key=f"{rule.rule_id}:{relative_path.as_posix()}",
                                 )
                             )
             except OSError as exc:

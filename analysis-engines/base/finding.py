@@ -1,17 +1,24 @@
-"""Canonical finding model shared by analysis engines and API adapters."""
+"""Canonical finding model shared by analysis engines and API adapters.
+
+Day 3 additions:
+  - rule_id: stable identifier of the rule that produced this finding
+  - rule_version: version string of the rule set (for reproducibility)
+  - group_key: optional deduplication/correlation group key
+"""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 import sys
 from uuid import UUID
 
-# StrEnum was added in Python 3.11; provide a compatible fallback for 3.10.
 if sys.version_info >= (3, 11):
     from enum import StrEnum
 else:
     from enum import Enum
 
     class StrEnum(str, Enum):  # type: ignore[no-redef]
-        """Minimal StrEnum backport: members compare equal to their string values."""
+        """Minimal StrEnum backport."""
 
 
 class EngineName(StrEnum):
@@ -32,14 +39,11 @@ class Severity(StrEnum):
 class Finding:
     """One normalized analysis observation.
 
-    ``is_development`` lets consumers distinguish fixtures from real findings;
-    it defaults to false so production engines cannot accidentally mark every
-    result as a fixture.
+    ``rule_id`` and ``rule_version`` record which rule produced the finding so
+    results can be reproduced from the same rule set version.
 
-    ``explanation`` is an optional human-readable description of why the
-    finding matters; engines may populate it directly. It maps to the
-    ``explanation`` column in the findings database table and to the
-    ``FindingOut.explanation`` API field.
+    ``group_key`` is an optional string used for deduplication and correlation;
+    findings with the same group_key describe the same logical issue.
     """
 
     finding_id: str
@@ -54,6 +58,9 @@ class Finding:
     recommendation: str
     explanation: str | None = None
     is_development: bool = False
+    rule_id: str | None = None          # Day 3: stable rule identifier
+    rule_version: str | None = None     # Day 3: rule-set version string
+    group_key: str | None = None        # Day 3: deduplication / correlation key
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -68,6 +75,10 @@ class Finding:
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"{field_name} must be a non-empty string")
 
+        # AE-09: file_path length check
+        if len(self.file_path) > 1024:
+            raise ValueError("file_path must not exceed 1024 characters")
+
         try:
             parsed_id = UUID(self.finding_id)
         except (AttributeError, TypeError, ValueError) as exc:
@@ -76,11 +87,17 @@ class Finding:
             raise ValueError("finding_id must be a canonical lowercase UUID string")
 
         if not isinstance(self.engine, EngineName):
-            raise ValueError(f"engine must be one of: {', '.join(item.value for item in EngineName)}")
+            raise ValueError(
+                f"engine must be one of: {', '.join(item.value for item in EngineName)}"
+            )
         if not isinstance(self.severity, Severity):
-            raise ValueError(f"severity must be one of: {', '.join(item.value for item in Severity)}")
+            raise ValueError(
+                f"severity must be one of: {', '.join(item.value for item in Severity)}"
+            )
         if self.line_number is not None and (
-            not isinstance(self.line_number, int) or isinstance(self.line_number, bool) or self.line_number < 1
+            not isinstance(self.line_number, int)
+            or isinstance(self.line_number, bool)
+            or self.line_number < 1
         ):
             raise ValueError("line_number must be a positive integer or None")
         if (
@@ -93,3 +110,7 @@ class Finding:
             raise ValueError("is_development must be a boolean")
         if self.explanation is not None and not isinstance(self.explanation, str):
             raise ValueError("explanation must be a string or None")
+        for opt_field in ("rule_id", "rule_version", "group_key"):
+            v = getattr(self, opt_field)
+            if v is not None and not isinstance(v, str):
+                raise ValueError(f"{opt_field} must be a string or None")
