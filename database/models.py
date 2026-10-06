@@ -220,7 +220,7 @@ class SBOMComponent(Base):
     detection_method = Column(String(100), server_default="manifest_parser", nullable=False, default="manifest_parser")
     confidence = Column(Float, server_default=text("1.0"), nullable=False, default=1.0)
     is_development = Column(Boolean, server_default=text("0"), nullable=False, default=False)
-    created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime6, server_default=func.now(), default=datetime.utcnow, nullable=False)
 
     # Relationships
     scan = relationship("Scan", back_populates="sbom_components")
@@ -269,7 +269,7 @@ class CBOMComponent(Base):
     rule_id = Column(String(100), nullable=True)
     rule_version = Column(String(50), nullable=True)
     is_development = Column(Boolean, server_default=text("0"), nullable=False, default=False)
-    created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime6, server_default=func.now(), default=datetime.utcnow, nullable=False)
 
     # Relationships
     scan = relationship("Scan", back_populates="cbom_components")
@@ -291,7 +291,7 @@ class FindingCorrelation(Base):
     related_finding_id = Column(String(36), ForeignKey("findings.id", ondelete="CASCADE"), nullable=False, index=True)
     correlation_type = Column(String(50), server_default="duplicate_or_variant", nullable=False, default="duplicate_or_variant")
     explanation = Column(Text, nullable=True)
-    created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime6, server_default=func.now(), default=datetime.utcnow, nullable=False)
 
     # Relationships
     scan = relationship("Scan", back_populates="correlations")

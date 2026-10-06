@@ -13,7 +13,7 @@ from .crypto.engine import CryptoEngine
 from .dependency.engine import DependencyEngine
 from .dummy_engine import DummyEngine
 from .normalizer import normalize_and_deduplicate
-from .runner import AnalysisPipeline, PipelineResult
+from .runner import AnalysisPipeline, PipelineResult, ScanCancelledError
 from .sast.engine import SASTEngine
 
 __all__ = [
@@ -29,6 +29,7 @@ __all__ = [
     "Finding",
     "PipelineResult",
     "SASTEngine",
+    "ScanCancelledError",
     "Severity",
     "normalize_and_deduplicate",
 ]

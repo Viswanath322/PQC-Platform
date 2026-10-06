@@ -91,6 +91,13 @@ class AnalysisPipeline:
     and so the normalizer can make all paths relative before deduplication.
     """
 
+    DEFAULT_ENGINES: tuple[AnalysisEngine, ...] = (
+        SASTEngine(),
+        CryptoEngine(),
+        ConfigurationEngine(),
+        DependencyEngine(),
+    )
+
     def _make_default_engines(self, scan_id: str = "") -> tuple[AnalysisEngine, ...]:
         return (
             SASTEngine(),
@@ -104,17 +111,19 @@ class AnalysisPipeline:
         engines: Sequence[AnalysisEngine] | None = None,
         scan_id: str = "",
     ) -> None:
-        self._engines: tuple[AnalysisEngine, ...] = (
-            tuple(engines) if engines is not None
-            else self._make_default_engines(scan_id)
-        )
+        if engines is not None:
+            self._engines = tuple(engines)
+        elif scan_id:
+            self._engines = self._make_default_engines(scan_id)
+        else:
+            self._engines = self.DEFAULT_ENGINES
 
     def run(
         self,
         files: Iterable[Path],
+        on_engine_status: Callable[[str, str], None] | None = None,
         *,
         root_dir: Path | None = None,
-        on_engine_status: Callable[[str, str], None] | None = None,
     ) -> PipelineResult:
         """
         Run all engines, normalize paths and deduplicate findings.
