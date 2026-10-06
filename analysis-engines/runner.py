@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Callable, Iterable, Sequence
 
 from .base.analyzer import AnalysisEngine
 from .base.component import CryptoComponent
@@ -29,6 +29,10 @@ from .normalizer import normalize_and_deduplicate
 from .sast.engine import SASTEngine
 
 logger = logging.getLogger(__name__)
+
+
+class ScanCancelledError(Exception):
+    """Raised by a worker callback when the owning scan was cancelled."""
 
 
 @dataclass
@@ -110,6 +114,7 @@ class AnalysisPipeline:
         files: Iterable[Path],
         *,
         root_dir: Path | None = None,
+        on_engine_status: Callable[[str, str], None] | None = None,
     ) -> PipelineResult:
         """
         Run all engines, normalize paths and deduplicate findings.
@@ -122,6 +127,8 @@ class AnalysisPipeline:
             Root of the extracted repository. When provided:
             - Each engine's exclusion check uses relative paths (AE-14).
             - The normalizer makes all finding paths relative before dedup.
+        on_engine_status:
+            Optional callback invoked with (engine_name, status) as each engine runs.
         """
         file_list = list(files)
         result = PipelineResult(total_files=len(file_list))
@@ -136,6 +143,8 @@ class AnalysisPipeline:
             logger.info(
                 "Pipeline: running engine=%s files=%d", engine_name, len(file_list)
             )
+            if on_engine_status is not None:
+                on_engine_status(engine_name, "RUNNING")
             try:
                 engine_result: AnalysisResult = engine.analyze(iter(file_list))
 
@@ -145,7 +154,7 @@ class AnalysisPipeline:
                 )
                 result.errors_by_engine[engine_name] = engine_result.errors
                 all_components.extend(engine_result.components)
-
+                engine_status = "FAILED" if engine_result.errors else "COMPLETED"
                 logger.info(
                     "Pipeline: engine=%s findings=%d components=%d errors=%d processed=%d",
                     engine_name,
@@ -160,6 +169,9 @@ class AnalysisPipeline:
                 result.findings_by_engine[engine_name] = ()
                 result.files_processed_by_engine[engine_name] = 0
                 result.errors_by_engine[engine_name] = (msg,)
+                engine_status = "FAILED"
+            if on_engine_status is not None:
+                on_engine_status(engine_name, engine_status)
 
         result.components = tuple(all_components)
 

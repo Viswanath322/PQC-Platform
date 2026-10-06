@@ -95,6 +95,7 @@ CREATE TABLE `scans` (
     ) NOT NULL DEFAULT 'QUEUED',
     `repository_path` VARCHAR(1024) NOT NULL,
     `error_message` TEXT NULL,
+    `engine_statuses` JSON NULL,
     `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `started_at` DATETIME(6) NULL DEFAULT NULL,
     `completed_at` DATETIME(6) NULL DEFAULT NULL,

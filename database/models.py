@@ -20,6 +20,7 @@ from sqlalchemy import (
     Enum,
     Boolean,
     Float,
+    JSON,
     text,
     func,
 )
@@ -30,6 +31,9 @@ Base = declarative_base()
 
 # Support microsecond precision (DATETIME(6)) for MySQL while remaining compatible with SQLite
 DateTime6 = DateTime().with_variant(MySQLDateTime(fsp=6), "mysql")
+# Keep model metadata usable by both SQLite-backed tests and MySQL deployments.
+# The database/schema.sql file retains the MySQL-specific DATETIME(6) defaults.
+CURRENT_TIMESTAMP_DEFAULT = text("CURRENT_TIMESTAMP")
 
 
 def generate_uuid() -> str:
@@ -113,6 +117,7 @@ class Scan(Base):
     )
     repository_path = Column(String(1024), nullable=False)
     error_message = Column(Text, nullable=True)
+    engine_statuses = Column(JSON, nullable=True, default=dict)
     created_at = Column(DateTime6, server_default=func.now(), default=datetime.utcnow, nullable=False, index=True)
     started_at = Column(DateTime6, nullable=True)
     completed_at = Column(DateTime6, nullable=True)

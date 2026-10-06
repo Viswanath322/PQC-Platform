@@ -133,7 +133,7 @@ def fake_queue(request, monkeypatch):
     from app.api.v1 import scans as scans_module
 
     FAKE_QUEUE.clear()
-    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid: FAKE_QUEUE.append(sid) or True)
+    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid, *args: FAKE_QUEUE.append(sid) or True)
     monkeypatch.setattr(scans_module, "dequeue_scan", lambda sid: sid in FAKE_QUEUE and FAKE_QUEUE.remove(sid) or True)
 
 
@@ -216,6 +216,7 @@ def test_full_flow_project_upload_scan(alice):
     assert r.status_code == 201, r.text
     scan = r.json()
     assert scan["status"] == "QUEUED" and scan["project_id"] == p["id"]
+    assert scan["engine_statuses"] == {"sast": "PENDING", "crypto": "PENDING"}
     assert scan["id"] in FAKE_QUEUE
     assert scan["upload_id"] == up["upload_id"]      # safe reference instead of the server path
     assert "repository_path" not in scan and "storage" not in str(scan).lower()
@@ -307,13 +308,14 @@ def test_cancel_then_cancel_again_409(alice):
     scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
     r = client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice)
     assert r.status_code == 200 and r.json()["status"] == "CANCELLED" and r.json()["completed_at"]
+    assert set(r.json()["engine_statuses"].values()) == {"CANCELLED"}
     assert client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice).status_code == 409
 
 
 def test_redis_failure_returns_503_and_scan_is_marked_failed(alice, monkeypatch):
     from app.api.v1 import scans as scans_module
 
-    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid: False)
+    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid, *args: False)
     p = create_project(alice)
     r = create_scan(alice, p["id"], upload_zip(alice)["upload_id"])
     assert r.status_code == 503
@@ -339,13 +341,34 @@ def test_cancel_removes_scan_from_queue(alice):
 
 
 def test_real_redis_enqueue_and_cancel_dequeue(alice, real_redis):
+    from app.services.redis_service import ScanJob
+
     scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+
+    def queued_item_matches(item):
+        if item == scan["id"]:  # legacy queue message
+            return True
+        try:
+            return ScanJob.decode(item).scan_id == scan["id"]
+        except (ValueError, TypeError):
+            return False
+
+    queued_payload = None
     try:
-        assert scan["id"] in real_redis.lrange(QUEUE_KEY, 0, -1)
+        queued_payload = next(
+            item
+            for item in real_redis.lrange(QUEUE_KEY, 0, -1)
+            if queued_item_matches(item)
+        )
+        job = ScanJob.decode(queued_payload)
+        assert job.repository_workspace
+        assert job.selected_engines == ("sast", "crypto")
         assert client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice).status_code == 200
-        assert scan["id"] not in real_redis.lrange(QUEUE_KEY, 0, -1)
+        remaining = real_redis.lrange(QUEUE_KEY, 0, -1)
+        assert not any(queued_item_matches(item) for item in remaining)
     finally:
-        real_redis.lrem(QUEUE_KEY, 0, scan["id"])
+        if queued_payload is not None:
+            real_redis.lrem(QUEUE_KEY, 0, queued_payload)
 
 
 def test_real_redis_ping_endpoint(real_redis):
