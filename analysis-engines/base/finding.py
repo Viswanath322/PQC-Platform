@@ -61,6 +61,8 @@ class Finding:
     rule_id: str | None = None          # Day 3: stable rule identifier
     rule_version: str | None = None     # Day 3: rule-set version string
     group_key: str | None = None        # Day 3: deduplication / correlation key
+    source_engine: str | None = None
+    correlation_group_id: str | None = None
 
     def __post_init__(self) -> None:
         for field_name in (

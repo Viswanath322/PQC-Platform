@@ -129,6 +129,7 @@ class Scan(Base):
     sbom_components = relationship("SBOMComponent", back_populates="scan", cascade="all, delete-orphan")
     cbom_components = relationship("CBOMComponent", back_populates="scan", cascade="all, delete-orphan")
     correlations = relationship("FindingCorrelation", back_populates="scan", cascade="all, delete-orphan")
+    components = relationship("ScanComponent", back_populates="scan", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Scan id={self.id} status='{self.status}' project_id='{self.project_id}'>"
@@ -180,6 +181,8 @@ class Finding(Base):
     rule_version = Column(String(50), nullable=True)
     group_key = Column(String(255), nullable=True, index=True)
     correlation_id = Column(String(255), nullable=True)
+    source_engine = Column(String(50), nullable=True)
+    correlation_group_id = Column(String(36), nullable=True, index=True)
     created_at = Column(DateTime6, server_default=func.now(), default=datetime.utcnow, nullable=False)
 
     # Relationships
@@ -300,4 +303,30 @@ class FindingCorrelation(Base):
 
     def __repr__(self) -> str:
         return f"<FindingCorrelation id={self.id} group='{self.group_key}'>"
+
+
+class ScanComponent(Base):
+    """Persisted dependency SBOM or cryptographic CBOM component for a scan."""
+
+    __tablename__ = "scan_components"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    scan_id = Column(String(36), ForeignKey("scans.id", ondelete="CASCADE"), nullable=False, index=True)
+    component_kind = Column(String(20), nullable=False, index=True)
+    component_type = Column(String(100), nullable=False)
+    name = Column(String(255), nullable=False)
+    version = Column(String(255), nullable=True)
+    purl = Column(String(1024), nullable=True)
+    source_file = Column(String(1024), nullable=True)
+    line_number = Column(Integer, nullable=True)
+    detection_method = Column(String(100), nullable=False)
+    confidence = Column(Float, nullable=True)
+    metadata_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime6, server_default=func.now(), default=datetime.utcnow, nullable=False)
+
+    scan = relationship("Scan", back_populates="components")
+
+    def __repr__(self) -> str:
+        return f"<ScanComponent id={self.id} kind='{self.component_kind}' name='{self.name}'>"
+
 

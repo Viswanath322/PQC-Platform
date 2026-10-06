@@ -33,6 +33,10 @@ class FindingOut(BaseModel):
         description="Human-readable explanation of why the finding matters",
     )
     confidence: float | None = Field(default=None, ge=0, le=1)
+    rule_id: str | None = None
+    rule_version: str | None = None
+    source_engine: str | None = None
+    correlation_group_id: str | None = None
     recommendation: str | None = None
     remediation: str | None = Field(
         default=None,
@@ -57,8 +61,34 @@ class ReportSeverityCounts(BaseModel):
     low: int = 0
 
 
+class FindingBreakdown(BaseModel):
+    key: str
+    count: int = Field(ge=0)
+
+
+class FindingSummaryOut(BaseModel):
+    scan_id: str
+    total_findings: int = Field(ge=0)
+    by_engine: list[FindingBreakdown]
+    by_severity: list[FindingBreakdown]
+    by_category: list[FindingBreakdown]
+
+
+class ComponentOut(BaseModel):
+    component_id: str
+    component_type: str
+    name: str
+    version: str | None = None
+    purl: str | None = None
+    source_file: str | None = None
+    line_number: int | None = Field(default=None, ge=1)
+    detection_method: str
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    metadata: dict[str, object] = Field(default_factory=dict)
+
+
 class ReportOut(BaseModel):
-    """Day 2 report model: scan metadata, finding counts, and detailed findings list."""
+    """Persisted scan summary with finding details and SBOM/CBOM inventories."""
 
     scan_id: str
     status: str
@@ -67,4 +97,9 @@ class ReportOut(BaseModel):
     target_repository: str = "repository"
     total_findings: int = 0
     findings_by_severity: ReportSeverityCounts
-    findings: list[FindingOut] = []
+    findings_by_engine: dict[str, int] = Field(default_factory=dict)
+    findings_by_category: dict[str, int] = Field(default_factory=dict)
+    findings_truncated: bool = False
+    findings: list[FindingOut] = Field(default_factory=list)
+    sbom: list[ComponentOut] = Field(default_factory=list)
+    cbom: list[ComponentOut] = Field(default_factory=list)

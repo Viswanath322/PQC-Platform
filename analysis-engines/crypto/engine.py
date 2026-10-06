@@ -26,7 +26,7 @@ from ..base.component import (
 )
 from ..base.finding import EngineName, Finding, Severity
 from ..base.result import AnalysisResult
-from .rules import get_crypto_rules
+from .rules import RULESET_VERSION, get_crypto_rules
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +181,7 @@ class CryptoEngine(AnalysisEngine):
                                     rule_id=rule.rule_id,
                                     rule_version=RULE_VERSION,
                                     group_key=f"{rule.rule_id}:{rel_str}",
+                                    source_engine="crypto",
                                 )
                             )
 

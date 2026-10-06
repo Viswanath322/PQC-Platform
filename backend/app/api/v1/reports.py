@@ -24,7 +24,19 @@ def read_report(
     result = get_report_data(db, scan_id, organization_id=organization_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Scan not found")
-    status, project_name, target_repo, total, counts, findings = result
+    (
+        status,
+        project_name,
+        target_repo,
+        total,
+        counts,
+        findings,
+        counts_by_engine,
+        counts_by_category,
+        sbom,
+        cbom,
+        findings_truncated,
+    ) = result
     return ReportOut(
         scan_id=scan_id,
         status=status,
@@ -33,6 +45,11 @@ def read_report(
         target_repository=target_repo,
         total_findings=total,
         findings_by_severity=counts,
+        findings_by_engine=counts_by_engine,
+        findings_by_category=counts_by_category,
         findings=findings,
+        sbom=sbom,
+        cbom=cbom,
+        findings_truncated=findings_truncated,
     )
 

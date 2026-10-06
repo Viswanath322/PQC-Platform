@@ -35,7 +35,7 @@ from app.core.config import get_settings
 from app.core.database import SessionLocal, engine
 from app.core.security import hash_password
 from app.main import app
-from app.models import Base, Organization, Project, Scan, User
+from app.models import Base, Finding, Organization, Project, Scan, ScanComponent, User
 from app.services.redis_service import QUEUE_KEY, get_redis
 
 API = "/api/v1"
@@ -241,6 +241,10 @@ def test_cross_org_isolation(alice, bob):
     assert client.get(f"{API}/projects/{p['id']}", headers=bob).status_code == 404
     assert p["id"] not in [x["id"] for x in client.get(f"{API}/projects", headers=bob).json()]
     assert client.get(f"{API}/scans/{scan['id']}", headers=bob).status_code == 404
+    assert client.get(f"{API}/reports/{scan['id']}", headers=bob).status_code == 404
+    assert client.get(
+        f"{API}/findings/summary", params={"scan_id": scan["id"]}, headers=bob
+    ).status_code == 404
     assert scan["id"] not in [x["id"] for x in client.get(f"{API}/scans", headers=bob).json()]
     assert scan["id"] not in [x["id"] for x in
                               client.get(f"{API}/scans", params={"project_id": p["id"]}, headers=bob).json()]
@@ -303,6 +307,78 @@ def test_unknown_uuids_are_404(alice):
     assert create_scan(alice, str(uuid.uuid4()), upload_zip(alice)["upload_id"]).status_code == 404
     assert create_scan(alice, p["id"], str(uuid.uuid4())).status_code == 404
     assert client.get(f"{API}/scans/{uuid.uuid4()}", headers=alice).status_code == 404
+
+
+def test_empty_report_and_summary_are_valid(alice):
+    scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+    report = client.get(f"{API}/reports/{scan['id']}", headers=alice)
+    summary = client.get(f"{API}/findings/summary", params={"scan_id": scan["id"]}, headers=alice)
+    assert report.status_code == summary.status_code == 200
+    assert report.json()["total_findings"] == 0
+    assert report.json()["findings"] == []
+    assert report.json()["sbom"] == report.json()["cbom"] == []
+    assert summary.json()["total_findings"] == 0
+    assert summary.json()["by_engine"] == summary.json()["by_severity"] == summary.json()["by_category"] == []
+
+
+def test_single_engine_report_includes_rule_metadata(alice):
+    scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+    with SessionLocal() as db:
+        db.add(Finding(
+            id=str(uuid.uuid4()), scan_id=scan["id"], engine="sast", category="injection",
+            severity="high", title="Unsafe SQL", file_path="src/db.py", line_number=8,
+            evidence="query = user_input", rule_id="SAST-INJ-001", rule_version="1.0.0",
+            source_engine="sast",
+        ))
+        db.commit()
+    report = client.get(f"{API}/reports/{scan['id']}", headers=alice).json()
+    assert report["total_findings"] == len(report["findings"]) == 1
+    assert report["findings_by_engine"] == {"sast": 1}
+    assert report["findings"][0]["rule_id"] == "SAST-INJ-001"
+
+
+def test_single_and_multi_engine_report_contract_is_deterministic(alice):
+    scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+    with SessionLocal() as db:
+        db.add_all([
+            Finding(
+                id=str(uuid.uuid4()), scan_id=scan["id"], engine="sast", category="injection",
+                severity="high", title="Unsafe SQL", file_path="src/db.py", line_number=8,
+                evidence="query = user_input", rule_id="SAST-INJ-001", rule_version="1.0.0",
+                source_engine="sast", correlation_group_id="00000000-0000-4000-8000-000000000001",
+            ),
+            Finding(
+                id=str(uuid.uuid4()), scan_id=scan["id"], engine="crypto", category="pqc",
+                severity="medium", title="RSA use", file_path="src/crypto.py", line_number=14,
+                evidence="RSA.generate()", rule_id="CRYPTO-QV-001", rule_version="1.0.0",
+                source_engine="crypto",
+            ),
+            ScanComponent(
+                scan_id=scan["id"], component_kind="dependency", component_type="library",
+                name="requests", version="2.32.0", purl="pkg:pypi/requests@2.32.0",
+                source_file="requirements.txt", detection_method="manifest", confidence=1.0,
+            ),
+            ScanComponent(
+                scan_id=scan["id"], component_kind="crypto", component_type="algorithm",
+                name="RSA", source_file="src/crypto.py", line_number=14,
+                detection_method="CRYPTO-QV-001", confidence=0.91,
+            ),
+        ])
+        db.commit()
+
+    first = client.get(f"{API}/findings/summary", params={"scan_id": scan["id"]}, headers=alice).json()
+    second = client.get(f"{API}/findings/summary", params={"scan_id": scan["id"]}, headers=alice).json()
+    assert first == second
+    assert first["total_findings"] == 2
+    assert first["by_engine"] == [{"key": "crypto", "count": 1}, {"key": "sast", "count": 1}]
+    assert first["by_severity"] == [{"key": "high", "count": 1}, {"key": "medium", "count": 1}]
+
+    report = client.get(f"{API}/reports/{scan['id']}", headers=alice).json()
+    assert report["total_findings"] == len(report["findings"]) == 2
+    assert report["findings_by_engine"] == {"crypto": 1, "sast": 1}
+    assert report["findings_by_category"] == {"injection": 1, "pqc": 1}
+    assert {item["rule_id"] for item in report["findings"]} == {"SAST-INJ-001", "CRYPTO-QV-001"}
+    assert len(report["sbom"]) == len(report["cbom"]) == 1
 
 
 def test_upload_rejects_bad_files(alice):

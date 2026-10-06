@@ -43,7 +43,7 @@ The API uses the shared SQLAlchemy models under `database.models` through `app.m
 
 Protected project, upload, scan, finding, and report routes require a bearer token and scope records to the authenticated user's organization. Missing, invalid, expired, or unknown-user tokens return `401`; a user without an organization receives `403`; inaccessible or missing organization-owned records return `404`.
 
-Request validation failures return `422` using a stable, non-echoing shape. Submitted values are deliberately omitted from each issue:
+Request validation failures return `422` using a stable, non-echoing shape:
 
 ```json
 {
@@ -56,32 +56,27 @@ Request validation failures return `422` using a stable, non-echoing shape. Subm
 
 Unexpected server failures return `500` with `{"detail":"Internal server error"}`; tracebacks and exception messages stay in server logs. Redis failures return `503` with `{"detail":"Redis unavailable"}`. Scan worker failures are stored as short user-safe messages; host paths and raw exception details are not returned in scan responses. Scan and report IDs, project filters, finding scan filters, and project IDs are validated as UUIDs. Findings filters enforce the declared severity and engine values and bounded pagination (`limit` 1–500, `offset` 0 or greater).
 
-### Current analysis and report endpoints
+## Findings, summaries, and reports
 
-Day 3 engine-specific response contracts are not implemented by this branch yet. Existing endpoints remain authenticated and return only persisted data:
+All finding and report endpoints require bearer authentication and scope reads to the user's organization. `GET /api/v1/findings` supports optional `scan_id`, `severity`, `engine`, `finding_category`, `limit` (1–500), and `offset` (0 or greater). Results sort by creation time descending and finding ID descending, so page boundaries are stable. The legacy `category` query name remains an alias for `engine`.
 
-| Endpoint | Parameters | Success response |
-|---|---|---|
-| `GET /api/v1/findings` | Optional `scan_id`, `severity`, `engine`, `finding_category`, `limit`, `offset` | JSON array of `FindingOut`; `[]` when no records match |
-| `GET /api/v1/findings/{finding_id}` | UUID path parameter | One `FindingOut` |
-| `GET /api/v1/reports/{scan_id}` | UUID path parameter | `ReportOut` with scan status, generation time, totals, severity counts, and findings |
+`FindingOut` includes `rule_id`, `rule_version`, `source_engine`, and optional `correlation_group_id` when present. `GET /api/v1/findings/summary?scan_id=<uuid>` returns `total_findings` and sorted `by_engine`, `by_severity`, and `by_category` arrays. A scan outside the caller's organization returns `404`, including scans with no findings.
 
-Example report response:
+Example summary response:
 
 ```json
 {
   "scan_id": "0d522be1-3f0d-4098-9695-c43923de94e8",
-  "status": "COMPLETED",
-  "generated_at": "2026-09-29T12:00:00Z",
-  "project_name": "Demo Project",
-  "target_repository": "repository",
-  "total_findings": 0,
-  "findings_by_severity": {"critical": 0, "high": 0, "medium": 0, "low": 0},
-  "findings": []
+  "total_findings": 2,
+  "by_engine": [{"key": "crypto", "count": 1}, {"key": "sast", "count": 1}],
+  "by_severity": [{"key": "high", "count": 1}, {"key": "medium", "count": 1}],
+  "by_category": [{"key": "injection", "count": 1}, {"key": "pqc", "count": 1}]
 }
 ```
 
-Invalid request parameters return the validation shape above; a valid but inaccessible finding or scan returns `404`. Reports currently summarize findings and do not claim to provide Day 3 SBOM/CBOM or engine status sections until those contracts are implemented.
+`GET /api/v1/reports/{scan_id}` returns finding totals and details, per-engine and per-category totals, and separate `sbom` and `cbom` component arrays. Each component carries its type, name/version, repository-relative source file and line when known, detection method, confidence, and optional metadata. Empty arrays mean no components have been persisted. Report details are capped at 5,000 findings; `findings_truncated` indicates when the full count is higher.
+
+Existing MySQL installations must apply [`20261006_day3_findings_components.sql`](../database/migrations/20261006_day3_findings_components.sql) before using the expanded report/finding queries. Fresh installs receive the same contract from `database/schema.sql`. Components are scan-owned and cascade-delete with their scan; source findings remain separate and correlation is represented by an optional group ID.
 
 ## Local security notes
 

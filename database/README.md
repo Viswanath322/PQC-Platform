@@ -2,7 +2,8 @@
 
 **Owner:** Vamsi (Database Engineer)
 **Target Engine:** MySQL 8.0+
-**Database Name:** `pqc_security`
+**Database Name:** `pqc_security` (with `pqc` compatibility)
+**Day 3 Migrations:** See `migrations/` for schema expansions (CBOM, SBOM, engine statuses, and findings).
 **Git Branch:** `vamsi`
 
 > 📘 **Comprehensive Manual Available:**

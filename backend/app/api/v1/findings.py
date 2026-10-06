@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from app.api.v1.routes.auth import get_current_user, get_user_organization_id
 from app.core.database import get_db
 from app.models import User
-from app.schemas.finding import FindingEngine, FindingOut, FindingSeverity
+from app.schemas.finding import FindingEngine, FindingOut, FindingSeverity, FindingSummaryOut
 from app.schemas.common import UUID_PATTERN
-from app.services.finding_service import get_finding, list_findings
+from app.services.finding_service import get_finding, get_finding_summary, list_findings
 
 router = APIRouter(prefix="/findings", tags=["findings"])
 
@@ -49,6 +49,21 @@ def read_findings(
         limit=limit,
         offset=offset,
     )
+
+
+@router.get("/summary", response_model=FindingSummaryOut)
+def read_finding_summary(
+    scan_id: str = Query(..., pattern=UUID_PATTERN),
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> FindingSummaryOut:
+    """Return scan-scoped finding counts without exposing other organizations."""
+    result = get_finding_summary(
+        db, scan_id, organization_id=get_user_organization_id(user)
+    )
+    if result is None:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    return result
 
 
 @router.get("/{finding_id}", response_model=FindingOut)
