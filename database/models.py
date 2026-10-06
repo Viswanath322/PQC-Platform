@@ -20,6 +20,7 @@ from sqlalchemy import (
     Enum,
     Boolean,
     Float,
+    JSON,
     text,
 )
 from sqlalchemy.dialects.mysql import DATETIME as MySQLDateTime
@@ -120,6 +121,7 @@ class Scan(Base):
     project = relationship("Project", back_populates="scans")
     scan_files = relationship("ScanFile", back_populates="scan", cascade="all, delete-orphan")
     findings = relationship("Finding", back_populates="scan", cascade="all, delete-orphan")
+    components = relationship("ScanComponent", back_populates="scan", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Scan id={self.id} status='{self.status}' project_id='{self.project_id}'>"
@@ -167,6 +169,10 @@ class Finding(Base):
     confidence = Column(Float, nullable=True)
     recommendation = Column(Text, nullable=True)
     is_development = Column(Boolean, server_default=text("0"), nullable=False, default=False)
+    rule_id = Column(String(100), nullable=True, index=True)
+    rule_version = Column(String(50), nullable=True)
+    source_engine = Column(String(50), nullable=True)
+    correlation_group_id = Column(String(36), nullable=True, index=True)
     created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False)
 
     # Relationships
@@ -174,4 +180,29 @@ class Finding(Base):
 
     def __repr__(self) -> str:
         return f"<Finding id={self.id} severity='{self.severity}' engine='{self.engine}'>"
+
+
+class ScanComponent(Base):
+    """Persisted dependency SBOM or cryptographic CBOM component for a scan."""
+
+    __tablename__ = "scan_components"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    scan_id = Column(String(36), ForeignKey("scans.id", ondelete="CASCADE"), nullable=False, index=True)
+    component_kind = Column(String(20), nullable=False, index=True)
+    component_type = Column(String(100), nullable=False)
+    name = Column(String(255), nullable=False)
+    version = Column(String(255), nullable=True)
+    purl = Column(String(1024), nullable=True)
+    source_file = Column(String(1024), nullable=True)
+    line_number = Column(Integer, nullable=True)
+    detection_method = Column(String(100), nullable=False)
+    confidence = Column(Float, nullable=True)
+    metadata_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False)
+
+    scan = relationship("Scan", back_populates="components")
+
+    def __repr__(self) -> str:
+        return f"<ScanComponent id={self.id} kind='{self.component_kind}' name='{self.name}'>"
 

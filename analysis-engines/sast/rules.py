@@ -15,6 +15,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+RULESET_VERSION = "1.0.0"
+
 
 @dataclass(frozen=True)
 class Rule:

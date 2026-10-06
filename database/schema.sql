@@ -163,6 +163,10 @@ CREATE TABLE `findings` (
     `confidence` FLOAT NULL,
     `recommendation` TEXT NULL,
     `is_development` BOOLEAN NOT NULL DEFAULT FALSE,
+    `rule_id` VARCHAR(100) NULL,
+    `rule_version` VARCHAR(50) NULL,
+    `source_engine` VARCHAR(50) NULL,
+    `correlation_group_id` VARCHAR(36) NULL,
     `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (`id`),
     KEY `idx_findings_scan_id` (`scan_id`),
@@ -170,9 +174,37 @@ CREATE TABLE `findings` (
     KEY `idx_findings_engine` (`engine`),
     KEY `idx_findings_scan_severity` (`scan_id`, `severity`),
     KEY `idx_findings_scan_engine` (`scan_id`, `engine`),
+    KEY `idx_findings_rule_id` (`rule_id`),
+    KEY `idx_findings_correlation_group` (`correlation_group_id`),
     CONSTRAINT `fk_findings_scan`
         FOREIGN KEY (`scan_id`) REFERENCES `scans` (`id`)
         ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 7. Table: scan_components (Day 3 SBOM / CBOM inventory)
+-- -----------------------------------------------------------------------------
+CREATE TABLE `scan_components` (
+    `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+    `scan_id` CHAR(36) NOT NULL,
+    `component_kind` VARCHAR(20) NOT NULL,
+    `component_type` VARCHAR(100) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `version` VARCHAR(255) NULL,
+    `purl` VARCHAR(1024) NULL,
+    `source_file` VARCHAR(1024) NULL,
+    `line_number` INT NULL,
+    `detection_method` VARCHAR(100) NOT NULL,
+    `confidence` FLOAT NULL,
+    `metadata_json` JSON NULL,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (`id`),
+    KEY `idx_scan_components_scan_kind` (`scan_id`, `component_kind`),
+    KEY `idx_scan_components_name_version` (`name`, `version`),
+    CONSTRAINT `fk_scan_components_scan`
+        FOREIGN KEY (`scan_id`) REFERENCES `scans` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `chk_scan_components_kind` CHECK (`component_kind` IN ('dependency', 'crypto'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------

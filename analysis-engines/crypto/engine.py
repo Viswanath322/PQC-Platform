@@ -23,7 +23,7 @@ from uuid import NAMESPACE_URL, uuid5
 from ..base.analyzer import AnalysisEngine
 from ..base.finding import EngineName, Finding, Severity
 from ..base.result import AnalysisResult
-from .rules import get_crypto_rules
+from .rules import RULESET_VERSION, get_crypto_rules
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +107,9 @@ class CryptoEngine(AnalysisEngine):
                                     confidence=rule.confidence,
                                     recommendation=rule.recommendation,
                                     is_development=False,
+                                    rule_id=rule.rule_id,
+                                    rule_version=RULESET_VERSION,
+                                    source_engine="crypto",
                                 )
                             )
             except OSError as exc:

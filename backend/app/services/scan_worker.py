@@ -177,6 +177,10 @@ def process_scan(scan_id: str, db: Session) -> bool:
                 confidence=f.confidence,
                 recommendation=f.recommendation,
                 is_development=f.is_development,
+                rule_id=f.rule_id,
+                rule_version=f.rule_version,
+                source_engine=f.source_engine or f.engine.value,
+                correlation_group_id=f.correlation_group_id,
             )
             db.add(db_finding)
             persisted += 1

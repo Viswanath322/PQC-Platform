@@ -1,5 +1,7 @@
 # PQC Security Assessment Platform — Database
 
+Day 3 Findings/Reports extensions are described in the additive migration [`migrations/20261006_day3_findings_components.sql`](migrations/20261006_day3_findings_components.sql). Apply it once to an existing Day 2 database before deploying the expanded API. Fresh databases receive the same columns and `scan_components` table from `schema.sql`.
+
 **Owner:** Vamsi (Database Engineer)  
 **Target Engine:** MySQL 8.0+  
 **Database Name:** `pqc` (with `pqc_security` backwards-compatibility)  

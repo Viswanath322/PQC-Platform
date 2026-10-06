@@ -13,8 +13,9 @@ from database.models import (  # noqa: E402
     Organization,
     Project,
     Scan,
+    ScanComponent,
     ScanFile,
     User,
 )
 
-__all__ = ["Base", "Finding", "Organization", "Project", "Scan", "ScanFile", "User"]
+__all__ = ["Base", "Finding", "Organization", "Project", "Scan", "ScanComponent", "ScanFile", "User"]

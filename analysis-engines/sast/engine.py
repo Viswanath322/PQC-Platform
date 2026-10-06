@@ -23,7 +23,7 @@ from uuid import NAMESPACE_URL, uuid5
 from ..base.analyzer import AnalysisEngine
 from ..base.finding import EngineName, Finding, Severity
 from ..base.result import AnalysisResult
-from .rules import Rule, get_rules
+from .rules import RULESET_VERSION, Rule, get_rules
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +133,9 @@ class SASTEngine(AnalysisEngine):
                                     confidence=rule.confidence,
                                     recommendation=rule.recommendation,
                                     is_development=False,
+                                    rule_id=rule.rule_id,
+                                    rule_version=RULESET_VERSION,
+                                    source_engine=rule.engine,
                                 )
                             )
             except OSError as exc:

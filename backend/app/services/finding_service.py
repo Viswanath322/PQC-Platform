@@ -3,7 +3,13 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.schemas.finding import FindingOut, ReportSeverityCounts
+from app.schemas.finding import (
+    ComponentOut,
+    FindingBreakdown,
+    FindingOut,
+    FindingSummaryOut,
+    ReportSeverityCounts,
+)
 
 
 def list_findings(
@@ -43,7 +49,8 @@ def list_findings(
             "SELECT findings.id AS finding_id, findings.scan_id, findings.engine, "
             "findings.category, findings.severity, findings.title, findings.file_path, "
             "findings.line_number, findings.evidence, findings.explanation, "
-            "findings.confidence, findings.recommendation, findings.is_development "
+            "findings.confidence, findings.recommendation, findings.is_development, "
+            "findings.rule_id, findings.rule_version, findings.source_engine, findings.correlation_group_id "
             "FROM findings "
             "JOIN scans ON scans.id = findings.scan_id "
             "JOIN projects ON projects.id = scans.project_id" + where + " "
@@ -61,7 +68,8 @@ def get_finding(db: Session, finding_id: str, *, organization_id: str) -> Findin
             "SELECT findings.id AS finding_id, findings.scan_id, findings.engine, "
             "findings.category, findings.severity, findings.title, findings.file_path, "
             "findings.line_number, findings.evidence, findings.explanation, "
-            "findings.confidence, findings.recommendation, findings.is_development "
+            "findings.confidence, findings.recommendation, findings.is_development, "
+            "findings.rule_id, findings.rule_version, findings.source_engine, findings.correlation_group_id "
             "FROM findings "
             "JOIN scans ON scans.id = findings.scan_id "
             "JOIN projects ON projects.id = scans.project_id "
@@ -74,7 +82,10 @@ def get_finding(db: Session, finding_id: str, *, organization_id: str) -> Findin
 
 def get_report_data(
     db: Session, scan_id: str, *, organization_id: str
-) -> tuple[str, str, str, int, ReportSeverityCounts, list[FindingOut]] | None:
+) -> tuple[
+    str, str, str, int, ReportSeverityCounts, list[FindingOut],
+    dict[str, int], dict[str, int], list[ComponentOut], list[ComponentOut], bool,
+] | None:
     """Return scan status, project name, target repository, finding counts, and findings list."""
     import os
 
@@ -98,6 +109,19 @@ def get_report_data(
 
     findings = list_findings(db, organization_id=organization_id, scan_id=scan_id, limit=5000)
 
+    summary = get_finding_summary(db, scan_id, organization_id=organization_id)
+    components = db.execute(
+        text(
+            "SELECT id AS component_id, component_kind, component_type, name, version, purl, "
+            "source_file, line_number, detection_method, confidence, metadata_json AS metadata "
+            "FROM scan_components WHERE scan_id = :scan_id "
+            "ORDER BY component_kind, name, version, source_file, id"
+        ),
+        {"scan_id": scan_id},
+    ).mappings().all()
+    sbom = [ComponentOut.model_validate(row) for row in components if row["component_kind"] == "dependency"]
+    cbom = [ComponentOut.model_validate(row) for row in components if row["component_kind"] == "crypto"]
+
     counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
     for f in findings:
         sev = str(f.severity).lower()
@@ -108,9 +132,54 @@ def get_report_data(
         str(scan["status"]),
         str(project_name),
         str(target_repo),
-        len(findings),
-        ReportSeverityCounts(**counts),
+        summary.total_findings,
+        ReportSeverityCounts(**{**counts, **{item.key: item.count for item in summary.by_severity}}),
         findings,
+        {item.key: item.count for item in summary.by_engine},
+        {item.key: item.count for item in summary.by_category},
+        sbom,
+        cbom,
+        summary.total_findings > len(findings),
+    )
+
+
+def get_finding_summary(
+    db: Session, scan_id: str, *, organization_id: str
+) -> FindingSummaryOut | None:
+    """Return deterministic grouped counts for a scan the organization can access."""
+    scan = db.execute(
+        text(
+            "SELECT scans.id FROM scans JOIN projects ON projects.id = scans.project_id "
+            "WHERE scans.id = :scan_id AND projects.organization_id = :organization_id"
+        ),
+        {"scan_id": scan_id, "organization_id": organization_id},
+    ).first()
+    if scan is None:
+        return None
+
+    total = db.execute(
+        text("SELECT COUNT(*) FROM findings WHERE scan_id = :scan_id"),
+        {"scan_id": scan_id},
+    ).scalar_one()
+
+    def breakdown(column: str, *, null_key: str | None = None) -> list[FindingBreakdown]:
+        expression = f"COALESCE({column}, :null_key)" if null_key else column
+        rows = db.execute(
+            text(
+                f"SELECT {expression} AS group_key, COUNT(*) AS item_count "
+                f"FROM findings WHERE scan_id = :scan_id "
+                f"GROUP BY {expression} ORDER BY group_key"
+            ),
+            {"scan_id": scan_id, "null_key": null_key} if null_key else {"scan_id": scan_id},
+        ).mappings()
+        return [FindingBreakdown(key=str(row["group_key"]), count=int(row["item_count"])) for row in rows]
+
+    return FindingSummaryOut(
+        scan_id=scan_id,
+        total_findings=int(total),
+        by_engine=breakdown("engine"),
+        by_severity=breakdown("severity"),
+        by_category=breakdown("category", null_key="uncategorized"),
     )
 
 
@@ -153,6 +222,10 @@ def persist_findings(
             confidence=f.confidence,
             recommendation=f.recommendation,
             is_development=f.is_development,
+            rule_id=getattr(f, "rule_id", None),
+            rule_version=getattr(f, "rule_version", None),
+            source_engine=getattr(f, "source_engine", None) or str(f.engine.value),
+            correlation_group_id=getattr(f, "correlation_group_id", None),
         )
         db.add(db_finding)
         inserted += 1

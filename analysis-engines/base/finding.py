@@ -54,6 +54,10 @@ class Finding:
     recommendation: str
     explanation: str | None = None
     is_development: bool = False
+    rule_id: str | None = None
+    rule_version: str | None = None
+    source_engine: str | None = None
+    correlation_group_id: str | None = None
 
     def __post_init__(self) -> None:
         for field_name in (

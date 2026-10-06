@@ -39,6 +39,28 @@ Project, upload, and scan endpoints require `Authorization: Bearer <access_token
 
 The API uses the shared SQLAlchemy models under `database.models` through `app.models`; it does not declare a second `Base` or duplicate project/scan tables.
 
+## Findings, summaries, and reports
+
+All finding and report endpoints require bearer authentication and scope reads to the user's organization. `GET /api/v1/findings` supports optional `scan_id`, `severity`, `engine`, `finding_category`, `limit` (1–500), and `offset` (0 or greater). Results sort by creation time descending and finding ID descending, so page boundaries are stable. The legacy `category` query name remains an alias for `engine`.
+
+`FindingOut` includes `rule_id`, `rule_version`, `source_engine`, and optional `correlation_group_id` when present. `GET /api/v1/findings/summary?scan_id=<uuid>` returns `total_findings` and sorted `by_engine`, `by_severity`, and `by_category` arrays. A scan outside the caller's organization returns `404`, including scans with no findings.
+
+Example summary response:
+
+```json
+{
+  "scan_id": "0d522be1-3f0d-4098-9695-c43923de94e8",
+  "total_findings": 2,
+  "by_engine": [{"key": "crypto", "count": 1}, {"key": "sast", "count": 1}],
+  "by_severity": [{"key": "high", "count": 1}, {"key": "medium", "count": 1}],
+  "by_category": [{"key": "injection", "count": 1}, {"key": "pqc", "count": 1}]
+}
+```
+
+`GET /api/v1/reports/{scan_id}` returns finding totals and details, per-engine and per-category totals, and separate `sbom` and `cbom` component arrays. Each component carries its type, name/version, repository-relative source file and line when known, detection method, confidence, and optional metadata. Empty arrays mean no components have been persisted. Report details are capped at 5,000 findings; `findings_truncated` indicates when the full count is higher.
+
+Existing MySQL installations must apply [`20261006_day3_findings_components.sql`](../database/migrations/20261006_day3_findings_components.sql) before using the expanded report/finding queries. Fresh installs receive the same contract from `database/schema.sql`. Components are scan-owned and cascade-delete with their scan; source findings remain separate and correlation is represented by an optional group ID.
+
 ## Local security notes
 
 The API is intended for local development. CORS origins are limited to the documented local React/Tauri origins and can be overridden with the comma-separated `CORS_ORIGINS` setting. Do not commit `.env`, real credentials, or production secrets. Replace the development JWT secret before using auth, and do not expose this development server to an untrusted network.
