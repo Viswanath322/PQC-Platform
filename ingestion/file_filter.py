@@ -1,0 +1,46 @@
+"""Repository path exclusions used before classification and analysis."""
+
+from pathlib import Path
+
+EXCLUDED_DIRS = {
+    ".git", ".hg", ".svn", "node_modules", "__pycache__",
+    ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox",
+    ".venv", "venv", "coverage", ".next", ".gradle",
+    ".idea", ".vscode", "pods", "site-packages",
+    "build", "dist",
+}
+EXCLUDED_FILES = {".ds_store", "thumbs.db"}
+
+
+def is_excluded(path: str | Path) -> bool:
+    parts = [part.lower() for part in Path(path).parts]
+    # Issue #14: Return bool, not empty list
+    if not parts:
+        return False
+    # Issue #10: Only check folder parts (not the filename itself)
+    return any(part in EXCLUDED_DIRS for part in parts[:-1]) or (parts and parts[-1] in EXCLUDED_FILES)
+
+
+def get_exclusion_reason(path: str | Path) -> str | None:
+    """Return the reason a path is excluded, or None if it's not excluded.
+    
+    Day 3: Track skip reasons for excluded files.
+    """
+    parts = [part.lower() for part in Path(path).parts]
+    if not parts:
+        return None
+    
+    # Check folder parts (not the filename itself)
+    for part in parts[:-1]:
+        if part in EXCLUDED_DIRS:
+            return f"excluded_directory:{part}"
+    
+    # Check filename
+    if parts and parts[-1] in EXCLUDED_FILES:
+        return f"excluded_file:{parts[-1]}"
+    
+    return None
+
+
+def filter_files(paths: list[Path]) -> list[Path]:
+    return [path for path in paths if not is_excluded(path)]
