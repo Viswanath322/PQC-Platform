@@ -21,5 +21,26 @@ def is_excluded(path: str | Path) -> bool:
     return any(part in EXCLUDED_DIRS for part in parts[:-1]) or (parts and parts[-1] in EXCLUDED_FILES)
 
 
+def get_exclusion_reason(path: str | Path) -> str | None:
+    """Return the reason a path is excluded, or None if it's not excluded.
+    
+    Day 3: Track skip reasons for excluded files.
+    """
+    parts = [part.lower() for part in Path(path).parts]
+    if not parts:
+        return None
+    
+    # Check folder parts (not the filename itself)
+    for part in parts[:-1]:
+        if part in EXCLUDED_DIRS:
+            return f"excluded_directory:{part}"
+    
+    # Check filename
+    if parts and parts[-1] in EXCLUDED_FILES:
+        return f"excluded_file:{parts[-1]}"
+    
+    return None
+
+
 def filter_files(paths: list[Path]) -> list[Path]:
     return [path for path in paths if not is_excluded(path)]
