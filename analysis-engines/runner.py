@@ -26,7 +26,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Callable, Iterable, Sequence
 
 from .base.analyzer import AnalysisEngine
 from .base.finding import EngineName, Finding
@@ -35,6 +35,10 @@ from .crypto.engine import CryptoEngine
 from .sast.engine import SASTEngine
 
 logger = logging.getLogger(__name__)
+
+
+class ScanCancelledError(Exception):
+    """Raised by a worker callback when the owning scan was cancelled."""
 
 
 @dataclass
@@ -103,7 +107,11 @@ class AnalysisPipeline:
             tuple(engines) if engines is not None else self.DEFAULT_ENGINES
         )
 
-    def run(self, files: Iterable[Path]) -> PipelineResult:
+    def run(
+        self,
+        files: Iterable[Path],
+        on_engine_status: Callable[[str, str], None] | None = None,
+    ) -> PipelineResult:
         """
         Run all engines against the supplied file paths.
 
@@ -120,11 +128,14 @@ class AnalysisPipeline:
         for engine in self._engines:
             engine_name = engine.name.value
             logger.info("Pipeline: running engine=%s files=%d", engine_name, len(file_list))
+            if on_engine_status is not None:
+                on_engine_status(engine_name, "RUNNING")
             try:
                 engine_result: AnalysisResult = engine.analyze(iter(file_list))
                 result.findings_by_engine[engine_name] = engine_result.findings
                 result.files_processed_by_engine[engine_name] = engine_result.files_processed
                 result.errors_by_engine[engine_name] = engine_result.errors
+                engine_status = "FAILED" if engine_result.errors else "COMPLETED"
                 logger.info(
                     "Pipeline: engine=%s findings=%d errors=%d files_processed=%d",
                     engine_name,
@@ -138,5 +149,8 @@ class AnalysisPipeline:
                 result.findings_by_engine[engine_name] = ()
                 result.files_processed_by_engine[engine_name] = 0
                 result.errors_by_engine[engine_name] = (msg,)
+                engine_status = "FAILED"
+            if on_engine_status is not None:
+                on_engine_status(engine_name, engine_status)
 
         return result

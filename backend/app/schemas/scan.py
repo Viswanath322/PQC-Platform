@@ -22,6 +22,14 @@ class ScanStatus(str, Enum):
     CANCELLED = "CANCELLED"
 
 
+class EngineExecutionStatus(str, Enum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
 FINAL_STATUSES = {ScanStatus.COMPLETED, ScanStatus.FAILED, ScanStatus.CANCELLED}
 
 
@@ -48,6 +56,7 @@ class ScanOut(BaseModel):
     started_at: datetime | None = None
     completed_at: datetime | None = None
     error_message: str | None = None
+    engine_statuses: dict[str, EngineExecutionStatus] = Field(default_factory=dict)
 
     @computed_field
     @property

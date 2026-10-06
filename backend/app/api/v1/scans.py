@@ -8,6 +8,7 @@ from app.api.v1.routes.auth import get_current_user, get_user_organization_id
 from app.models import Project, Scan, User
 from app.schemas.common import UUID_PATTERN
 from app.schemas.scan import FINAL_STATUSES, ScanCreate, ScanOut, ScanStatus
+from analysis_engines.runner import AnalysisPipeline
 from app.services.redis_service import dequeue_scan, enqueue_scan
 from app.services.storage_service import get_upload_path
 
@@ -33,14 +34,23 @@ def create_scan(
     if project is None:
         raise HTTPException(404, "Project not found")
     zip_path = get_upload_path(body.upload_id, organization_id=organization_id)
-    scan = Scan(project_id=body.project_id, status=ScanStatus.QUEUED.value, repository_path=str(zip_path))
+    selected_engines = tuple(engine.name.value for engine in AnalysisPipeline.DEFAULT_ENGINES)
+    scan = Scan(
+        project_id=body.project_id,
+        status=ScanStatus.QUEUED.value,
+        repository_path=str(zip_path),
+        engine_statuses={engine: "PENDING" for engine in selected_engines},
+    )
     db.add(scan)
     db.commit()
     db.refresh(scan)
-    if not enqueue_scan(scan.id):
+    scan_workspace = zip_path.parent.parent / "scans" / scan.id / "repository"
+    if not enqueue_scan(scan.id, str(scan_workspace), selected_engines):
         # Never report QUEUED for a scan that is not in the queue: keep the row as FAILED and tell the caller.
         scan.status = ScanStatus.FAILED.value
         scan.completed_at = _utcnow()
+        scan.error_message = "Scan queue is unavailable"
+        scan.engine_statuses = {engine: "FAILED" for engine in selected_engines}
         db.commit()
         raise HTTPException(503, "Scan queue is unavailable; the scan was not queued. Please retry.")
     return scan
@@ -86,6 +96,10 @@ def cancel_scan(scan_id: str, db: Session = Depends(get_db), user: User = Depend
         raise HTTPException(409, f"Scan already {scan.status}")
     scan.status = ScanStatus.CANCELLED.value
     scan.completed_at = _utcnow()
+    scan.engine_statuses = {
+        name: "CANCELLED" if state in ("PENDING", "RUNNING") else state
+        for name, state in (scan.engine_statuses or {}).items()
+    }
     db.commit()
     dequeue_scan(scan.id)
     return scan

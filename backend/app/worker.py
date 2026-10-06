@@ -16,8 +16,9 @@ import sys
 import time
 
 from app.core.database import SessionLocal
-from app.services.redis_service import QUEUE_KEY, get_redis
-from app.services.scan_worker import process_scan
+from app.services.job_retry import retry_unclaimed_job
+from app.services.redis_service import QUEUE_KEY, ScanJob, enqueue_job, get_redis
+from app.services.scan_worker import mark_unexpected_failure, process_scan
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,6 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger("pqc.worker")
 
 _running = True
+MAX_JOB_RETRIES = 2
 
 
 def _handle_exit(signum, frame):
@@ -53,15 +55,33 @@ def run_worker() -> None:
             if item is None:
                 continue
 
-            _, scan_id = item
+            _, queued_payload = item
+            try:
+                job = ScanJob.decode(queued_payload)
+            except (ValueError, TypeError):
+                # Continue accepting scan IDs queued by workers from older builds.
+                job = queued_payload
+            scan_id = job.scan_id if isinstance(job, ScanJob) else job
             logger.info("Worker picked up scan: %s", scan_id)
 
             db = SessionLocal()
             try:
-                success = process_scan(scan_id, db)
+                success = process_scan(job, db)
                 logger.info("Scan %s completed with result: %s", scan_id, success)
             except Exception as exc:  # noqa: BLE001
                 logger.exception("Unexpected error processing scan %s: %s", scan_id, exc)
+                try:
+                    retry_scheduled = retry_unclaimed_job(job, db, enqueue_job, MAX_JOB_RETRIES)
+                    if retry_scheduled:
+                        logger.warning(
+                            "Scan %s failed before claim; retrying (attempt %d)",
+                            scan_id,
+                            job.attempt + 1,
+                        )
+                    if not retry_scheduled:
+                        mark_unexpected_failure(scan_id, db)
+                except Exception:  # noqa: BLE001
+                    logger.exception("Could not mark scan %s as FAILED", scan_id)
             finally:
                 db.close()
 
