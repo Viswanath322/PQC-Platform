@@ -41,8 +41,8 @@ Every route below needs `Authorization: Bearer <access_token>`.
  "created_at": "2026-09-30T09:50:10.837998", "started_at": null, "completed_at": null}
 ```
 - The server-side ZIP path is not returned. It is saved in `scans.repository_path` in MySQL for ingestion.
-- Response header `X-Queue-Status`: `enqueued` (pushed to Redis list `pqc:scan_queue`) or `deferred` (Redis unreachable; scan is still saved as `QUEUED`).
-- Errors: `422` ids that are not UUIDs, `404` project or upload not found (or in another organization).
+- On success the response is `201` and the scan is enqueued in Redis. If Redis is unavailable, the scan is marked `FAILED` and the API returns `503`; it does not return a queued scan that cannot be processed.
+- Errors: `422` ids that are not UUIDs, `404` project or upload not found (or in another organization), `503` queue unavailable.
 
 Other routes:
 - `GET /scans` (optional `?project_id=<uuid>`) and `GET /scans/{scan_id}`.
@@ -50,6 +50,21 @@ Other routes:
 
 ## Redis test
 `GET /redis/ping` returns `{"redis": "ok", "queue_length": 0}`, or `503` if Redis is unreachable or the password is wrong.
+
+The `503` body is `{"detail":"Redis unavailable"}` and does not include internal connection details.
+
+## Validation and error responses
+
+Malformed request values return `422` with a stable shape that omits submitted values:
+
+```json
+{
+  "detail": "Request validation failed",
+  "errors": [{"loc": ["body", "name"], "msg": "Invalid request value", "type": "string_too_long"}]
+}
+```
+
+Unexpected server failures return `500` with `{"detail":"Internal server error"}`. Internal exception details are logged server-side and are not included in API responses.
 
 ## Local run
 ```

@@ -39,6 +39,50 @@ Project, upload, and scan endpoints require `Authorization: Bearer <access_token
 
 The API uses the shared SQLAlchemy models under `database.models` through `app.models`; it does not declare a second `Base` or duplicate project/scan tables.
 
+## Stable API errors and Day 3 validation
+
+Protected project, upload, scan, finding, and report routes require a bearer token and scope records to the authenticated user's organization. Missing, invalid, expired, or unknown-user tokens return `401`; a user without an organization receives `403`; inaccessible or missing organization-owned records return `404`.
+
+Request validation failures return `422` using a stable, non-echoing shape. Submitted values are deliberately omitted from each issue:
+
+```json
+{
+  "detail": "Request validation failed",
+  "errors": [
+    {"loc": ["body", "name"], "msg": "Invalid request value", "type": "string_too_long"}
+  ]
+}
+```
+
+Unexpected server failures return `500` with `{"detail":"Internal server error"}`; tracebacks and exception messages stay in server logs. Redis failures return `503` with `{"detail":"Redis unavailable"}`. Scan worker failures are stored as short user-safe messages; host paths and raw exception details are not returned in scan responses. Scan and report IDs, project filters, finding scan filters, and project IDs are validated as UUIDs. Findings filters enforce the declared severity and engine values and bounded pagination (`limit` 1–500, `offset` 0 or greater).
+
+### Current analysis and report endpoints
+
+Day 3 engine-specific response contracts are not implemented by this branch yet. Existing endpoints remain authenticated and return only persisted data:
+
+| Endpoint | Parameters | Success response |
+|---|---|---|
+| `GET /api/v1/findings` | Optional `scan_id`, `severity`, `engine`, `finding_category`, `limit`, `offset` | JSON array of `FindingOut`; `[]` when no records match |
+| `GET /api/v1/findings/{finding_id}` | UUID path parameter | One `FindingOut` |
+| `GET /api/v1/reports/{scan_id}` | UUID path parameter | `ReportOut` with scan status, generation time, totals, severity counts, and findings |
+
+Example report response:
+
+```json
+{
+  "scan_id": "0d522be1-3f0d-4098-9695-c43923de94e8",
+  "status": "COMPLETED",
+  "generated_at": "2026-09-29T12:00:00Z",
+  "project_name": "Demo Project",
+  "target_repository": "repository",
+  "total_findings": 0,
+  "findings_by_severity": {"critical": 0, "high": 0, "medium": 0, "low": 0},
+  "findings": []
+}
+```
+
+Invalid request parameters return the validation shape above; a valid but inaccessible finding or scan returns `404`. Reports currently summarize findings and do not claim to provide Day 3 SBOM/CBOM or engine status sections until those contracts are implemented.
+
 ## Local security notes
 
 The API is intended for local development. CORS origins are limited to the documented local React/Tauri origins and can be overridden with the comma-separated `CORS_ORIGINS` setting. Do not commit `.env`, real credentials, or production secrets. Replace the development JWT secret before using auth, and do not expose this development server to an untrusted network.

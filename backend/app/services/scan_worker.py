@@ -157,8 +157,9 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
 
     zip_path = Path(scan.repository_path)
     if not zip_path.is_file():
-        logger.error("process_scan: uploaded archive is missing for scan %s", scan_id)
-        _set_status(scan, "FAILED", db, error_message="Uploaded archive is missing")
+        err = "Uploaded repository is unavailable for processing."
+        logger.error("process_scan: repository unavailable for scan %s", scan_id)
+        _set_status(scan, "FAILED", db, error_message=err)
         return False
 
     storage_root = zip_path.parent.parent  # storage/uploads → storage/
@@ -177,8 +178,9 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
     try:
         AnalysisPipeline, ScanCancelledError, normalize_findings_paths, ingest_repository = _import_pipeline()
     except ImportError as exc:
-        logger.exception("process_scan: could not import pipeline: %s", exc)
-        _set_status(scan, "FAILED", db, error_message="Analysis pipeline is unavailable")
+        err = "Analysis pipeline is unavailable."
+        logger.exception("process_scan: analysis pipeline import failed for scan %s: %s", scan_id, exc)
+        _set_status(scan, "FAILED", db, error_message=err)
         return False
 
     # ------------------------------------------------------------------
@@ -187,8 +189,9 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
     try:
         summary = ingest_repository(zip_path, scan_dir)
     except Exception as exc:  # noqa: BLE001
+        err = "Repository validation or ingestion failed."
         logger.exception("process_scan: ingestion failed for scan %s: %s", scan_id, exc)
-        _set_status(scan, "FAILED", db, error_message="Repository ingestion failed")
+        _set_status(scan, "FAILED", db, error_message=err)
         return False
 
     # Persist scan_files inventory
@@ -231,8 +234,9 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
         logger.info("process_scan: scan %s cancelled during engine execution", scan_id)
         return False
     except Exception as exc:  # noqa: BLE001
+        err = "Analysis processing failed."
         logger.exception("process_scan: analysis failed for scan %s: %s", scan_id, exc)
-        _set_status(scan, "FAILED", db, error_message="Analysis pipeline failed")
+        _set_status(scan, "FAILED", db, error_message=err)
         return False
 
     # ------------------------------------------------------------------
@@ -270,7 +274,7 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
             "process_scan: scan %s — persisted %d findings", scan_id, persisted
         )
     except Exception as exc:  # noqa: BLE001
-        err = f"finding persistence failed: {exc}"
+        err = "Analysis results could not be saved."
         logger.exception(
             "process_scan: finding persistence failed for scan %s: %s", scan_id, exc
         )
