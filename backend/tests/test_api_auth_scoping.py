@@ -158,6 +158,9 @@ PROTECTED = [
     ("GET", f"{API}/scans", {}),
     ("GET", f"{API}/scans/{FAKE}", {}),
     ("POST", f"{API}/scans/{FAKE}/cancel", {}),
+    ("GET", f"{API}/findings", {}),
+    ("GET", f"{API}/findings/{FAKE}", {}),
+    ("GET", f"{API}/reports/{FAKE}", {}),
 ]
 
 
@@ -278,6 +281,19 @@ def test_non_uuid_ids_are_422_not_500(alice):
     for bad in ("hello", "../../etc/passwd"):
         assert create_scan(alice, p["id"], bad).status_code == 422
     assert client.get(f"{API}/scans", params={"project_id": "abc"}, headers=alice).status_code == 422
+    report = client.get(f"{API}/reports/not-a-uuid", headers=alice)
+    assert report.status_code == 422
+
+
+def test_validation_errors_do_not_echo_submitted_values(alice):
+    marker = "PRIVATE_VALUE_SHOULD_NOT_BE_ECHOED"
+    response = client.post(
+        f"{API}/projects", json={"name": marker * 20}, headers=alice
+    )
+    assert response.status_code == 422
+    assert marker not in response.text
+    assert response.json()["detail"] == "Request validation failed"
+    assert response.json()["errors"]
 
 
 def test_unknown_uuids_are_404(alice):

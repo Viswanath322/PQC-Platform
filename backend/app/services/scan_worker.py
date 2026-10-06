@@ -90,8 +90,8 @@ def process_scan(scan_id: str, db: Session) -> bool:
 
     zip_path = Path(scan.repository_path)
     if not zip_path.is_file():
-        err = f"ZIP not found at {zip_path}"
-        logger.error("process_scan: %s for scan %s", err, scan_id)
+        err = "Uploaded repository is unavailable for processing."
+        logger.error("process_scan: repository unavailable for scan %s", scan_id)
         _set_status(scan, "FAILED", db, error_message=err)
         return False
 
@@ -101,8 +101,8 @@ def process_scan(scan_id: str, db: Session) -> bool:
     try:
         AnalysisPipeline, normalize_findings_paths, ingest_repository = _import_pipeline()
     except ImportError as exc:
-        err = f"could not import pipeline: {exc}"
-        logger.exception("process_scan: %s", err)
+        err = "Analysis pipeline is unavailable."
+        logger.exception("process_scan: analysis pipeline import failed for scan %s", scan_id)
         _set_status(scan, "FAILED", db, error_message=err)
         return False
 
@@ -114,7 +114,7 @@ def process_scan(scan_id: str, db: Session) -> bool:
     try:
         summary = ingest_repository(zip_path, scan_dir)
     except Exception as exc:  # noqa: BLE001
-        err = f"ingestion failed: {exc}"
+        err = "Repository validation or ingestion failed."
         logger.exception("process_scan: ingestion failed for scan %s: %s", scan_id, exc)
         _set_status(scan, "FAILED", db, error_message=err)
         return False
@@ -146,7 +146,7 @@ def process_scan(scan_id: str, db: Session) -> bool:
         pipeline = AnalysisPipeline()
         pipeline_result = pipeline.run(file_paths)
     except Exception as exc:  # noqa: BLE001
-        err = f"analysis failed: {exc}"
+        err = "Analysis processing failed."
         logger.exception("process_scan: analysis failed for scan %s: %s", scan_id, exc)
         _set_status(scan, "FAILED", db, error_message=err)
         return False
@@ -186,7 +186,7 @@ def process_scan(scan_id: str, db: Session) -> bool:
             "process_scan: scan %s — persisted %d findings", scan_id, persisted
         )
     except Exception as exc:  # noqa: BLE001
-        err = f"finding persistence failed: {exc}"
+        err = "Analysis results could not be saved."
         logger.exception(
             "process_scan: finding persistence failed for scan %s: %s", scan_id, exc
         )
