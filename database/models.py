@@ -23,12 +23,29 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.mysql import DATETIME as MySQLDateTime
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.expression import FunctionElement
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
 # Support microsecond precision (DATETIME(6)) for MySQL while remaining compatible with SQLite
 DateTime6 = DateTime().with_variant(MySQLDateTime(fsp=6), "mysql")
+
+
+class utcnow_server_default(FunctionElement):
+    """Dialect-aware server default: CURRENT_TIMESTAMP(6) on MySQL, CURRENT_TIMESTAMP on SQLite."""
+    inherit_cache = True
+
+
+@compiles(utcnow_server_default, "mysql")
+def _utcnow_mysql(element, compiler, **kw):
+    return "CURRENT_TIMESTAMP(6)"
+
+
+@compiles(utcnow_server_default, "default")
+def _utcnow_default(element, compiler, **kw):
+    return "CURRENT_TIMESTAMP"
 
 
 def generate_uuid() -> str:
@@ -41,8 +58,8 @@ class Organization(Base):
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     name = Column(String(255), nullable=False)
-    created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime6, server_default=utcnow_server_default(), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime6, server_default=utcnow_server_default(), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships (aligned with SQL ON DELETE SET NULL)
     users = relationship("User", back_populates="organization", passive_deletes=True)
@@ -60,8 +77,8 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     role = Column(String(50), server_default="user", nullable=False, default="user")
-    created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime6, server_default=utcnow_server_default(), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime6, server_default=utcnow_server_default(), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     organization = relationship("Organization", back_populates="users")
@@ -77,8 +94,8 @@ class Project(Base):
     organization_id = Column(String(36), ForeignKey("organizations.id", ondelete="SET NULL"), nullable=True, default="org-default-001")
     name = Column(String(255), nullable=False, index=True)
     description = Column(Text, nullable=True)
-    created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime6, server_default=utcnow_server_default(), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime6, server_default=utcnow_server_default(), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
     organization = relationship("Organization", back_populates="projects")
@@ -112,7 +129,7 @@ class Scan(Base):
     )
     repository_path = Column(String(1024), nullable=False)
     error_message = Column(Text, nullable=True)
-    created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime6, server_default=utcnow_server_default(), default=datetime.utcnow, nullable=False, index=True)
     started_at = Column(DateTime6, nullable=True)
     completed_at = Column(DateTime6, nullable=True)
 
@@ -134,7 +151,7 @@ class ScanFile(Base):
     file_type = Column(String(100), nullable=True)
     language = Column(String(100), nullable=True, index=True)
     size_bytes = Column(BigInteger, server_default=text("0"), nullable=False, default=0)
-    created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime6, server_default=utcnow_server_default(), default=datetime.utcnow, nullable=False)
 
     # Relationships
     scan = relationship("Scan", back_populates="scan_files")
@@ -167,7 +184,7 @@ class Finding(Base):
     confidence = Column(Float, nullable=True)
     recommendation = Column(Text, nullable=True)
     is_development = Column(Boolean, server_default=text("0"), nullable=False, default=False)
-    created_at = Column(DateTime6, server_default=text("CURRENT_TIMESTAMP(6)"), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime6, server_default=utcnow_server_default(), default=datetime.utcnow, nullable=False)
 
     # Relationships
     scan = relationship("Scan", back_populates="findings")

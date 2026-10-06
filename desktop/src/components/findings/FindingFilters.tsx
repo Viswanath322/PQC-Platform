@@ -11,6 +11,10 @@ interface FindingFiltersProps {
   findingCategory?: string;
   onFindingCategoryChange?: (c: string) => void;
   availableCategories?: string[];
+  // Day 3: rule filter
+  ruleFilter?: string;
+  onRuleFilterChange?: (r: string) => void;
+  availableRules?: string[];
   totalCount: number;
   filteredCount: number;
   onReset: () => void;
@@ -29,14 +33,30 @@ export const FindingFilters: React.FC<FindingFiltersProps> = ({
   findingCategory = 'ALL',
   onFindingCategoryChange,
   availableCategories = [],
+  ruleFilter = 'ALL',
+  onRuleFilterChange,
+  availableRules = [],
   totalCount,
   filteredCount,
   onReset,
   selectedCategory,
   onCategoryChange,
 }) => {
-  const currentEngine = engine !== 'ALL' ? engine : (selectedCategory && ['SAST', 'CRYPTO', 'DEPENDENCY', 'CONFIGURATION', 'Semgrep'].includes(selectedCategory) ? selectedCategory : 'ALL');
-  const currentCategory = findingCategory !== 'ALL' ? findingCategory : (selectedCategory && !['SAST', 'CRYPTO', 'DEPENDENCY', 'CONFIGURATION', 'Semgrep'].includes(selectedCategory) ? selectedCategory : 'ALL');
+  const currentEngine =
+    engine !== 'ALL'
+      ? engine
+      : selectedCategory &&
+        ['SAST', 'CRYPTO', 'DEPENDENCY', 'CONFIGURATION', 'Semgrep'].includes(selectedCategory)
+      ? selectedCategory
+      : 'ALL';
+
+  const currentCategory =
+    findingCategory !== 'ALL'
+      ? findingCategory
+      : selectedCategory &&
+        !['SAST', 'CRYPTO', 'DEPENDENCY', 'CONFIGURATION', 'Semgrep'].includes(selectedCategory)
+      ? selectedCategory
+      : 'ALL';
 
   const severities = [
     { label: 'All Severities', value: 'ALL' },
@@ -72,11 +92,18 @@ export const FindingFilters: React.FC<FindingFiltersProps> = ({
 
   const categories = [...baseCategories, ...extraCategories];
 
+  // Build rule options from actual finding data only; never hardcode fake rule IDs
+  const ruleOptions = [
+    { label: 'All Rules', value: 'ALL' },
+    ...availableRules.map((r) => ({ label: r, value: r })),
+  ];
+
   const hasActiveFilters =
     searchQuery !== '' ||
     selectedSeverity !== 'ALL' ||
     currentEngine !== 'ALL' ||
-    currentCategory !== 'ALL';
+    currentCategory !== 'ALL' ||
+    ruleFilter !== 'ALL';
 
   return (
     <div className="glass flex flex-col gap-3 rounded-xl p-4">
@@ -153,6 +180,36 @@ export const FindingFilters: React.FC<FindingFiltersProps> = ({
             {categories.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Rule Selector — Day 3; options derived from real finding data only.
+            Always rendered. Disabled (with tooltip) when no rule_id data is
+            available from the backend yet — never hardcodes fake rules. */}
+        <div className="flex items-center gap-1.5 text-[13px]">
+          <span className={ruleOptions.length <= 1 ? 'text-slate-400' : 'text-slate-500'}>
+            Rule:
+          </span>
+          <select
+            value={ruleFilter}
+            onChange={(e) => onRuleFilterChange?.(e.target.value)}
+            disabled={ruleOptions.length <= 1}
+            title={
+              ruleOptions.length <= 1
+                ? 'Rule IDs are not yet returned by the backend'
+                : undefined
+            }
+            className={`h-9 rounded-lg border px-2.5 text-[12px] outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 ${
+              ruleOptions.length <= 1
+                ? 'border-white/50 bg-white/40 text-slate-400 cursor-not-allowed'
+                : 'border-white/80 bg-white/70 text-foreground'
+            }`}
+          >
+            {ruleOptions.map((r) => (
+              <option key={r.value} value={r.value}>
+                {r.label}
               </option>
             ))}
           </select>

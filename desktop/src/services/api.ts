@@ -336,11 +336,45 @@ class ApiClient {
     if (params?.limit !== undefined) query.append('limit', String(params.limit));
     if (params?.offset !== undefined) query.append('offset', String(params.offset));
     const qs = query.toString() ? `?${query.toString()}` : '';
-    return this.request<Finding[]>(`/findings${qs}`, { method: 'GET' });
+
+    // Backend returns finding_id / file_path / line_number; normalise to the
+    // shared Finding interface (id / file / line) so all consumers work
+    // regardless of whether the data comes from the real API or mock data.
+    interface BackendFinding {
+      finding_id?: string;
+      id?: string;
+      file_path?: string;
+      file?: string;
+      line_number?: number;
+      line?: number;
+      [key: string]: unknown;
+    }
+    const raw = await this.request<BackendFinding[]>(`/findings${qs}`, { method: 'GET' });
+    return raw.map((r) => ({
+      ...r,
+      id: (r.finding_id ?? r.id ?? '') as string,
+      file: (r.file_path ?? r.file ?? '') as string,
+      line: (r.line_number ?? r.line ?? 0) as number,
+    })) as Finding[];
   }
 
   async getFinding(id: string): Promise<Finding> {
-    return this.request<Finding>(`/findings/${id}`, { method: 'GET' });
+    interface BackendFinding {
+      finding_id?: string;
+      id?: string;
+      file_path?: string;
+      file?: string;
+      line_number?: number;
+      line?: number;
+      [key: string]: unknown;
+    }
+    const r = await this.request<BackendFinding>(`/findings/${id}`, { method: 'GET' });
+    return {
+      ...r,
+      id: (r.finding_id ?? r.id ?? '') as string,
+      file: (r.file_path ?? r.file ?? '') as string,
+      line: (r.line_number ?? r.line ?? 0) as number,
+    } as Finding;
   }
 
   // ──────────────────────────────────────────

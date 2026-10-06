@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Bug, RefreshCw, AlertCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -19,7 +19,7 @@ export const Findings: React.FC = () => {
 
   const [findings, setFindings] = useState<Finding[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);   // null = no error
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,6 +27,8 @@ export const Findings: React.FC = () => {
   const [engine, setEngine] = useState<string>(initialEngine);
   const [findingCategory, setFindingCategory] = useState<string>(initialFindingCategory);
   const [scanFilter, setScanFilter] = useState<string>(initialScanId);
+  // Day 3: Rule filter state
+  const [ruleFilter, setRuleFilter] = useState<string>('ALL');
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export const Findings: React.FC = () => {
       setFindings(data);
     } catch (err) {
       // REAL API FAILURE != EMPTY SUCCESS
-      // Capture the error and surface it \u2014 never convert to empty array
+      // Capture the error and surface it — never convert to empty array
       const message =
         err instanceof ApiError
           ? err.userMessage
@@ -62,6 +64,7 @@ export const Findings: React.FC = () => {
 
   useEffect(() => {
     loadFindings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleRefresh = async () => {
@@ -92,49 +95,90 @@ export const Findings: React.FC = () => {
     setSelectedSeverity('ALL');
     setEngine('ALL');
     setFindingCategory('ALL');
+    setRuleFilter('ALL');
     setScanFilter('');
   };
 
-  const filteredFindings = findings.filter((f) => {
-    if (scanFilter && f.scan_id !== scanFilter) {
-      return false;
-    }
-    if (selectedSeverity !== 'ALL' && f.severity?.toUpperCase() !== selectedSeverity.toUpperCase()) {
-      return false;
-    }
-    if (engine !== 'ALL') {
-      const targetEngine = engine.toLowerCase();
-      const itemEngine = (f.engine || '').toLowerCase();
-      const itemCategory = (f.category || '').toLowerCase();
-      const matchesEngine =
-        itemEngine === targetEngine ||
-        (targetEngine === 'semgrep' && (itemEngine.includes('semgrep') || itemCategory === 'sast')) ||
-        (targetEngine === 'sast' && (itemEngine === 'sast' || itemCategory === 'sast')) ||
-        (targetEngine === 'crypto' && (itemEngine === 'crypto' || itemCategory === 'crypto')) ||
-        (targetEngine === 'dependency' && (itemEngine === 'dependency' || itemCategory === 'dependency')) ||
-        (targetEngine === 'configuration' && (itemEngine === 'configuration' || itemCategory === 'configuration'));
-      if (!matchesEngine) {
+  // ── Derive available categories and rules from real finding data ───────────
+  const availableCategories = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          findings
+            .map((f) => f.finding_category || f.category)
+            .filter((c): c is string => Boolean(c))
+        )
+      ),
+    [findings]
+  );
+
+  // Rule IDs: use rule_id when available, fall back to title as a proxy rule
+  // identifier so the filter is still useful even before the backend ships rule_id.
+  // We only show a rule filter if there is actually rule_id data in the findings.
+  const availableRules = useMemo(() => {
+    const ruleIds = findings
+      .map((f) => f.rule_id)
+      .filter((r): r is string => Boolean(r));
+    return Array.from(new Set(ruleIds));
+  }, [findings]);
+
+  // ── Filter logic ─────────────────────────────────────────────────────────
+
+  const filteredFindings = useMemo(() => {
+    return findings.filter((f) => {
+      if (scanFilter && f.scan_id !== scanFilter) return false;
+
+      if (
+        selectedSeverity !== 'ALL' &&
+        f.severity?.toUpperCase() !== selectedSeverity.toUpperCase()
+      )
         return false;
+
+      if (engine !== 'ALL') {
+        const targetEngine = engine.toLowerCase();
+        const itemEngine = (f.engine || '').toLowerCase();
+        const itemCategory = (f.category || '').toLowerCase();
+        const matchesEngine =
+          itemEngine === targetEngine ||
+          (targetEngine === 'semgrep' &&
+            (itemEngine.includes('semgrep') || itemCategory === 'sast')) ||
+          (targetEngine === 'sast' &&
+            (itemEngine === 'sast' || itemCategory === 'sast')) ||
+          (targetEngine === 'crypto' &&
+            (itemEngine === 'crypto' || itemCategory === 'crypto')) ||
+          (targetEngine === 'dependency' &&
+            (itemEngine === 'dependency' || itemCategory === 'dependency')) ||
+          (targetEngine === 'configuration' &&
+            (itemEngine === 'configuration' || itemCategory === 'configuration'));
+        if (!matchesEngine) return false;
       }
-    }
-    if (findingCategory !== 'ALL') {
-      const targetCat = findingCategory.toLowerCase();
-      const itemFindingCat = (f.finding_category || f.category || '').toLowerCase();
-      if (!itemFindingCat.includes(targetCat) && itemFindingCat !== targetCat) {
-        return false;
+
+      if (findingCategory !== 'ALL') {
+        const targetCat = findingCategory.toLowerCase();
+        const itemFindingCat = (f.finding_category || f.category || '').toLowerCase();
+        if (!itemFindingCat.includes(targetCat) && itemFindingCat !== targetCat) return false;
       }
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        f.id.toLowerCase().includes(q) ||
-        f.title.toLowerCase().includes(q) ||
-        (f.explanation && f.explanation.toLowerCase().includes(q)) ||
-        f.file.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+
+      // Day 3: Rule filter — match by rule_id when available
+      if (ruleFilter !== 'ALL') {
+        if ((f.rule_id || '') !== ruleFilter) return false;
+      }
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          (f.id || '').toLowerCase().includes(q) ||
+          (f.title || '').toLowerCase().includes(q) ||
+          (f.explanation && f.explanation.toLowerCase().includes(q)) ||
+          (f.description && f.description.toLowerCase().includes(q)) ||
+          (f.file || '').toLowerCase().includes(q) ||
+          (f.file_path || '').toLowerCase().includes(q) ||
+          (f.rule_id || '').toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [findings, scanFilter, selectedSeverity, engine, findingCategory, ruleFilter, searchQuery]);
 
   return (
     <>
@@ -148,7 +192,9 @@ export const Findings: React.FC = () => {
             className="btn"
             title="Refresh findings list"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-primary' : ''}`}
+            />
             <span>Refresh</span>
           </button>
         }
@@ -166,7 +212,9 @@ export const Findings: React.FC = () => {
           }}
         >
           <AlertCircle size={15} className="shrink-0" />
-          <span><strong>Unable to refresh findings</strong> — {refreshError}</span>
+          <span>
+            <strong>Unable to refresh findings</strong> — {refreshError}
+          </span>
           <button
             onClick={() => setRefreshError(null)}
             className="ml-auto text-xs hover:underline"
@@ -187,13 +235,11 @@ export const Findings: React.FC = () => {
           onEngineChange={setEngine}
           findingCategory={findingCategory}
           onFindingCategoryChange={setFindingCategory}
-          availableCategories={Array.from(
-            new Set(
-              findings
-                .map((f) => f.finding_category || f.category)
-                .filter((c): c is string => Boolean(c))
-            )
-          )}
+          availableCategories={availableCategories}
+          // Day 3: Rule filter — always rendered; options populated from real data only
+          ruleFilter={ruleFilter}
+          onRuleFilterChange={setRuleFilter}
+          availableRules={availableRules}
           totalCount={findings.length}
           filteredCount={filteredFindings.length}
           onReset={handleResetFilters}
@@ -203,7 +249,9 @@ export const Findings: React.FC = () => {
           <div className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-purple-50/90 border border-purple-200/80 px-4 py-2 text-xs text-purple-900 shadow-xs">
             <div className="flex items-center gap-2">
               <span className="font-semibold">Filtered by Scan ID:</span>
-              <code className="font-mono bg-white px-2 py-0.5 rounded border border-purple-200 text-purple-700 text-[11px]">{scanFilter}</code>
+              <code className="font-mono bg-white px-2 py-0.5 rounded border border-purple-200 text-purple-700 text-[11px]">
+                {scanFilter}
+              </code>
               <span className="text-slate-500">({filteredFindings.length} findings)</span>
             </div>
             <button
@@ -240,7 +288,10 @@ export const Findings: React.FC = () => {
             <h3 className="text-[16px] font-semibold" style={{ color: '#29384D' }}>
               Unable to load findings
             </h3>
-            <p className="mt-1 text-[13px] max-w-sm leading-relaxed" style={{ color: '#687587' }}>
+            <p
+              className="mt-1 text-[13px] max-w-sm leading-relaxed"
+              style={{ color: '#687587' }}
+            >
               {loadError}
             </p>
             <button onClick={loadFindings} className="btn-primary mt-5">
@@ -253,23 +304,27 @@ export const Findings: React.FC = () => {
             <div className="grid h-12 w-12 place-items-center rounded-xl bg-surface-2 text-muted-foreground">
               <Bug className="h-6 w-6" />
             </div>
-            <h3 className="mt-4 text-[16px] font-semibold">No findings matched your criteria</h3>
+            <h3 className="mt-4 text-[16px] font-semibold">
+              No findings matched your criteria
+            </h3>
             <p className="mt-1 text-[13px] text-muted-foreground max-w-sm">
-              Try adjusting your active severity, engine, or category filters or clearing the search query.
+              Try adjusting your active severity, engine, category, or rule filters, or clearing the
+              search query.
             </p>
             <button onClick={handleResetFilters} className="btn mt-5">
               Reset Filters
             </button>
           </div>
         ) : findings.length === 0 ? (
-          /* STATE 3a: Successful response, zero findings (clean empty state) */
+          /* STATE 3a: Successful response, zero findings */
           <div className="card flex flex-col items-center justify-center p-12 text-center">
             <div className="grid h-12 w-12 place-items-center rounded-xl bg-surface-2 text-muted-foreground">
               <Bug className="h-6 w-6" />
             </div>
             <h3 className="mt-4 text-[16px] font-semibold">No findings</h3>
             <p className="mt-1 text-[13px] text-muted-foreground max-w-sm">
-              No security findings were returned for this scan. Run a scan to detect vulnerabilities.
+              No security findings were returned for this scan. Run a scan to detect
+              vulnerabilities.
             </p>
           </div>
         ) : (
@@ -285,6 +340,7 @@ export const Findings: React.FC = () => {
       {/* Flyout Details Drawer */}
       <FindingDetails
         finding={selectedFinding}
+        allFindings={findings}
         onClose={() => setSelectedFinding(null)}
       />
     </>

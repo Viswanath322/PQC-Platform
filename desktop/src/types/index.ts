@@ -115,28 +115,49 @@ export interface Scan {
 }
 
 export interface Finding {
+  // Core identity — normalised from backend finding_id
   id: string;
   finding_id?: string;
   scan_id: string;
+
+  // Classification
   severity: FindingSeverity;
   category: FindingCategory | string;
   engine?: string;
   finding_category?: string;
+
+  // Display
   title: string;
+
+  // File location — normalised from backend file_path / line_number
   file: string;
   file_path?: string;
   line: number;
   line_number?: number;
+
+  // Analysis output
   confidence: ConfidenceLevel | number;
   explanation: string;
   description?: string;
   recommendation: string;
   remediation?: string;
   evidence: string;
+
+  // Optional metadata
   cwe_id?: string;
   detected_at?: string;
   status?: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'SUPPRESSED';
   is_development?: boolean;
+
+  // Day 3: rule information (optional — backend does not yet return these;
+  // UI must show "Not available" when absent)
+  rule_id?: string;
+  rule_version?: string;
+
+  // Day 3: correlation / related findings (optional — not yet from backend)
+  correlation_id?: string;
+  correlation_reason?: string;
+  related_finding_ids?: string[];
 }
 
 export interface CryptoComponent {
