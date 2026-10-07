@@ -1,4 +1,5 @@
 import sys
+import uuid
 from pathlib import Path
 
 import pytest
@@ -95,6 +96,34 @@ def test_job_payload_round_trip_preserves_bounded_retry_attempt():
     assert ScanJob.decode(retried.encode()) == retried
 
 
+def test_worker_ingestion_uses_configured_upload_root(monkeypatch, tmp_path):
+    from app.services import storage_service
+    from ingestion import scan_adapter
+
+    uploads_root = tmp_path / "uploads"
+    uploads_root.mkdir()
+    scan_id = str(uuid.uuid4())
+    expected_workspace = uploads_root / "scans" / scan_id / "repository"
+    calls = []
+
+    monkeypatch.setattr(storage_service, "STORAGE_DIR", uploads_root)
+    monkeypatch.setattr(
+        scan_adapter,
+        "ingest_scan_upload",
+        lambda archive, ident, storage_root, uploads_root=None: calls.append(
+            (archive, ident, storage_root, uploads_root)
+        ) or {"files": []},
+    )
+    _, _, _, ingest_scan = scan_worker._import_pipeline()
+
+    archive = uploads_root / "org" / "upload.zip"
+    assert ingest_scan(archive, scan_id, expected_workspace) == {"files": []}
+    assert calls == [(archive, scan_id, uploads_root, uploads_root)]
+
+    with pytest.raises(ValueError, match="Invalid scan workspace"):
+        ingest_scan(archive, scan_id, tmp_path / "outside" / "repository")
+
+
 def test_worker_claim_is_atomic_and_cancellation_blocks_progress(db_session):
     scan = ScanRow(
         id="scan-1",
@@ -163,7 +192,12 @@ def test_scan_worker_persists_each_engine_status(worker_db, monkeypatch):
     monkeypatch.setattr(
         scan_worker,
         "_import_pipeline",
-        lambda: (Pipeline, ScanCancelledError, lambda findings, _root: findings, lambda _zip, _dir: {"files": []}),
+        lambda: (
+            Pipeline,
+            ScanCancelledError,
+            lambda findings, _root: findings,
+            lambda _zip, _scan_id, _dir: {"files": []},
+        ),
     )
     workspace = zip_path.parent.parent / "scans" / scan.id / "repository"
     job = ScanJob(scan.id, str(workspace), ("sast", "crypto"))
@@ -203,7 +237,7 @@ def test_scan_worker_stops_after_cancellation(worker_db, monkeypatch):
             CancellingPipeline,
             ScanCancelledError,
             lambda findings, _root: findings,
-            lambda _zip, _dir: {"files": []},
+            lambda _zip, _scan_id, _dir: {"files": []},
         ),
     )
     workspace = zip_path.parent.parent / "scans" / scan.id / "repository"

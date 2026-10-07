@@ -38,8 +38,23 @@ def _import_pipeline():
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
     from analysis_engines.runner import AnalysisPipeline, ScanCancelledError
     from analysis_engines.path_utils import normalize_findings_paths
-    from ingestion.summary import ingest_repository
-    return AnalysisPipeline, ScanCancelledError, normalize_findings_paths, ingest_repository
+    from ingestion.scan_adapter import ingest_scan_upload
+    from app.services.storage_service import STORAGE_DIR
+
+    uploads_root = Path(STORAGE_DIR).resolve()
+
+    def ingest_scan(archive_path: Path, scan_id: str, scan_directory: Path) -> dict:
+        expected_directory = uploads_root / "scans" / scan_id / "repository"
+        if scan_directory.resolve() != expected_directory.resolve():
+            raise ValueError("Invalid scan workspace")
+        return ingest_scan_upload(
+            archive_path,
+            scan_id,
+            storage_root=uploads_root,
+            uploads_root=uploads_root,
+        )
+
+    return AnalysisPipeline, ScanCancelledError, normalize_findings_paths, ingest_scan
 
 
 def _now() -> datetime:
@@ -187,7 +202,7 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
     # 2. INGESTING — extract and inventory the ZIP
     # ------------------------------------------------------------------
     try:
-        summary = ingest_repository(zip_path, scan_dir)
+        summary = ingest_repository(zip_path, scan_id, scan_dir)
     except Exception as exc:  # noqa: BLE001
         err = "Repository validation or ingestion failed."
         logger.exception("process_scan: ingestion failed for scan %s: %s", scan_id, exc)
