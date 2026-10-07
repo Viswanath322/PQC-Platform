@@ -150,6 +150,15 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
         )
         return False
 
+    if (
+        isinstance(job_or_scan_id, ScanJob)
+        and job_or_scan_id.project_id is not None
+        and job_or_scan_id.project_id != scan.project_id
+    ):
+        logger.error("process_scan: invalid project in job payload for scan %s", scan_id)
+        _set_status(scan, "FAILED", db, error_message="Invalid scan job project reference")
+        return False
+
     # Claim the QUEUED row atomically before doing any work. This prevents two
     # workers from processing the same scan after a duplicate queue delivery.
     if not _set_status(scan, "INGESTING", db):
@@ -206,9 +215,16 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
             )
             db.add(sf)
         db.commit()
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("process_scan: scan_files persistence failed: %s", exc)
+    except Exception:  # noqa: BLE001
+        logger.exception("process_scan: scan_files persistence failed for scan %s", scan_id)
         db.rollback()
+        _set_status(
+            scan,
+            "FAILED",
+            db,
+            error_message="Repository file inventory could not be saved.",
+        )
+        return False
 
     # ------------------------------------------------------------------
     # 3. ANALYZING — run detection engines
