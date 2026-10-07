@@ -35,7 +35,7 @@ from app.core.config import get_settings
 from app.core.database import SessionLocal, engine
 from app.core.security import hash_password
 from app.main import app
-from app.models import Base, Organization, Project, Scan, User
+from app.models import Base, Finding, Organization, Project, Scan, ScanComponent, User
 from app.services.redis_service import QUEUE_KEY, get_redis
 
 API = "/api/v1"
@@ -133,7 +133,7 @@ def fake_queue(request, monkeypatch):
     from app.api.v1 import scans as scans_module
 
     FAKE_QUEUE.clear()
-    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid: FAKE_QUEUE.append(sid) or True)
+    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid, *args: FAKE_QUEUE.append(sid) or True)
     monkeypatch.setattr(scans_module, "dequeue_scan", lambda sid: sid in FAKE_QUEUE and FAKE_QUEUE.remove(sid) or True)
 
 
@@ -158,6 +158,9 @@ PROTECTED = [
     ("GET", f"{API}/scans", {}),
     ("GET", f"{API}/scans/{FAKE}", {}),
     ("POST", f"{API}/scans/{FAKE}/cancel", {}),
+    ("GET", f"{API}/findings", {}),
+    ("GET", f"{API}/findings/{FAKE}", {}),
+    ("GET", f"{API}/reports/{FAKE}", {}),
 ]
 
 
@@ -216,6 +219,8 @@ def test_full_flow_project_upload_scan(alice):
     assert r.status_code == 201, r.text
     scan = r.json()
     assert scan["status"] == "QUEUED" and scan["project_id"] == p["id"]
+    assert all(status == "PENDING" for status in scan["engine_statuses"].values())
+    assert "sast" in scan["engine_statuses"] and "crypto" in scan["engine_statuses"]
     assert scan["id"] in FAKE_QUEUE
     assert scan["upload_id"] == up["upload_id"]      # safe reference instead of the server path
     assert "repository_path" not in scan and "storage" not in str(scan).lower()
@@ -237,6 +242,10 @@ def test_cross_org_isolation(alice, bob):
     assert client.get(f"{API}/projects/{p['id']}", headers=bob).status_code == 404
     assert p["id"] not in [x["id"] for x in client.get(f"{API}/projects", headers=bob).json()]
     assert client.get(f"{API}/scans/{scan['id']}", headers=bob).status_code == 404
+    assert client.get(f"{API}/reports/{scan['id']}", headers=bob).status_code == 404
+    assert client.get(
+        f"{API}/findings/summary", params={"scan_id": scan["id"]}, headers=bob
+    ).status_code == 404
     assert scan["id"] not in [x["id"] for x in client.get(f"{API}/scans", headers=bob).json()]
     assert scan["id"] not in [x["id"] for x in
                               client.get(f"{API}/scans", params={"project_id": p["id"]}, headers=bob).json()]
@@ -278,6 +287,19 @@ def test_non_uuid_ids_are_422_not_500(alice):
     for bad in ("hello", "../../etc/passwd"):
         assert create_scan(alice, p["id"], bad).status_code == 422
     assert client.get(f"{API}/scans", params={"project_id": "abc"}, headers=alice).status_code == 422
+    report = client.get(f"{API}/reports/not-a-uuid", headers=alice)
+    assert report.status_code == 422
+
+
+def test_validation_errors_do_not_echo_submitted_values(alice):
+    marker = "PRIVATE_VALUE_SHOULD_NOT_BE_ECHOED"
+    response = client.post(
+        f"{API}/projects", json={"name": marker * 20}, headers=alice
+    )
+    assert response.status_code == 422
+    assert marker not in response.text
+    assert response.json()["detail"] == "Request validation failed"
+    assert response.json()["errors"]
 
 
 def test_unknown_uuids_are_404(alice):
@@ -286,6 +308,78 @@ def test_unknown_uuids_are_404(alice):
     assert create_scan(alice, str(uuid.uuid4()), upload_zip(alice)["upload_id"]).status_code == 404
     assert create_scan(alice, p["id"], str(uuid.uuid4())).status_code == 404
     assert client.get(f"{API}/scans/{uuid.uuid4()}", headers=alice).status_code == 404
+
+
+def test_empty_report_and_summary_are_valid(alice):
+    scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+    report = client.get(f"{API}/reports/{scan['id']}", headers=alice)
+    summary = client.get(f"{API}/findings/summary", params={"scan_id": scan["id"]}, headers=alice)
+    assert report.status_code == summary.status_code == 200
+    assert report.json()["total_findings"] == 0
+    assert report.json()["findings"] == []
+    assert report.json()["sbom"] == report.json()["cbom"] == []
+    assert summary.json()["total_findings"] == 0
+    assert summary.json()["by_engine"] == summary.json()["by_severity"] == summary.json()["by_category"] == []
+
+
+def test_single_engine_report_includes_rule_metadata(alice):
+    scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+    with SessionLocal() as db:
+        db.add(Finding(
+            id=str(uuid.uuid4()), scan_id=scan["id"], engine="sast", category="injection",
+            severity="high", title="Unsafe SQL", file_path="src/db.py", line_number=8,
+            evidence="query = user_input", rule_id="SAST-INJ-001", rule_version="1.0.0",
+            source_engine="sast",
+        ))
+        db.commit()
+    report = client.get(f"{API}/reports/{scan['id']}", headers=alice).json()
+    assert report["total_findings"] == len(report["findings"]) == 1
+    assert report["findings_by_engine"] == {"sast": 1}
+    assert report["findings"][0]["rule_id"] == "SAST-INJ-001"
+
+
+def test_single_and_multi_engine_report_contract_is_deterministic(alice):
+    scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+    with SessionLocal() as db:
+        db.add_all([
+            Finding(
+                id=str(uuid.uuid4()), scan_id=scan["id"], engine="sast", category="injection",
+                severity="high", title="Unsafe SQL", file_path="src/db.py", line_number=8,
+                evidence="query = user_input", rule_id="SAST-INJ-001", rule_version="1.0.0",
+                source_engine="sast", correlation_group_id="00000000-0000-4000-8000-000000000001",
+            ),
+            Finding(
+                id=str(uuid.uuid4()), scan_id=scan["id"], engine="crypto", category="pqc",
+                severity="medium", title="RSA use", file_path="src/crypto.py", line_number=14,
+                evidence="RSA.generate()", rule_id="CRYPTO-QV-001", rule_version="1.0.0",
+                source_engine="crypto",
+            ),
+            ScanComponent(
+                scan_id=scan["id"], component_kind="dependency", component_type="library",
+                name="requests", version="2.32.0", purl="pkg:pypi/requests@2.32.0",
+                source_file="requirements.txt", detection_method="manifest", confidence=1.0,
+            ),
+            ScanComponent(
+                scan_id=scan["id"], component_kind="crypto", component_type="algorithm",
+                name="RSA", source_file="src/crypto.py", line_number=14,
+                detection_method="CRYPTO-QV-001", confidence=0.91,
+            ),
+        ])
+        db.commit()
+
+    first = client.get(f"{API}/findings/summary", params={"scan_id": scan["id"]}, headers=alice).json()
+    second = client.get(f"{API}/findings/summary", params={"scan_id": scan["id"]}, headers=alice).json()
+    assert first == second
+    assert first["total_findings"] == 2
+    assert first["by_engine"] == [{"key": "crypto", "count": 1}, {"key": "sast", "count": 1}]
+    assert first["by_severity"] == [{"key": "high", "count": 1}, {"key": "medium", "count": 1}]
+
+    report = client.get(f"{API}/reports/{scan['id']}", headers=alice).json()
+    assert report["total_findings"] == len(report["findings"]) == 2
+    assert report["findings_by_engine"] == {"crypto": 1, "sast": 1}
+    assert report["findings_by_category"] == {"injection": 1, "pqc": 1}
+    assert {item["rule_id"] for item in report["findings"]} == {"SAST-INJ-001", "CRYPTO-QV-001"}
+    assert len(report["sbom"]) == len(report["cbom"]) == 1
 
 
 def test_upload_rejects_bad_files(alice):
@@ -307,13 +401,14 @@ def test_cancel_then_cancel_again_409(alice):
     scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
     r = client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice)
     assert r.status_code == 200 and r.json()["status"] == "CANCELLED" and r.json()["completed_at"]
+    assert set(r.json()["engine_statuses"].values()) == {"CANCELLED"}
     assert client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice).status_code == 409
 
 
 def test_redis_failure_returns_503_and_scan_is_marked_failed(alice, monkeypatch):
     from app.api.v1 import scans as scans_module
 
-    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid: False)
+    monkeypatch.setattr(scans_module, "enqueue_scan", lambda sid, *args: False)
     p = create_project(alice)
     r = create_scan(alice, p["id"], upload_zip(alice)["upload_id"])
     assert r.status_code == 503
@@ -338,14 +433,39 @@ def test_cancel_removes_scan_from_queue(alice):
     assert scan["id"] not in FAKE_QUEUE
 
 
-def test_real_redis_enqueue_and_cancel_dequeue(alice, real_redis):
+def test_real_redis_enqueue_and_cancel_dequeue(alice, real_redis, monkeypatch):
+    import app.services.redis_service as rs
+    from app.services.redis_service import ScanJob
+
+    test_queue = "pqc:scan_queue_test"
+    monkeypatch.setattr(rs, "QUEUE_KEY", test_queue)
+
     scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+
+    def queued_item_matches(item):
+        if item == scan["id"]:  # legacy queue message
+            return True
+        try:
+            return ScanJob.decode(item).scan_id == scan["id"]
+        except (ValueError, TypeError):
+            return False
+
+    queued_payload = None
     try:
-        assert scan["id"] in real_redis.lrange(QUEUE_KEY, 0, -1)
+        queued_payload = next(
+            item
+            for item in real_redis.lrange(test_queue, 0, -1)
+            if queued_item_matches(item)
+        )
+        job = ScanJob.decode(queued_payload)
+        assert job.repository_workspace
+        assert "sast" in job.selected_engines and "crypto" in job.selected_engines
         assert client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice).status_code == 200
-        assert scan["id"] not in real_redis.lrange(QUEUE_KEY, 0, -1)
+        remaining = real_redis.lrange(test_queue, 0, -1)
+        assert not any(queued_item_matches(item) for item in remaining)
     finally:
-        real_redis.lrem(QUEUE_KEY, 0, scan["id"])
+        if queued_payload is not None:
+            real_redis.lrem(test_queue, 0, queued_payload)
 
 
 def test_real_redis_ping_endpoint(real_redis):

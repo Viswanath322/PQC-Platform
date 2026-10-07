@@ -23,9 +23,11 @@ from uuid import NAMESPACE_URL, uuid5
 from ..base.analyzer import AnalysisEngine
 from ..base.finding import EngineName, Finding, Severity
 from ..base.result import AnalysisResult
-from .rules import Rule, get_rules
+from .rules import RULESET_VERSION, Rule, get_rules
 
 logger = logging.getLogger(__name__)
+
+RULE_VERSION = "1.0.0"  # Day 3: record rule-set version for reproducibility
 
 # Source file extensions this engine can meaningfully scan
 _SCANNABLE = {
@@ -132,7 +134,12 @@ class SASTEngine(AnalysisEngine):
                                     evidence=evidence or line.strip()[:_MAX_EVIDENCE_CHARS],
                                     confidence=rule.confidence,
                                     recommendation=rule.recommendation,
+                                    explanation=rule.explanation if hasattr(rule, "explanation") else None,
                                     is_development=False,
+                                    rule_id=rule.rule_id,
+                                    rule_version=RULE_VERSION,
+                                    group_key=f"{rule.rule_id}:{file_path.as_posix()}",
+                                    source_engine="sast",
                                 )
                             )
             except OSError as exc:
