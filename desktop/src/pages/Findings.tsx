@@ -28,6 +28,12 @@ export const Findings: React.FC = () => {
   const [findingCategory, setFindingCategory] = useState<string>(initialFindingCategory);
   const [scanFilter, setScanFilter] = useState<string>(initialScanId);
   const [selectedFinding, setSelectedFinding] = useState<Finding | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedSeverity, engine, findingCategory, scanFilter]);
 
   useEffect(() => {
     const sId = searchParams.get('scan_id');
@@ -274,11 +280,41 @@ export const Findings: React.FC = () => {
           </div>
         ) : (
           /* STATE 2: Success with data */
-          <FindingsTable
-            findings={filteredFindings}
-            selectedFindingId={selectedFinding?.id}
-            onSelectFinding={(f) => setSelectedFinding(f)}
-          />
+          <div className="space-y-4">
+            <FindingsTable
+              findings={filteredFindings.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+              selectedFindingId={selectedFinding?.id}
+              onSelectFinding={(f) => setSelectedFinding(f)}
+            />
+            {filteredFindings.length > pageSize && (
+              <div className="flex items-center justify-between px-2 py-3 text-[13px] text-slate-600 bg-white/50 rounded-xl border border-slate-200/60 shadow-xs">
+                <div>
+                  Showing <span className="font-semibold text-slate-900">{(currentPage - 1) * pageSize + 1}</span>–
+                  <span className="font-semibold text-slate-900">{Math.min(currentPage * pageSize, filteredFindings.length)}</span> of{' '}
+                  <span className="font-semibold text-slate-900">{filteredFindings.length}</span> findings
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="btn h-8 px-3 text-xs disabled:opacity-50 cursor-pointer"
+                  >
+                    Previous
+                  </button>
+                  <span className="font-medium text-slate-700 text-xs">
+                    Page {currentPage} of {Math.max(1, Math.ceil(filteredFindings.length / pageSize))}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.min(Math.max(1, Math.ceil(filteredFindings.length / pageSize)), p + 1))}
+                    disabled={currentPage >= Math.ceil(filteredFindings.length / pageSize)}
+                    className="btn h-8 px-3 text-xs disabled:opacity-50 cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

@@ -166,32 +166,32 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
               <span>Export JSON</span>
             </button>
 
-            {/* Disabled PDF Export with Day 3 Badge */}
+            {/* Disabled PDF Export with Planned Badge */}
             <div className="relative inline-flex items-center">
               <button
                 disabled
                 className="btn opacity-50 cursor-not-allowed flex items-center gap-1.5"
-                title="PDF export engine scheduled for Day 3"
+                title="PDF export engine is planned for future release"
               >
                 <FileText className="h-3.5 w-3.5 text-critical" />
                 <span>Export PDF</span>
                 <span className="text-[10px] font-semibold uppercase tracking-wider bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1">
-                  Day 3
+                  Planned
                 </span>
               </button>
             </div>
 
-            {/* Disabled CSV Export with Day 3 Badge */}
+            {/* Disabled CSV Export with Planned Badge */}
             <div className="relative inline-flex items-center">
               <button
                 disabled
                 className="btn opacity-50 cursor-not-allowed flex items-center gap-1.5"
-                title="CSV export engine scheduled for Day 3"
+                title="CSV export engine is planned for future release"
               >
                 <FileSpreadsheet className="h-3.5 w-3.5 text-slate-500" />
                 <span>Export CSV</span>
                 <span className="text-[10px] font-semibold uppercase tracking-wider bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1">
-                  Day 3
+                  Planned
                 </span>
               </button>
             </div>
@@ -417,6 +417,106 @@ export const Reports: React.FC<ReportsProps> = ({ onShowToast }) => {
             </table>
           </div>
         </div>
+
+        {/* CycloneDX CBOM Table in Report */}
+        {reportData?.cbom && reportData.cbom.length > 0 && (
+          <div className="card p-6">
+            <h3 className="section-title mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Cpu className="h-4 w-4 text-violet-600" />
+                <span>CycloneDX Cryptographic Bill of Materials (CBOM) ({reportData.cbom.length})</span>
+              </div>
+              <span className="text-xs font-normal text-slate-500 font-mono">
+                Component Kind: crypto
+              </span>
+            </h3>
+
+            <div className="overflow-x-auto w-full">
+              <table className="w-full border-collapse text-left text-[12.5px]">
+                <thead>
+                  <tr className="border-b border-border bg-surface-2/50 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                    <th className="py-2.5 px-3 w-44">Algorithm / Name</th>
+                    <th className="py-2.5 px-3 w-28">Type</th>
+                    <th className="py-2.5 px-3 w-28">Version</th>
+                    <th className="py-2.5 px-3 min-w-[200px]">Source File</th>
+                    <th className="py-2.5 px-3 w-36">Detection Method</th>
+                    <th className="py-2.5 px-3 w-24">Confidence</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border text-foreground">
+                  {reportData.cbom.map((c) => (
+                    <tr key={c.component_id} className="hover:bg-surface-2/40 transition-colors">
+                      <td className="py-2.5 px-3 font-mono font-semibold text-purple-700">
+                        {c.name}
+                      </td>
+                      <td className="py-2.5 px-3 uppercase text-[11px] font-mono text-slate-500">
+                        {c.component_type}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-[11.5px] text-slate-600">
+                        {c.version || '—'}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-[11.5px] text-slate-700">
+                        {c.source_file ? `${c.source_file}${c.line_number ? `:${c.line_number}` : ''}` : '—'}
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600 text-[12px]">
+                        {c.detection_method}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-[11.5px] font-semibold text-slate-700">
+                        {c.confidence != null ? `${Math.round(c.confidence * 100)}%` : 'HIGH'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* CycloneDX SBOM Table in Report */}
+        {reportData?.sbom && reportData.sbom.length > 0 && (
+          <div className="card p-6">
+            <h3 className="section-title mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FolderGit2 className="h-4 w-4 text-cyan-600" />
+                <span>CycloneDX Software Bill of Materials (SBOM) ({reportData.sbom.length})</span>
+              </div>
+              <span className="text-xs font-normal text-slate-500 font-mono">
+                Component Kind: dependency
+              </span>
+            </h3>
+
+            <div className="overflow-x-auto w-full">
+              <table className="w-full border-collapse text-left text-[12.5px]">
+                <thead>
+                  <tr className="border-b border-border bg-surface-2/50 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                    <th className="py-2.5 px-3 w-48">Dependency Package</th>
+                    <th className="py-2.5 px-3 w-28">Version</th>
+                    <th className="py-2.5 px-3 min-w-[200px]">PURL / Location</th>
+                    <th className="py-2.5 px-3 w-36">Detection Method</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border text-foreground">
+                  {reportData.sbom.map((c) => (
+                    <tr key={c.component_id} className="hover:bg-surface-2/40 transition-colors">
+                      <td className="py-2.5 px-3 font-mono font-semibold text-slate-900">
+                        {c.name}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-[11.5px] text-slate-600">
+                        {c.version || '—'}
+                      </td>
+                      <td className="py-2.5 px-3 font-mono text-[11.5px] text-slate-700 truncate max-w-xs" title={c.purl || c.source_file || ''}>
+                        {c.purl || c.source_file || '—'}
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-600 text-[12px]">
+                        {c.detection_method}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Compliance Standard References */}
         <div className="card p-6">
