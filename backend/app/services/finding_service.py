@@ -123,8 +123,19 @@ def get_report_data(
         ),
         {"scan_id": scan_id},
     ).mappings().all()
-    sbom = [ComponentOut.model_validate(row) for row in components if row["component_kind"] == "dependency"]
-    cbom = [ComponentOut.model_validate(row) for row in components if row["component_kind"] == "crypto"]
+    def _clean_comp(row):
+        d = dict(row)
+        sf = d.get("source_file")
+        if sf:
+            s_norm = str(sf).replace("\\", "/")
+            if "/repository/" in s_norm:
+                d["source_file"] = s_norm.split("/repository/", 1)[1]
+            elif ":" in str(sf) or str(sf).startswith("/"):
+                d["source_file"] = os.path.basename(s_norm)
+        return d
+
+    sbom = [ComponentOut.model_validate(_clean_comp(row)) for row in components if row["component_kind"] == "dependency"]
+    cbom = [ComponentOut.model_validate(_clean_comp(row)) for row in components if row["component_kind"] == "crypto"]
 
     counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
     for f in findings:

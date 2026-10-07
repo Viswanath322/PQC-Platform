@@ -282,6 +282,12 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
         if pipeline_result.components:
             persist_cbom_components(db, scan_id, pipeline_result.components)
             for comp in pipeline_result.components:
+                rel_comp_file = comp.file_path
+                if rel_comp_file:
+                    try:
+                        rel_comp_file = str(Path(rel_comp_file).relative_to(scan_dir)).replace("\\", "/")
+                    except Exception:
+                        rel_comp_file = rel_comp_file.replace("\\", "/").split("/repository/")[-1]
                 db.add(
                     ScanComponent(
                         id=comp.component_id,
@@ -289,7 +295,7 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
                         component_kind="crypto",
                         component_type="algorithm",
                         name=comp.algorithm,
-                        source_file=comp.file_path,
+                        source_file=rel_comp_file,
                         line_number=comp.line_number,
                         detection_method=comp.detection_method,
                         confidence=comp.confidence,
