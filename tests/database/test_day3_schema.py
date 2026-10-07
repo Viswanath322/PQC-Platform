@@ -29,11 +29,6 @@ from database.models import (
     CBOMComponent,
     FindingCorrelation,
 )
-from app.services.finding_service import (
-    persist_findings,
-    persist_sbom_components,
-    persist_cbom_components,
-)
 
 from sqlalchemy.orm import Session
 
@@ -184,7 +179,6 @@ def test_scan_delete_cascades_to_day3_tables(run, q, project):
     run("INSERT INTO cbom_components (id, scan_id, algorithm, category, file_path, detection_method, quantum_risk) VALUES (%s, %s, 'AES', 'symmetric', 'f.py', 'engine', 'safe')", (uid(), sid))
     run("INSERT INTO finding_correlations (id, scan_id, group_key, primary_finding_id, related_finding_id) VALUES (%s, %s, 'grp', %s, %s)", (uid(), sid, f1, f2))
 
-    
     # Delete scan
     run("DELETE FROM scans WHERE id=%s", (sid,))
     

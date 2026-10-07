@@ -16,6 +16,7 @@ from database.models import (  # noqa: E402
     Project,
     SBOMComponent,
     Scan,
+    ScanComponent,
     ScanFile,
     User,
 )
@@ -29,7 +30,7 @@ __all__ = [
     "Project",
     "SBOMComponent",
     "Scan",
+    "ScanComponent",
     "ScanFile",
     "User",
 ]
-

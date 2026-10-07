@@ -1,15 +1,19 @@
 -- =============================================================================
--- PQC Security Assessment Platform - Core Database Schema (Day 1)
--- Author: Vamsi (Database Engineer)
+-- PQC Security Assessment Platform - Core Database Schema (Day 4 Integration)
+-- Author: Vamsi (Database Engineer - Person 10)
 -- Target: MySQL 8.0+
--- Database: pqc_security
+-- Database: pqc_security (with pqc compatibility)
 --
 -- Unified Identifier Standard:
 --   - All entities use UUID strings (CHAR(36) / VARCHAR(36)) with DEFAULT (UUID())
---   - Compatible with air-gapped distributed clients and local desktop agents
+--   - Compatible with air-gapped distributed clients, API services, and desktop agent
 -- =============================================================================
 
 CREATE DATABASE IF NOT EXISTS `pqc_security`
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
+CREATE DATABASE IF NOT EXISTS `pqc`
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
@@ -95,6 +99,7 @@ CREATE TABLE `scans` (
     ) NOT NULL DEFAULT 'QUEUED',
     `repository_path` VARCHAR(1024) NOT NULL,
     `error_message` TEXT NULL,
+    `engine_statuses` JSON NULL,
     `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `started_at` DATETIME(6) NULL DEFAULT NULL,
     `completed_at` DATETIME(6) NULL DEFAULT NULL,
@@ -161,14 +166,18 @@ CREATE TABLE `findings` (
     `is_development` BOOLEAN NOT NULL DEFAULT FALSE,
     `rule_id` VARCHAR(100) NULL,
     `rule_version` VARCHAR(50) NULL,
+    `source_engine` VARCHAR(50) NULL,
     `group_key` VARCHAR(255) NULL,
     `correlation_id` VARCHAR(255) NULL,
+    `correlation_group_id` VARCHAR(36) NULL,
     `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     PRIMARY KEY (`id`),
     KEY `idx_findings_scan_id` (`scan_id`),
     KEY `idx_findings_severity` (`severity`),
     KEY `idx_findings_engine` (`engine`),
     KEY `idx_findings_category` (`category`),
+    KEY `idx_findings_rule_id` (`rule_id`),
+    KEY `idx_findings_correlation_group` (`correlation_group_id`),
     KEY `idx_findings_rule` (`scan_id`, `rule_id`),
     KEY `idx_findings_group_key` (`scan_id`, `group_key`),
     KEY `idx_findings_scan_severity` (`scan_id`, `severity`),
@@ -226,7 +235,6 @@ CREATE TABLE `cbom_components` (
     `usage_context` TEXT NULL,
     `detection_method` VARCHAR(100) NOT NULL DEFAULT 'engine',
     `confidence` FLOAT NOT NULL DEFAULT 1.0,
-
     `quantum_risk` ENUM(
         'quantum_vulnerable',
         'weakened',
@@ -284,6 +292,35 @@ CREATE TABLE `finding_correlations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
+-- 10. Table: scan_components (Unified API & Frontend Inventory Storage)
+-- Description: Persisted dependency SBOM and cryptographic CBOM components for a scan
+-- -----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `scan_components`;
+CREATE TABLE `scan_components` (
+    `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+    `scan_id` CHAR(36) NOT NULL,
+    `component_kind` VARCHAR(20) NOT NULL,
+    `component_type` VARCHAR(100) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `version` VARCHAR(255) NULL,
+    `purl` VARCHAR(1024) NULL,
+    `source_file` VARCHAR(1024) NULL,
+    `line_number` INT NULL,
+    `detection_method` VARCHAR(100) NOT NULL,
+    `confidence` FLOAT NULL,
+    `metadata_json` JSON NULL,
+    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (`id`),
+    KEY `idx_scan_components_scan_kind` (`scan_id`, `component_kind`),
+    KEY `idx_scan_components_name_version` (`name`, `version`),
+    CONSTRAINT `fk_scan_components_scan`
+        FOREIGN KEY (`scan_id`) REFERENCES `scans` (`id`)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `chk_scan_components_kind`
+        CHECK (`component_kind` IN ('dependency', 'crypto'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
 -- Default Seed: Organization (Single unified UUID-compatible standard)
 -- -----------------------------------------------------------------------------
 INSERT INTO `organizations` (`id`, `name`, `created_at`, `updated_at`)
@@ -293,4 +330,3 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- Re-enable foreign key checks
 SET FOREIGN_KEY_CHECKS = 1;
-
