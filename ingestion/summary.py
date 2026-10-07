@@ -1,4 +1,41 @@
-"""Repository ingestion orchestration and JSON-friendly summary output."""
+"""Repository ingestion orchestration and JSON-friendly summary output.
+
+INVENTORY OUTPUT FORMAT (for analysis engines):
+{
+    "files_seen": int,           # Total files in ZIP
+    "files_included": int,       # Files after exclusions
+    "files_excluded": int,       # Number of excluded files
+    "skip_reason_counts": {      # Why files were excluded
+        "excluded_directory:node_modules": int,
+        "excluded_file:.ds_store": int,
+        ...
+    },
+    "file_type_counts": {        # File classifications
+        "source": int, "config": int, "manifest": int,
+        "docs": int, "data": int, "binary": int,
+        "crypto_material": int, "generated": int, "vendor": int
+    },
+    "language_counts": {         # Detected languages
+        "python": int, "javascript": int, ...
+    },
+    "files": [                   # File inventory (deterministically sorted)
+        {
+            "path": str,         # Relative POSIX path (e.g., "src/main.py")
+            "file_type": str,    # Classification
+            "language": str|null,# Language or null
+            "size_bytes": int|null
+        },
+        ...
+    ],
+    "excluded_files": [          # Optional: only if exclusions exist
+        {
+            "path": str,
+            "skip_reason": str   # e.g., "excluded_directory:build"
+        },
+        ...
+    ]
+}
+"""
 
 from collections import Counter
 from pathlib import Path
