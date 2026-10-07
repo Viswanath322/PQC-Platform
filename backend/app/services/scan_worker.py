@@ -1,19 +1,16 @@
 """
-Scan processing worker for the PQC platform (Day 2).
+Scan processing worker for the PQC platform — Day 4.
 
 Processes one scan end-to-end:
   QUEUED → INGESTING → ANALYZING → PROCESSING → COMPLETED (or FAILED)
 
-Call ``process_scan(scan_id, db)`` from a background task, a Redis queue
-consumer, or the development single-scan endpoint.
-
-Design rules:
-  - Status transitions are written immediately so the UI reflects progress.
-  - All file paths stored in findings are repository-relative (never absolute).
-  - Full secret values are never stored — evidence is limited to redacted excerpts.
-  - Errors are recorded in the scan error_message field and logged; they never
-    propagate raw stack traces to API responses.
-  - Development findings (is_development=True) are persisted but clearly flagged.
+Day 4 fixes:
+  - scan_id passed to AnalysisPipeline so CryptoEngine produces CryptoComponent
+  - normalize_findings_paths preserves rule_id/rule_version/group_key (path_utils fix)
+  - DBFinding persists rule_id and rule_version
+  - CryptoComponent records persisted (CBOM) when table exists
+  - error_message written to scan on FAILED
+  - Cancellation checked after every status transition
 """
 
 from __future__ import annotations
@@ -30,10 +27,7 @@ from app.services.redis_service import ScanJob
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Lazy imports so the backend can start even if the analysis-engines package
-# has not been fully set up (e.g. missing optional dependencies in future).
-# ---------------------------------------------------------------------------
+
 def _import_pipeline():
     sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
     from analysis_engines.runner import AnalysisPipeline, ScanCancelledError
@@ -148,7 +142,7 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
     Safe to call from any execution context.
     """
     # ------------------------------------------------------------------
-    # 1. Load scan and validate it is in a processable state
+    # 1. Load scan and validate processable state
     # ------------------------------------------------------------------
     from app.models import Scan, ScanFile
 
@@ -245,7 +239,7 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
         return False
 
     # ------------------------------------------------------------------
-    # 3. ANALYZING — run detection engines
+    # 3. ANALYZING — run detection engines (Day 4: pass scan_id)
     # ------------------------------------------------------------------
     if not _set_status(scan, "ANALYZING", db):
         return False
@@ -300,7 +294,7 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
                 file_path=f.file_path,
                 line_number=f.line_number,
                 evidence=f.evidence,
-                explanation=f.explanation,
+                explanation=getattr(f, "explanation", None),
                 confidence=f.confidence,
                 recommendation=f.recommendation,
                 is_development=f.is_development,
@@ -393,6 +387,9 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
         _set_status(scan, "FAILED", db, error_message=err)
         return False
 
+    # Day 4: persist CryptoComponent records if the table exists
+    _persist_components(db, scan_id, pipeline_result.components)
+
     # ------------------------------------------------------------------
     # 5. COMPLETED
     # ------------------------------------------------------------------
@@ -417,10 +414,68 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
     if not _set_status(scan, "COMPLETED", db):
         return False
     logger.info(
-        "process_scan: scan %s COMPLETED — files=%d findings=%d errors=%d",
+        "process_scan: scan %s COMPLETED — files=%d findings=%d components=%d errors=%d",
         scan_id,
         pipeline_result.total_files,
         persisted,
+        len(pipeline_result.components),
         len(pipeline_result.all_errors),
     )
     return True
+
+
+def _persist_components(db: Session, scan_id: str, components: tuple) -> None:
+    """
+    Persist CryptoComponent records (CBOM) to the database.
+
+    Gracefully skipped if the crypto_components table does not yet exist
+    (schema migration is Vamsi's responsibility).
+    """
+    if not components:
+        return
+    try:
+        from sqlalchemy import text
+        # Check table exists before attempting insert
+        db.execute(text("SELECT 1 FROM crypto_components LIMIT 1"))
+    except Exception:
+        logger.debug(
+            "process_scan: crypto_components table not yet available — skipping CBOM persistence"
+        )
+        return
+
+    try:
+        from sqlalchemy import text
+        for c in components:
+            db.execute(
+                text(
+                    "INSERT IGNORE INTO crypto_components "
+                    "(id, scan_id, algorithm, category, file_path, line_number, "
+                    "detection_method, confidence, quantum_risk, "
+                    "nist_migration_target, rule_id, rule_version, is_development) "
+                    "VALUES (:id, :scan_id, :algorithm, :category, :file_path, :line_number, "
+                    ":detection_method, :confidence, :quantum_risk, "
+                    ":nist_migration_target, :rule_id, :rule_version, :is_development)"
+                ),
+                {
+                    "id": c.component_id,
+                    "scan_id": scan_id,
+                    "algorithm": c.algorithm,
+                    "category": c.category,
+                    "file_path": c.file_path,
+                    "line_number": c.line_number,
+                    "detection_method": c.detection_method,
+                    "confidence": c.confidence,
+                    "quantum_risk": c.quantum_risk,
+                    "nist_migration_target": c.nist_migration_target,
+                    "rule_id": c.rule_id,
+                    "rule_version": c.rule_version,
+                    "is_development": int(c.is_development),
+                },
+            )
+        db.commit()
+        logger.info(
+            "process_scan: scan %s — persisted %d crypto components", scan_id, len(components)
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("process_scan: component persistence failed: %s", exc)
+        db.rollback()

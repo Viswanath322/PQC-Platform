@@ -288,6 +288,112 @@ _RULES: list[Rule] = [
         ),
         confidence=0.90,
     ),
+    Rule(
+        rule_id="SAST-INJ-005",
+        engine="sast",
+        category="Code Injection",
+        severity="critical",
+        title="Dynamic code evaluation detected",
+        pattern=re.compile(r"\beval\s*\("),
+        explanation="Dynamic evaluation can execute attacker-controlled code in the application process.",
+        recommendation="Avoid eval; parse data with a safe format or use an explicit allowlisted interpreter.",
+        confidence=0.90,
+    ),
+    Rule(
+        rule_id="SAST-XSS-001",
+        engine="sast",
+        category="Cross-Site Scripting",
+        severity="high",
+        title="HTML is assigned through innerHTML",
+        pattern=re.compile(r"\.innerHTML\s*="),
+        explanation="Assigning untrusted content to innerHTML can execute attacker-controlled markup or script.",
+        recommendation="Use textContent or a vetted sanitizer before rendering untrusted HTML.",
+        confidence=0.88,
+    ),
+    Rule(
+        rule_id="SAST-SEC-004",
+        engine="sast",
+        category="Hardcoded Secret",
+        severity="critical",
+        title="Cloud credential assigned in source or configuration",
+        pattern=re.compile(
+            r"(?i)\b(?:AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID|client_secret|private_key)\b\s*[:=]\s*[\"'][^\"']{6,}[\"']"
+        ),
+        explanation="A cloud credential or private key value appears to be embedded in a file.",
+        recommendation="Remove the value, rotate the credential, and load it from a protected local secret store.",
+        confidence=0.94,
+    ),
+
+    # ---------------------------------------------------------------------------
+    # Day 4: SSRF
+    # ---------------------------------------------------------------------------
+    Rule(
+        rule_id="SAST-SSRF-001",
+        engine="sast",
+        category="SSRF",
+        severity="high",
+        title="HTTP request with user-controlled URL (SSRF risk)",
+        pattern=re.compile(
+            r"(?i)requests?\.(get|post|put|delete|head|patch|request)\s*\(\s*(?:url\s*=\s*)?[a-zA-Z_]\w*",
+        ),
+        explanation=(
+            "An HTTP request is made using a variable as the URL. If that variable "
+            "originates from user input, an attacker can trigger server-side requests "
+            "to internal services (SSRF — CWE-918)."
+        ),
+        recommendation=(
+            "Validate and allowlist URL schemes and hosts before making HTTP requests. "
+            "Never forward user-supplied URLs directly to requests.get() or similar."
+        ),
+        confidence=0.65,
+    ),
+
+    # ---------------------------------------------------------------------------
+    # Day 4: Weak randomness
+    # ---------------------------------------------------------------------------
+    Rule(
+        rule_id="SAST-RAND-001",
+        engine="sast",
+        category="Weak Randomness",
+        severity="medium",
+        title="random module used — not cryptographically secure",
+        pattern=re.compile(r"\brandom\.(?:random|randint|choice|shuffle|seed)\b"),
+        explanation=(
+            "The random module is not cryptographically secure. "
+            "Using it for tokens, passwords, session IDs or cryptographic keys "
+            "makes them predictable (CWE-338)."
+        ),
+        recommendation=(
+            "Replace random with secrets.token_hex(), secrets.token_urlsafe() or "
+            "os.urandom() for all security-sensitive values."
+        ),
+        confidence=0.70,
+    ),
+
+    # ---------------------------------------------------------------------------
+    # Day 4: XXE
+    # ---------------------------------------------------------------------------
+    Rule(
+        rule_id="SAST-XXE-001",
+        engine="sast",
+        category="XXE Injection",
+        severity="high",
+        title="XML parsing without explicit external-entity protection (XXE risk)",
+        pattern=re.compile(
+            r"(?i)(?:etree\.parse|etree\.fromstring|xml\.dom|minidom\.parse|"
+            r"lxml\.etree\.parse|parseString)\s*\(",
+        ),
+        explanation=(
+            "XML parsers that have not explicitly disabled external entity processing "
+            "are vulnerable to XXE injection. An attacker can read arbitrary files "
+            "from the server (CWE-611)."
+        ),
+        recommendation=(
+            "Use the defusedxml library, or set resolve_entities=False in lxml, "
+            "or use XMLParser(no_network=True, resolve_entities=False)."
+        ),
+        confidence=0.72,
+    ),
 ]
 
 
