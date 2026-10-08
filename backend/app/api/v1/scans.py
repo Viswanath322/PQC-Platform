@@ -45,7 +45,7 @@ def create_scan(
     db.commit()
     db.refresh(scan)
     scan_workspace = zip_path.parent.parent / "scans" / scan.id / "repository"
-    if not enqueue_scan(scan.id, str(scan_workspace), selected_engines):
+    if not enqueue_scan(scan.id, project.id, str(scan_workspace), selected_engines):
         # Never report QUEUED for a scan that is not in the queue: keep the row as FAILED and tell the caller.
         scan.status = ScanStatus.FAILED.value
         scan.completed_at = _utcnow()
