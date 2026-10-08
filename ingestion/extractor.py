@@ -140,10 +140,13 @@ def extract_zip_safely(
                 if info.create_system == 3 and mode != 0 and stat.S_ISLNK(mode):
                     log.warning(f"ZIP rejected - symlink: {repr(info.filename[:100])}")
                     raise ExtractionError("Symbolic links are not allowed in ZIPs")
-                # Issue #17: Reject non-regular files/directories (but allow mode==0 which is common)
-                if mode != 0 and info.create_system == 3 and not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
-                    log.warning(f"ZIP rejected - special file type: {repr(info.filename[:100])}")
-                    raise ExtractionError("Unsupported file type in ZIP")
+                # Issue #17 + #9d: Reject non-regular files/directories (but allow mode==0 which is common)
+                # Day 4 QA Fix #9d: Use S_IFMT to extract file type bits, then check if it's set and valid
+                if info.create_system == 3:
+                    fmt = stat.S_IFMT(mode)
+                    if fmt != 0 and not (stat.S_ISREG(mode) or stat.S_ISDIR(mode)):
+                        log.warning(f"ZIP rejected - special file type: {repr(info.filename[:100])}")
+                        raise ExtractionError("Unsupported file type in ZIP")
                 
                 # Issue #4: Check if this path should be excluded before writing
                 relative_path = PurePosixPath(info.filename.replace("\\", "/"))
