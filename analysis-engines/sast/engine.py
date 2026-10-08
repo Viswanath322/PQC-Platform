@@ -93,6 +93,9 @@ class SASTEngine(AnalysisEngine):
     def name(self) -> EngineName:
         return EngineName.SAST
 
+    def set_root_dir(self, root_dir: Path | None) -> None:
+        self.root_dir = Path(root_dir).resolve() if root_dir is not None else None
+
     def analyze(self, files: Iterable[Path]) -> AnalysisResult:
         rules = get_rules()
         findings: list[Finding] = []

@@ -112,6 +112,9 @@ export interface Scan {
   pqc_readiness_score: number;
   progress_percent?: number;
   is_mock?: boolean;
+  error_message?: string | null;
+  started_at?: string;
+  engine_statuses?: Record<string, string>;
 }
 
 export interface Finding {
@@ -137,6 +140,10 @@ export interface Finding {
   detected_at?: string;
   status?: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'SUPPRESSED';
   is_development?: boolean;
+  rule_id?: string;
+  rule_version?: string;
+  source_engine?: string;
+  correlation_group_id?: string;
 }
 
 export interface CryptoComponent {
@@ -181,6 +188,19 @@ export interface MigrationCandidate {
   rationale?: string;
 }
 
+export interface Component {
+  component_id: string;
+  component_type: string;
+  name: string;
+  version?: string | null;
+  purl?: string | null;
+  source_file?: string | null;
+  line_number?: number | null;
+  detection_method: string;
+  confidence?: number | null;
+  metadata?: Record<string, any>;
+}
+
 export interface Report {
   scan_id: string;
   status?: string;
@@ -194,7 +214,12 @@ export interface Report {
     medium: number;
     low: number;
   };
+  findings_by_engine?: Record<string, number>;
+  findings_by_category?: Record<string, number>;
+  findings_truncated?: boolean;
   findings?: Finding[];
+  sbom?: Component[];
+  cbom?: Component[];
   executive_summary?: string;
   summary?: {
     total_findings: number;

@@ -274,6 +274,59 @@ _CRYPTO_RULES: list[CryptoRule] = [
         confidence=0.80,
         quantum_vulnerable=False,
     ),
+
+    # -------------------------------------------------------------------------
+    # Day 4: Weak RSA key size (< 2048 bits)
+    # -------------------------------------------------------------------------
+    CryptoRule(
+        rule_id="CRYPTO-KEY-005",
+        algorithm="RSA-weak-key",
+        category="Weak Key Size",
+        severity="critical",
+        title="RSA key size below 2048 bits — trivially factorable",
+        pattern=re.compile(
+            r"(?:key_size|bits)\s*=\s*(?:512|768|1024)\b",
+            re.IGNORECASE,
+        ),
+        explanation=(
+            "RSA keys smaller than 2048 bits can be factored by classical computers "
+            "using the General Number Field Sieve. A 512-bit key can be broken in "
+            "hours; a 1024-bit key in months with modern hardware."
+        ),
+        recommendation=(
+            "Use RSA-2048 as the minimum. Prefer RSA-3072 or 4096 for long-lived "
+            "keys, or migrate to NIST FIPS 203 ML-KEM for post-quantum security."
+        ),
+        confidence=0.97,
+        quantum_vulnerable=True,
+        nist_reference="FIPS 203 (ML-KEM)",
+    ),
+
+    # -------------------------------------------------------------------------
+    # Day 4: Hardcoded salt in password hashing
+    # -------------------------------------------------------------------------
+    CryptoRule(
+        rule_id="CRYPTO-PASS-002",
+        algorithm="Hardcoded-Salt",
+        category="Weak Password Hash",
+        severity="high",
+        title="Hardcoded or static salt in password hash",
+        pattern=re.compile(
+            r"(?i)\bsalt\s*=\s*(?:b[\"'][^\"']{1,64}[\"']|[\"'][^\"']{1,64}[\"'])",
+        ),
+        explanation=(
+            "A static or hardcoded salt eliminates the protection that salts provide "
+            "against rainbow-table and pre-computation attacks. All users with the "
+            "same password will have identical hashes."
+        ),
+        recommendation=(
+            "Generate a unique random salt per user per password using "
+            "os.urandom(16) or secrets.token_bytes(16). Store the salt alongside "
+            "the hash, never as a constant."
+        ),
+        confidence=0.82,
+        quantum_vulnerable=False,
+    ),
 ]
 
 

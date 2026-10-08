@@ -20,10 +20,11 @@ def list_findings(
     severity: str | None = None,
     category: str | None = None,
     engine: str | None = None,
+    q: str | None = None,
     limit: int = 100,
     offset: int = 0,
 ) -> list[FindingOut]:
-    """Return findings with optional exact filters and bounded pagination."""
+    """Return findings with optional exact filters, text search, and bounded pagination."""
     clauses: list[str] = ["projects.organization_id = :organization_id"]
     params: dict[str, str | int] = {
         "organization_id": organization_id,
@@ -42,6 +43,9 @@ def list_findings(
     if engine is not None:
         clauses.append("findings.engine = :engine")
         params["engine"] = engine.lower()
+    if q is not None and q.strip():
+        clauses.append("(findings.title LIKE :q_like OR findings.file_path LIKE :q_like OR findings.category LIKE :q_like OR findings.explanation LIKE :q_like)")
+        params["q_like"] = f"%{q.strip()}%"
 
     where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
     rows = db.execute(
@@ -119,8 +123,19 @@ def get_report_data(
         ),
         {"scan_id": scan_id},
     ).mappings().all()
-    sbom = [ComponentOut.model_validate(row) for row in components if row["component_kind"] == "dependency"]
-    cbom = [ComponentOut.model_validate(row) for row in components if row["component_kind"] == "crypto"]
+    def _clean_comp(row):
+        d = dict(row)
+        sf = d.get("source_file")
+        if sf:
+            s_norm = str(sf).replace("\\", "/")
+            if "/repository/" in s_norm:
+                d["source_file"] = s_norm.split("/repository/", 1)[1]
+            elif ":" in str(sf) or str(sf).startswith("/"):
+                d["source_file"] = os.path.basename(s_norm)
+        return d
+
+    sbom = [ComponentOut.model_validate(_clean_comp(row)) for row in components if row["component_kind"] == "dependency"]
+    cbom = [ComponentOut.model_validate(_clean_comp(row)) for row in components if row["component_kind"] == "crypto"]
 
     counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
     for f in findings:

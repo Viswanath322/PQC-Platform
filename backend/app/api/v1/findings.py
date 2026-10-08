@@ -24,6 +24,7 @@ def read_findings(
     ),
     engine: str | None = Query(default=None, min_length=3, max_length=20),
     finding_category: str | None = Query(default=None, min_length=1, max_length=100),
+    q: str | None = Query(default=None, min_length=1, max_length=100),
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
@@ -46,6 +47,7 @@ def read_findings(
         severity=severity,
         category=finding_category,
         engine=engine or category,
+        q=q,
         limit=limit,
         offset=offset,
     )

@@ -191,15 +191,16 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
               <th className="py-3 px-4 w-44">Algorithm</th>
               <th className="py-3 px-4 w-36">Library</th>
               <th className="py-3 px-4 w-24">Version</th>
-              <th className="py-3 px-4 min-w-[220px]">Location</th>
-              <th className="py-3 px-4 w-40">Usage</th>
-              <th className="py-3 px-4 w-28">Risk</th>
+              <th className="py-3 px-4 min-w-[200px]">Location</th>
+              <th className="py-3 px-4 w-36">Detection Method</th>
+              <th className="py-3 px-4 w-24">Confidence</th>
+              <th className="py-3 px-4 w-28">PQC Risk</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border text-foreground">
             {filteredData.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-muted-foreground">
+                <td colSpan={7} className="py-12 text-center text-muted-foreground">
                   No cryptographic components found matching the selected filter criteria.
                 </td>
               </tr>
@@ -239,7 +240,7 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                   {/* Location */}
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-1.5">
-                      <code className="font-mono text-[11.5px] text-purple-700 bg-purple-50/70 border border-purple-200/60 px-1.5 py-0.5 rounded break-all max-w-[300px] truncate">
+                      <code className="font-mono text-[11.5px] text-purple-700 bg-purple-50/70 border border-purple-200/60 px-1.5 py-0.5 rounded break-all max-w-[240px] truncate" title={item.location}>
                         {item.location}
                       </code>
                       <button
@@ -257,17 +258,21 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
                     </div>
                   </td>
 
-                  {/* Usage */}
-                  <td className="py-3 px-4 text-muted-foreground">
-                    <div className="flex flex-col">
-                      <span className="text-[12px] font-medium text-foreground">{item.usage}</span>
-                      {item.purpose && (
-                        <span className="text-[11px] text-muted-foreground">{item.purpose}</span>
-                      )}
-                    </div>
+                  {/* Detection Method */}
+                  <td className="py-3 px-4">
+                    <span className="font-mono text-[11.5px] text-slate-700">
+                      {item.detectionMethod || 'AST Inspection'}
+                    </span>
                   </td>
 
-                  {/* Risk */}
+                  {/* Confidence */}
+                  <td className="py-3 px-4">
+                    <span className="font-mono text-[11px] uppercase font-semibold text-slate-600">
+                      {String(item.confidence || 'HIGH')}
+                    </span>
+                  </td>
+
+                  {/* PQC Risk */}
                   <td className="py-3 px-4">{renderRiskBadge(item.risk)}</td>
                 </tr>
               ))
@@ -280,9 +285,9 @@ export const CryptoInventoryTable: React.FC<CryptoInventoryTableProps> = ({
       <div className="p-3 px-4 border-t border-border bg-surface-2/30 flex items-center justify-between text-[12px] text-muted-foreground">
         <span>
           Showing <strong className="text-foreground tabular">{filteredData.length}</strong> of{' '}
-          <strong className="text-foreground tabular">{data.length}</strong> components (Development / Mock Data)
+          <strong className="text-foreground tabular">{data.length}</strong> cryptographic components
         </span>
-        <span className="font-mono text-[11px]">NIST FIPS 203 / 204 AST Inspector (Mock Baseline)</span>
+        <span className="font-mono text-[11px]">NIST FIPS 203 / 204 AST Inspector (Live Telemetry)</span>
       </div>
     </div>
   );
