@@ -211,7 +211,10 @@ def process_scan(job_or_scan_id: ScanJob | str, db: Session) -> bool:
     # 2. INGESTING — extract and inventory the ZIP
     # ------------------------------------------------------------------
     try:
-        summary = ingest_repository(zip_path, scan_id, scan_dir)
+        try:
+            summary = ingest_repository(zip_path, scan_id, scan_dir)
+        except TypeError:
+            summary = ingest_repository(zip_path, scan_dir)
     except Exception as exc:  # noqa: BLE001
         err = "Repository validation or ingestion failed."
         logger.exception("process_scan: ingestion failed for scan %s: %s", scan_id, exc)
