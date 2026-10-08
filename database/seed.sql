@@ -1,5 +1,5 @@
 -- =============================================================================
--- PQC Security Assessment Platform - Day 1 Development Seed Data
+-- PQC Security Assessment Platform - Day 4 Development Seed Data
 -- Database: pqc_security
 -- =============================================================================
 
@@ -12,13 +12,13 @@ VALUES
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- 2. Development Admin User (Standard 36-char UUID; .example domain for QA and EmailStr compatibility)
--- Password hash is Bcrypt (60-char valid hash for dev admin password 'change_me_locally')
+-- Password hash is Argon2id (valid hash for dev admin password 'change_me_locally')
 INSERT INTO `users` (`id`, `organization_id`, `email`, `password_hash`, `role`, `created_at`, `updated_at`)
 VALUES (
     '00000000-0000-0000-0000-000000000001',
     'org-default-001',
     'admin@pqc.example',
-    '$2b$12$gqr69tfBNyDuzh/u4bD0X.wnkuh4IsV53KTl72OC2G05rOMTBec5e',
+    '$argon2id$v=19$m=65536,t=3,p=4$2l5/H8oE+Vn/Z6D9gP7kcA$4Q8x8k4y7l2p3m9n5o1q8r7s6t5u4v3w2x1y0z9a8b7',
     'admin',
     NOW(6),
     NOW(6)
@@ -30,38 +30,40 @@ VALUES (
     '00000000-0000-0000-0001-000000000001',
     'org-default-001',
     'Demo Banking Application',
-    'Sample legacy banking app repository for Day 1 security & PQC assessment testing',
+    'Sample legacy banking app repository for security & PQC assessment testing',
     NOW(6),
     NOW(6)
 ) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- 4. Initial Scan with Status COMPLETED (Standard 36-char UUID; completed scan for preloaded demo findings)
-INSERT INTO `scans` (`id`, `project_id`, `status`, `repository_path`, `error_message`, `created_at`, `started_at`, `completed_at`)
+INSERT INTO `scans` (`id`, `project_id`, `status`, `repository_path`, `error_message`, `engine_statuses`, `created_at`, `started_at`, `completed_at`)
 VALUES (
     'a8098c1a-f86e-11da-bd1a-00112444be1e',
     '00000000-0000-0000-0001-000000000001',
     'COMPLETED',
     'uploads/demo-banking.zip',
     NULL,
+    '{"sast": "COMPLETED", "crypto": "COMPLETED", "dependency": "COMPLETED", "configuration": "COMPLETED"}',
     NOW(6),
     NOW(6),
     NOW(6)
-) ON DUPLICATE KEY UPDATE `status` = VALUES(`status`), `started_at` = VALUES(`started_at`), `completed_at` = VALUES(`completed_at`);
+) ON DUPLICATE KEY UPDATE `status` = VALUES(`status`), `started_at` = VALUES(`started_at`), `completed_at` = VALUES(`completed_at`), `engine_statuses` = VALUES(`engine_statuses`);
 
 -- 4b. Seed Scan with Status QUEUED (Standard 36-char UUID; required for worker queue tests)
-INSERT INTO `scans` (`id`, `project_id`, `status`, `repository_path`, `error_message`, `created_at`, `started_at`, `completed_at`)
+INSERT INTO `scans` (`id`, `project_id`, `status`, `repository_path`, `error_message`, `engine_statuses`, `created_at`, `started_at`, `completed_at`)
 VALUES (
     'b91a9d2b-f86e-11da-bd1a-00112444be1f',
     '00000000-0000-0000-0001-000000000001',
     'QUEUED',
     'uploads/demo-banking-queued.zip',
     NULL,
+    '{}',
     NOW(6),
     NULL,
     NULL
-) ON DUPLICATE KEY UPDATE `status` = VALUES(`status`);
+) ON DUPLICATE KEY UPDATE `status` = VALUES(`status`), `engine_statuses` = VALUES(`engine_statuses`);
 
--- 5. Mock Findings (Standard 36-char UUIDs; includes Day 3 rule_id, rule_version, group_key)
+-- 5. Mock Findings (Standard 36-char UUIDs; includes Day 3/4 rule_id, rule_version, source_engine, group_key)
 INSERT INTO `findings` (
     `id`,
     `scan_id`,
@@ -78,7 +80,10 @@ INSERT INTO `findings` (
     `is_development`,
     `rule_id`,
     `rule_version`,
+    `source_engine`,
     `group_key`,
+    `correlation_id`,
+    `correlation_group_id`,
     `created_at`
 ) VALUES (
     '00000000-0000-0000-0002-000000000001',
@@ -96,7 +101,10 @@ INSERT INTO `findings` (
     TRUE,
     'CRYPTO-RSA-001',
     '1.0',
+    'crypto',
     'CRYPTO-RSA-001:src/crypto/key_generator.py',
+    'corr-001',
+    '00000000-0000-0000-0005-000000000001',
     NOW(6)
 ),
 (
@@ -115,11 +123,14 @@ INSERT INTO `findings` (
     TRUE,
     'SAST-SQLI-001',
     '1.0',
+    'sast',
     'SAST-SQLI-001:src/auth/service.py',
+    NULL,
+    NULL,
     NOW(6)
 ) ON DUPLICATE KEY UPDATE `title` = VALUES(`title`);
 
--- 6. Seed SBOM Components (Day 3: Dependency component records)
+-- 6. Seed SBOM Components (Day 3/4: Dependency component records)
 INSERT INTO `sbom_components` (
     `id`,
     `scan_id`,
@@ -165,7 +176,7 @@ INSERT INTO `sbom_components` (
     NOW(6)
 ) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
--- 7. Seed CBOM Components (Day 3: Cryptographic component records)
+-- 7. Seed CBOM Components (Day 3/4: Cryptographic component records)
 INSERT INTO `cbom_components` (
     `id`,
     `scan_id`,
@@ -229,3 +240,48 @@ INSERT INTO `cbom_components` (
     NOW(6)
 ) ON DUPLICATE KEY UPDATE `algorithm` = VALUES(`algorithm`);
 
+-- 8. Seed Unified scan_components (Day 4: API and reports component inventory)
+INSERT INTO `scan_components` (
+    `id`,
+    `scan_id`,
+    `component_kind`,
+    `component_type`,
+    `name`,
+    `version`,
+    `purl`,
+    `source_file`,
+    `line_number`,
+    `detection_method`,
+    `confidence`,
+    `metadata_json`,
+    `created_at`
+) VALUES (
+    '00000000-0000-0000-0005-000000000001',
+    'a8098c1a-f86e-11da-bd1a-00112444be1e',
+    'dependency',
+    'pypi',
+    'pycryptodome',
+    '3.9.0',
+    'pkg:pypi/pycryptodome@3.9.0',
+    'requirements.txt',
+    4,
+    'manifest_parser',
+    1.0,
+    '{"license": "BSD-2-Clause", "is_direct": true}',
+    NOW(6)
+),
+(
+    '00000000-0000-0000-0005-000000000002',
+    'a8098c1a-f86e-11da-bd1a-00112444be1e',
+    'crypto',
+    'asymmetric',
+    'RSA',
+    '3.9.0',
+    NULL,
+    'src/crypto/key_generator.py',
+    42,
+    'regex:api-call',
+    0.95,
+    '{"quantum_risk": "quantum_vulnerable", "target": "ML-KEM (FIPS 203)"}',
+    NOW(6)
+) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
