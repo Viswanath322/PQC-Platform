@@ -11,6 +11,7 @@ Steps share state in FLOW; a step whose prerequisite is missing is Blocked, a st
 exists but misbehaves is Failed. API prefix (/api/v1 or none) is discovered from OpenAPI.
 """
 import io
+import json
 import os
 import re
 import uuid
@@ -39,6 +40,22 @@ FLOW: dict = {}
 
 def blocked(reason):
     pytest.skip(f"BLOCKED: {reason}")
+
+
+def _queued_items(r, key, scan_id):
+    """Queue entries for scan_id: a bare id (Day 1) or a versioned JSON ScanJob (Day 3+)."""
+    hits = []
+    for item in r.lrange(key, 0, -1):
+        if item == scan_id:
+            hits.append(item)
+            continue
+        try:
+            job = json.loads(item)
+        except ValueError:
+            continue
+        if isinstance(job, dict) and job.get("scan_id") == scan_id:
+            hits.append(item)
+    return hits
 
 
 def _send_token(request):
@@ -341,7 +358,7 @@ def test_07b_scan_is_in_redis_queue(http):
     r = redis_client()
     found = []
     for key in r.scan_iter(match="*", count=200):
-        if r.type(key) == "list" and FLOW["scan_id"] in r.lrange(key, 0, -1):
+        if r.type(key) == "list" and _queued_items(r, key, FLOW["scan_id"]):
             found.append(key)
     FLOW["queue_keys"] = found
     assert found, "FINDING: scan is QUEUED in MySQL but its id is in no Redis list (never enqueued)"
@@ -375,7 +392,7 @@ def test_09b_cancelled_scan_removed_from_queue(http):
     if "queue_keys" not in FLOW or not FLOW["queue_keys"]:
         blocked("scan was never found in a Redis queue")
     r = redis_client()
-    still = [k for k in FLOW["queue_keys"] if FLOW["scan_id"] in r.lrange(k, 0, -1)]
+    still = [k for k in FLOW["queue_keys"] if _queued_items(r, k, FLOW["scan_id"])]
     r.delete("pqc:worker:paused")
     if still:
         pytest.xfail(f"FINDING: cancelled scan {FLOW['scan_id']} is still in Redis queue {still}; "
@@ -402,7 +419,8 @@ def test_99_cleanup():
         import redis
         r = redis.Redis.from_url(REDIS_URL, socket_connect_timeout=2, decode_responses=True)
         for k in FLOW.get("queue_keys", []):
-            r.lrem(k, 0, FLOW["scan_id"])
+            for item in _queued_items(r, k, FLOW["scan_id"]):
+                r.lrem(k, 0, item)
         r.delete("pqc:worker:paused")
     except Exception:  # noqa: BLE001
         pass
