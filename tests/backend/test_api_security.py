@@ -5,10 +5,9 @@ from backend_helpers import *  # noqa: F401,F403
 
 pytestmark = pytest.mark.security
 LEAK = re.compile(r'Traceback|File "/|/Users/|/home/|[A-Za-z]:\\\\|site-packages|sqlalchemy|pymysql|sqlite3?\.', re.I)
-NO_AUTH = pytest.mark.xfail(reason="FINDING: no auth enforced yet", strict=False)
+NO_AUTH = pytest.mark.xfail(reason="FINDING: /redis/ping has no auth dependency", strict=False)
 
 
-@NO_AUTH
 @pytest.mark.parametrize("method,path", [("get", "/projects"), ("post", "/projects"),
                                          ("get", "/scans"), ("post", "/scans"),
                                          ("post", "/uploads"), ("get", "/findings")])
@@ -19,7 +18,6 @@ def test_endpoint_requires_authentication(anon_api, openapi, method, path):
     assert r.status_code in (401, 403), f"{method.upper()} {path} unauthenticated -> {r.status_code}"
 
 
-@NO_AUTH
 def test_scan_get_requires_authentication(anon_api, openapi, scan):
     r = anon_api.get(f"{V1}/scans/{scan['id']}")
     assert r.status_code in (401, 403)

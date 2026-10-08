@@ -95,8 +95,6 @@ def test_findings_list_order_is_deterministic(api, openapi):
     assert [i["finding_id"] for i in api.get(F).json()] == [i["finding_id"] for i in items]
 
 
-@pytest.mark.xfail(reason="FINDING: GET /findings has no limit/offset; a large scan returns everything in one response",
-                   strict=False)
 def test_findings_list_is_paginated(openapi):
     require_endpoint(openapi, "get", F)
     params = {p["name"] for p in openapi["paths"][F]["get"].get("parameters", [])}
