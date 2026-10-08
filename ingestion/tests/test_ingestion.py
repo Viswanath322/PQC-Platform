@@ -471,7 +471,10 @@ class IngestionTests(unittest.TestCase):
                 shutil.rmtree(self.destination)
     
     def test_hostile_windows_reserved_names(self):
-        """Day 4: Test rejection of Windows reserved device names."""
+        """Day 4: Test handling of Windows reserved device names.
+        
+        P2 #23e.5: Changed to SKIP reserved names instead of rejecting whole ZIP.
+        """
         reserved_names = [
             "CON",
             "PRN",
@@ -489,9 +492,13 @@ class IngestionTests(unittest.TestCase):
         for reserved in reserved_names:
             with zipfile.ZipFile(self.archive, "w") as z:
                 z.writestr(f"dir/{reserved}", "content")
+                z.writestr("normal.txt", "ok")  # Add a normal file too
             
-            with self.assertRaisesRegex(ExtractionError, "reserved system name"):
-                ingest_repository(self.archive, self.destination)
+            # P2 #23e.5: Should now SKIP reserved names, not reject
+            result = ingest_repository(self.archive, self.destination)
+            # Should extract the normal file and skip the reserved name
+            self.assertEqual(result["files_included"], 1)
+            self.assertIn("normal.txt", [f["path"] for f in result["files"]])
             
             if self.destination.exists():
                 import shutil

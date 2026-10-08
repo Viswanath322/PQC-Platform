@@ -53,9 +53,7 @@ def _safe_target(root: Path, member_name: str) -> Path:
         # Issue #8: Check for other invalid Windows characters
         if any(c in part for c in '<>"|?*') or any(ord(c) < 32 for c in part):
             raise ExtractionError("ZIP member contains invalid characters")
-        # Issue #8: Check for Windows reserved names
-        if _WINDOWS_RESERVED.match(part):
-            raise ExtractionError("ZIP member uses reserved system name")
+        # P2 #23e.5: Reserved names now skipped earlier, not rejected here
         # Issue #8: Check for trailing dots or spaces (Windows strips them)
         if part.endswith('.') or part.endswith(' '):
             raise ExtractionError("ZIP member has invalid trailing characters")
@@ -105,7 +103,28 @@ def extract_zip_safely(
         dirs_written = 0
         with zipfile.ZipFile(archive) as zipped:
             for info in zipped.infolist():
-                target = _safe_target(temp_root, info.filename)
+                # P2 #23e.1: Check exclusions FIRST before applying limits
+                # This prevents node_modules/.git from counting against limits
+                relative_path = PurePosixPath(info.filename.replace("\\", "/"))
+                should_exclude = is_excluded(relative_path)
+                
+                # P2 #23e.5: Skip files with Windows reserved names instead of rejecting whole ZIP
+                parts = relative_path.parts
+                has_reserved = any(_WINDOWS_RESERVED.match(part) for part in parts)
+                
+                # Skip excluded entries or reserved names early - don't even validate them
+                if should_exclude or has_reserved:
+                    if has_reserved:
+                        log.info(f"Skipping file with reserved name: {info.filename}")
+                    continue
+                
+                try:
+                    target = _safe_target(temp_root, info.filename)
+                except ExtractionError as e:
+                    # P2 #23e.4: Wrap OS errors to avoid leaking host paths
+                    if "extraction directory" in str(e) or "path escapes" in str(e):
+                        raise ExtractionError("Invalid ZIP member path") from None
+                    raise
                 
                 # Issue #7: Check path depth and length limits
                 parts = PurePosixPath(info.filename.replace("\\", "/")).parts
@@ -148,24 +167,14 @@ def extract_zip_safely(
                         log.warning(f"ZIP rejected - special file type: {repr(info.filename[:100])}")
                         raise ExtractionError("Unsupported file type in ZIP")
                 
-                # Issue #4: Check if this path should be excluded before writing
-                relative_path = PurePosixPath(info.filename.replace("\\", "/"))
-                should_exclude = is_excluded(relative_path)
-                
                 if info.is_dir():
-                    # Don't count excluded directories
-                    if not should_exclude:
-                        dirs_written += 1
-                        if dirs_written > limits.max_dirs:
-                            raise ExtractionError(f"Too many directories ({dirs_written}; limit {limits.max_dirs})")
-                        target.mkdir(parents=True, exist_ok=True)
+                    dirs_written += 1
+                    if dirs_written > limits.max_dirs:
+                        raise ExtractionError(f"Too many directories ({dirs_written}; limit {limits.max_dirs})")
+                    target.mkdir(parents=True, exist_ok=True)
                     continue
                 
-                # Issue #4: Skip excluded files - don't write to disk
-                if should_exclude:
-                    continue
-                
-                # Issue #4: Count files after exclusions
+                # Count files (already filtered by exclusions above)
                 files_written += 1
                 if files_written > limits.max_files:
                     raise ExtractionError(f"Too many included files ({files_written}; limit {limits.max_files})")
