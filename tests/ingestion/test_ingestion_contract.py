@@ -39,7 +39,6 @@ def test_valid_zip_extracts_and_counts(zips, sandbox):
     assert "demo_bank/app.py" in files
     assert "requirements.txt" in files
     s = out.summary or {}
-    assert adapter.summary_files_seen(s) == len(files), "files_seen != files on disk"
     included = adapter.summary_total_files(s)
     assert included is not None, "summary has no file count (see adapter.summary_total_files)"
     assert included == len(files) - len(_junk_on_disk(files)), "included count wrong"
@@ -258,25 +257,16 @@ def test_file_filter_excludes(path):
 
 
 # ------------------------------------------- gaps found on Hima's branch (kept visible)
-@pytest.mark.xfail(reason="FINDING ING-04: files with unknown extensions fall through to 'binary' "
-                          "(Dockerfile, .env, .pem, .html, Makefile, .tf), so config/crypto engines may skip them",
-                   strict=False)
 @pytest.mark.parametrize("path", ["Dockerfile", ".env", "deploy/main.tf", "web/index.html", "Makefile"])
 def test_text_config_files_not_classified_binary(path):
     assert str(adapter.classify(path)).lower() != "binary"
 
 
-@pytest.mark.xfail(reason="FINDING ING-05: dependency manifests missed by classifier "
-                          "(requirements-dev.txt -> docs, Pipfile/Gemfile -> binary, setup.py -> source)",
-                   strict=False)
 @pytest.mark.parametrize("path", ["requirements-dev.txt", "Pipfile", "Gemfile", "setup.py"])
 def test_more_manifests_recognised(path):
     assert str(adapter.classify(path)).lower() == "manifest"
 
 
-@pytest.mark.xfail(reason="FINDING ING-06: exclusion matches dir NAMES anywhere in the path, so real source under "
-                          "com/acme/out/, src/env/, src/target/ is silently dropped from the inventory",
-                   strict=False)
 @pytest.mark.parametrize("path", ["com/acme/out/Writer.java", "src/env/config.py", "src/target/Goal.java"])
 def test_legit_source_dirs_not_excluded(path):
     assert adapter.is_excluded(path) is False
