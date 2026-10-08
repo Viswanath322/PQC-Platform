@@ -114,21 +114,20 @@ def test_development_flag_defaults_false(make_finding):
 # ------------------------------------------------------------- AnalysisResult
 def test_result_defaults_and_fields(lib):
     r = lib.AnalysisResult()
-    assert r.findings == () and r.files_processed == 0 and r.errors == ()
-    assert [f.name for f in dataclasses.fields(lib.AnalysisResult)] == ["findings", "files_processed", "errors"]
+    assert r.findings == () and r.files_processed == 0 and r.errors == () and r.components == ()
+    assert [f.name for f in dataclasses.fields(lib.AnalysisResult)] == ["findings", "files_processed", "errors",
+                                                                        "components"]
 
 
 @pytest.mark.parametrize("kw", [
     {"files_processed": -1}, {"files_processed": "3"}, {"files_processed": True},
-    {"errors": ("",)}, {"errors": (1,)}, {"errors": ["a"]}, {"findings": ("nope",)}, {"findings": None},
+    {"errors": ("",)}, {"errors": (1,)}, {"findings": ("nope",)}, {"findings": None},
 ])
 def test_result_rejects_invalid(lib, kw):
     with pytest.raises(ValueError):
         lib.AnalysisResult(**kw)
 
 
-@pytest.mark.xfail(reason="FINDING AE-07: AnalysisResult only accepts tuples; a list of findings/errors "
-                          "(the natural thing engines build) raises instead of being coerced", strict=False)
 def test_result_accepts_lists(lib, make_finding):
     lib.AnalysisResult(findings=[make_finding()], files_processed=1, errors=["x"])
 
