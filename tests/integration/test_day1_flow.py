@@ -14,6 +14,7 @@ import io
 import json
 import os
 import re
+import time
 import uuid
 import zipfile
 from pathlib import Path
@@ -70,6 +71,8 @@ def _day1_worker_pause():
     try:
         r = redis_client()
         r.set("pqc:worker:paused", "1")
+        # a worker already inside BLPOP (2 s timeout) only sees the flag on its next loop
+        time.sleep(2.5)
     except Exception:
         pass
     yield
