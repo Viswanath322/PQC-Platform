@@ -15,7 +15,7 @@ import { MigrationCandidates } from '@/components/pqc/MigrationCandidates';
 import { KeyInsights } from '@/components/pqc/KeyInsights';
 import { ScoreRing } from '@/components/dashboard/ScoreRing';
 import { api, ApiError } from '@/services/api';
-import type { Finding, Scan } from '@/types';
+import type { Finding, Scan, Component } from '@/types';
 import type { CryptoComponent, MigrationCandidate, KeyInsight, PQCRiskSummary } from '@/types/pqc';
 
 interface PQCPageProps {
@@ -74,8 +74,12 @@ function findingToCryptoComponent(f: Finding): CryptoComponent {
     algorithm: algo,
     library: f.engine === 'crypto' ? 'Cryptographic Rule Engine' : 'AST Static Inspector',
     version: '1.0',
-    location: `${f.file}:${f.line}`,
+    location: `${f.file_path || f.file}:${f.line_number || f.line}`,
+    file: f.file_path || f.file,
+    line: f.line_number || f.line,
     usage: f.title,
+    detectionMethod: f.source_engine || (f.engine === 'crypto' ? 'Rule Heuristics' : 'Static AST'),
+    confidence: String(f.confidence || 'HIGH').toUpperCase(),
     risk: risk,
     quantumVulnerable: risk !== 'LOW',
     status: 'Detected',
@@ -91,6 +95,7 @@ export const PQC: React.FC<PQCPageProps> = ({
   const navigate = useNavigate();
   const [findings, setFindings] = useState<Finding[]>([]);
   const [scans, setScans] = useState<Scan[]>([]);
+  const [cbomComponents, setCbomComponents] = useState<Component[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -110,6 +115,14 @@ export const PQC: React.FC<PQCPageProps> = ({
       ]);
       setFindings(findingsList);
       setScans(scanList);
+      if (scanList.length > 0) {
+        try {
+          const report = await api.getReport(scanList[0].id);
+          setCbomComponents(report.cbom || []);
+        } catch {
+          setCbomComponents([]);
+        }
+      }
     } catch (err) {
       console.error('Failed to load PQC assessment telemetry:', err);
       setLoadError(err instanceof ApiError ? err.userMessage : 'Failed to retrieve assessment findings.');
@@ -373,7 +386,7 @@ export const PQC: React.FC<PQCPageProps> = ({
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                CycloneDX CBOM Specification
+                CycloneDX CBOM Components ({cbomComponents.length})
               </button>
             </div>
           </div>
@@ -390,15 +403,58 @@ export const PQC: React.FC<PQCPageProps> = ({
               }}
             />
           ) : (
-            <div className="card p-12 text-center flex flex-col items-center justify-center">
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-purple-100/70 border border-purple-200/80 text-purple-700 mb-3">
-                <Layers className="h-6 w-6" />
+            cbomComponents.length > 0 ? (
+              <div className="card overflow-hidden">
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full border-collapse text-left text-[13px]">
+                    <thead>
+                      <tr className="border-b border-border bg-surface-2/50 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                        <th className="py-3 px-4 w-48">Component / Algorithm</th>
+                        <th className="py-3 px-4 w-28">Type</th>
+                        <th className="py-3 px-4 w-28">Version</th>
+                        <th className="py-3 px-4 min-w-[200px]">Location</th>
+                        <th className="py-3 px-4 w-36">Detection Method</th>
+                        <th className="py-3 px-4 w-24">Confidence</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border text-foreground">
+                      {cbomComponents.map((c) => (
+                        <tr key={c.component_id} className="hover:bg-surface-2/40 transition-colors">
+                          <td className="py-3 px-4 font-mono font-semibold text-purple-700">
+                            {c.name}
+                          </td>
+                          <td className="py-3 px-4 text-xs font-mono uppercase text-slate-500">
+                            {c.component_type}
+                          </td>
+                          <td className="py-3 px-4 font-mono text-xs text-slate-600">
+                            {c.version || '—'}
+                          </td>
+                          <td className="py-3 px-4 font-mono text-xs text-slate-700">
+                            {c.source_file ? `${c.source_file}${c.line_number ? `:${c.line_number}` : ''}` : '—'}
+                          </td>
+                          <td className="py-3 px-4 text-xs text-slate-600">
+                            {c.detection_method}
+                          </td>
+                          <td className="py-3 px-4 font-mono text-xs font-semibold text-slate-700">
+                            {c.confidence != null ? `${Math.round(c.confidence * 100)}%` : 'HIGH'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <h4 className="font-semibold text-slate-900 text-[15px]">CycloneDX CBOM Generation</h4>
-              <p className="text-slate-500 text-[13px] mt-1 max-w-md">
-                CycloneDX CBOM JSON export will be available in Day 3. Full CBOM serialization will compile discovered cryptographic primitives into standard CycloneDX 1.6 specifications.
-              </p>
-            </div>
+            ) : (
+              <div className="card p-12 text-center flex flex-col items-center justify-center">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-purple-100/70 border border-purple-200/80 text-purple-700 mb-3">
+                  <Layers className="h-6 w-6" />
+                </div>
+                <h4 className="font-semibold text-slate-900 text-[15px]">CycloneDX Cryptographic Bill of Materials</h4>
+                <p className="text-slate-500 text-[13px] mt-1 max-w-md">
+                  No cryptographic components were discovered for the latest scan (clean cryptographic baseline).
+                </p>
+              </div>
+            )
           )}
         </div>
       </div>

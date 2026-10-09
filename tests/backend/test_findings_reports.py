@@ -198,3 +198,18 @@ def test_report_enriched_payload_fields(api, openapi):
         assert "severity" in f
         assert "file_path" in f
         assert "explanation" in f or "description" in f
+
+
+def test_findings_text_search_filter(api, openapi):
+    """Verify text search filter q filters findings properly."""
+    require_endpoint(openapi, "get", F)
+    all_findings = api.get(F).json()
+    if not all_findings:
+        pytest.skip("no findings available to test search filter")
+    first = all_findings[0]
+    query_word = first["title"].split()[0]
+    r = api.get(f"{F}?q={query_word}")
+    assert r.status_code == 200, r.text
+    matched = r.json()
+    assert len(matched) > 0
+    assert any(query_word.lower() in (m["title"] + m["file_path"] + m["explanation"]).lower() for m in matched)

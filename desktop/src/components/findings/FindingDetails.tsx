@@ -123,7 +123,7 @@ export const FindingDetails: React.FC<FindingDetailsProps> = ({
           </p>
         </div>
 
-        {/* Standards & CWE */}
+        {/* Standards, CWE & Engine/Rule Metadata */}
         <div className="grid grid-cols-2 gap-3 text-[12px]">
           <div className="rounded-lg border border-slate-200/60 bg-white/60 p-3">
             <span className="text-[10px] uppercase font-medium tracking-wider text-slate-500">Confidence</span>
@@ -137,6 +137,30 @@ export const FindingDetails: React.FC<FindingDetailsProps> = ({
               {finding.cwe_id || 'CWE-327 / FIPS 203'}
             </div>
           </div>
+          {finding.rule_id && (
+            <div className="rounded-lg border border-slate-200/60 bg-white/60 p-3">
+              <span className="text-[10px] uppercase font-medium tracking-wider text-slate-500">Rule ID</span>
+              <div className="font-mono font-semibold text-slate-900 mt-1 truncate" title={finding.rule_id}>
+                {finding.rule_id}
+              </div>
+            </div>
+          )}
+          {finding.rule_version && (
+            <div className="rounded-lg border border-slate-200/60 bg-white/60 p-3">
+              <span className="text-[10px] uppercase font-medium tracking-wider text-slate-500">Rule Version</span>
+              <div className="font-mono font-semibold text-slate-900 mt-1">
+                v{finding.rule_version}
+              </div>
+            </div>
+          )}
+          {finding.source_engine && (
+            <div className="rounded-lg border border-slate-200/60 bg-white/60 p-3 col-span-2">
+              <span className="text-[10px] uppercase font-medium tracking-wider text-slate-500">Source Engine</span>
+              <div className="font-mono text-slate-800 mt-1">
+                {finding.source_engine}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -440,7 +440,8 @@ def test_real_redis_enqueue_and_cancel_dequeue(alice, real_redis, monkeypatch):
     test_queue = "pqc:scan_queue_test"
     monkeypatch.setattr(rs, "QUEUE_KEY", test_queue)
 
-    scan = create_scan(alice, create_project(alice)["id"], upload_zip(alice)["upload_id"]).json()
+    project_id = create_project(alice)["id"]
+    scan = create_scan(alice, project_id, upload_zip(alice)["upload_id"]).json()
 
     def queued_item_matches(item):
         if item == scan["id"]:  # legacy queue message
@@ -458,6 +459,8 @@ def test_real_redis_enqueue_and_cancel_dequeue(alice, real_redis, monkeypatch):
             if queued_item_matches(item)
         )
         job = ScanJob.decode(queued_payload)
+        assert job.payload_version == 2
+        assert job.project_id == project_id
         assert job.repository_workspace
         assert "sast" in job.selected_engines and "crypto" in job.selected_engines
         assert client.post(f"{API}/scans/{scan['id']}/cancel", headers=alice).status_code == 200

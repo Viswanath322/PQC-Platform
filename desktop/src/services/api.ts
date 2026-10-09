@@ -323,6 +323,7 @@ class ApiClient {
     severity?: string;
     engine?: string;
     finding_category?: string;
+    q?: string;
     limit?: number;
     offset?: number;
   }): Promise<Finding[]> {
@@ -333,6 +334,7 @@ class ApiClient {
     // NEVER send category= as an alias.
     if (params?.engine) query.append('engine', params.engine);
     if (params?.finding_category) query.append('finding_category', params.finding_category);
+    if (params?.q) query.append('q', params.q);
     if (params?.limit !== undefined) query.append('limit', String(params.limit));
     if (params?.offset !== undefined) query.append('offset', String(params.offset));
     const qs = query.toString() ? `?${query.toString()}` : '';

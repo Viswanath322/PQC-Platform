@@ -12,6 +12,10 @@ export interface CryptoComponent {
   status?: string;
   purpose?: string;
   curveOrKeySize?: string;
+  file?: string;
+  line?: number;
+  detectionMethod?: string;
+  confidence?: string | number;
 }
 
 export interface CBOMEntry {

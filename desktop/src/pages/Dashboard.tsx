@@ -55,6 +55,20 @@ export function Dashboard() {
     loadData();
   }, []);
 
+  // Poll only while any scan is in an active non-terminal state
+  useEffect(() => {
+    const hasActiveScan = scans.some((s) =>
+      ['QUEUED', 'INGESTING', 'ANALYZING', 'PROCESSING', 'AI_ANALYSIS'].includes(s.status)
+    );
+    if (!hasActiveScan) return;
+
+    const intervalId = setInterval(() => {
+      loadData();
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [scans]);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await loadData();
@@ -124,7 +138,68 @@ export function Dashboard() {
   const mediumPqcRisk = highCount + weakHashCount;
   const lowPqcRisk = mediumCount + lowCount;
 
-  const currentScan = scans.find((s) => s.status === "QUEUED" || s.status === "ANALYZING") || scans[0] || null;
+  const currentScan = scans.find((s) => s.status === "QUEUED" || s.status === "ANALYZING" || s.status === "INGESTING" || s.status === "PROCESSING") || scans[0] || null;
+
+  const uniqueFiles = new Set(
+    findings.map((f) => f.file_path || f.file).filter(Boolean)
+  );
+  const totalFilesAnalyzed = uniqueFiles.size;
+
+  const getScanStatusBadge = (status?: string) => {
+    switch ((status || '').toUpperCase()) {
+      case 'QUEUED':
+        return {
+          badge: 'bg-amber-100 text-amber-800 border-amber-300',
+          label: 'QUEUED',
+          description: 'Waiting in scan queue',
+        };
+      case 'INGESTING':
+        return {
+          badge: 'bg-blue-100 text-blue-800 border-blue-300 animate-pulse',
+          label: 'INGESTING',
+          description: 'Ingesting repository files',
+        };
+      case 'ANALYZING':
+        return {
+          badge: 'bg-indigo-100 text-indigo-800 border-indigo-300 animate-pulse',
+          label: 'ANALYZING',
+          description: 'Running analysis engines',
+        };
+      case 'PROCESSING':
+      case 'AI_ANALYSIS':
+        return {
+          badge: 'bg-purple-100 text-purple-800 border-purple-300 animate-pulse',
+          label: 'PROCESSING',
+          description: 'Correlating results & CBOM',
+        };
+      case 'COMPLETED':
+        return {
+          badge: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+          label: 'COMPLETED',
+          description: 'Completed successfully',
+        };
+      case 'FAILED':
+        return {
+          badge: 'bg-rose-100 text-rose-800 border-rose-300',
+          label: 'FAILED',
+          description: 'Scan failed',
+        };
+      case 'CANCELLED':
+        return {
+          badge: 'bg-slate-100 text-slate-800 border-slate-300',
+          label: 'CANCELLED',
+          description: 'Scan cancelled',
+        };
+      default:
+        return {
+          badge: 'bg-slate-100 text-slate-800 border-slate-300',
+          label: status || 'UNKNOWN',
+          description: status || 'Idle',
+        };
+    }
+  };
+
+  const statusInfo = currentScan ? getScanStatusBadge(currentScan.status) : null;
 
   // Real activity from actual scans
   const recentActivity = scans.slice(0, 5).map((s) => ({
@@ -236,9 +311,9 @@ export function Dashboard() {
         <div className="card min-w-0 border-purple-200/80 bg-gradient-to-br from-purple-100/50 via-white/70 to-sky-100/40 p-5 shadow-sm">
           <div className="flex items-center justify-between gap-2">
             <span className="eyebrow text-purple-700 font-semibold">Latest assessment</span>
-            {currentScan && (
-              <span className="rounded-full bg-purple-100/70 border border-purple-200/70 px-2 py-0.5 text-[11px] font-medium text-purple-700">
-                {currentScan.status}
+            {statusInfo && (
+              <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${statusInfo.badge}`}>
+                {statusInfo.label}
               </span>
             )}
           </div>
@@ -257,8 +332,8 @@ export function Dashboard() {
             </div>
           )}
           <div className="mt-3 flex items-center justify-between text-[13px]">
-            <span className="text-slate-500 font-medium">
-              {currentScan ? (currentScan.status === 'COMPLETED' ? 'Completed successfully' : 'In progress') : ''}
+            <span className="text-slate-600 font-medium text-[12px]">
+              {statusInfo ? (currentScan?.error_message ? `Failed: ${currentScan.error_message}` : statusInfo.description) : ''}
             </span>
             <button
               onClick={() => navigate("/scans")}
@@ -267,6 +342,30 @@ export function Dashboard() {
               View all →
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Engine Telemetry & Analyzed Files Summary Strip */}
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="card p-3 bg-white/60">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Files Analyzed</span>
+          <div className="mt-1 font-mono text-[18px] font-semibold text-slate-900 tabular">{totalFilesAnalyzed}</div>
+        </div>
+        <div className="card p-3 bg-white/60">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-sky-600">SAST Engine</span>
+          <div className="mt-1 font-mono text-[18px] font-semibold text-sky-700 tabular">{sastFindingsCount}</div>
+        </div>
+        <div className="card p-3 bg-white/60">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-violet-600">Crypto Engine</span>
+          <div className="mt-1 font-mono text-[18px] font-semibold text-violet-700 tabular">{cryptoFindingsCount}</div>
+        </div>
+        <div className="card p-3 bg-white/60">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-cyan-600">Dependency Engine</span>
+          <div className="mt-1 font-mono text-[18px] font-semibold text-cyan-700 tabular">{dependencyFindingsCount}</div>
+        </div>
+        <div className="card p-3 bg-white/60">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-amber-600">Configuration</span>
+          <div className="mt-1 font-mono text-[18px] font-semibold text-amber-700 tabular">{configFindingsCount}</div>
         </div>
       </div>
 

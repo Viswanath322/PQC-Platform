@@ -17,8 +17,17 @@ class ScanJob:
     scan_id: str
     repository_workspace: str
     selected_engines: tuple[str, ...]
-    payload_version: int = 1
+    project_id: str | None = None
+    payload_version: int = 2
     attempt: int = 0
+
+    def __post_init__(self) -> None:
+        if self.payload_version not in (1, 2):
+            raise ValueError("Unsupported scan job payload")
+        if self.payload_version == 2 and not self.project_id:
+            raise ValueError("Scan job has no project ID")
+        if self.payload_version == 1 and self.project_id is not None:
+            raise ValueError("Legacy scan job has an unexpected project ID")
 
     def encode(self) -> str:
         payload = asdict(self)
@@ -28,11 +37,15 @@ class ScanJob:
     @classmethod
     def decode(cls, value: str) -> "ScanJob":
         payload = json.loads(value)
-        if not isinstance(payload, dict) or payload.get("payload_version") != 1:
+        if not isinstance(payload, dict):
+            raise ValueError("Unsupported scan job payload")
+        version = payload.get("payload_version")
+        if version not in (1, 2):
             raise ValueError("Unsupported scan job payload")
         scan_id = payload.get("scan_id")
         workspace = payload.get("repository_workspace")
         engines = payload.get("selected_engines")
+        project_id = payload.get("project_id")
         attempt = payload.get("attempt", 0)
         if not isinstance(scan_id, str) or not scan_id:
             raise ValueError("Scan job has no scan ID")
@@ -40,9 +53,20 @@ class ScanJob:
             raise ValueError("Scan job has no repository workspace")
         if not isinstance(engines, list) or not engines or any(not isinstance(item, str) for item in engines):
             raise ValueError("Scan job has invalid engine configuration")
+        if version == 2 and (not isinstance(project_id, str) or not project_id):
+            raise ValueError("Scan job has no project ID")
+        if version == 1 and project_id is not None:
+            raise ValueError("Legacy scan job has an unexpected project ID")
         if not isinstance(attempt, int) or isinstance(attempt, bool) or attempt < 0:
             raise ValueError("Scan job has invalid retry count")
-        return cls(scan_id, workspace, tuple(engines), 1, attempt)
+        return cls(
+            scan_id=scan_id,
+            repository_workspace=workspace,
+            selected_engines=tuple(engines),
+            project_id=project_id,
+            payload_version=version,
+            attempt=attempt,
+        )
 
     def for_retry(self) -> "ScanJob":
         return replace(self, attempt=self.attempt + 1)
@@ -61,10 +85,20 @@ def get_redis() -> redis.Redis:
     )
 
 
-def enqueue_scan(scan_id: str, repository_workspace: str, selected_engines: tuple[str, ...]) -> bool:
+def enqueue_scan(
+    scan_id: str,
+    project_id: str,
+    repository_workspace: str,
+    selected_engines: tuple[str, ...],
+) -> bool:
     """Queue a stable, versioned analysis job payload."""
     try:
-        job = ScanJob(scan_id, repository_workspace, selected_engines)
+        job = ScanJob(
+            scan_id=scan_id,
+            repository_workspace=repository_workspace,
+            selected_engines=selected_engines,
+            project_id=project_id,
+        )
         return enqueue_job(job)
     except redis.RedisError as exc:
         logger.warning("Redis enqueue failed for scan %s: %s", scan_id, exc)

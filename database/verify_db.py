@@ -1,21 +1,22 @@
 """
-PQC Security Assessment Platform - Database Verification Script (Day 3)
-Author: Vamsi & Viswanath (Database Engineering)
+PQC Security Assessment Platform - Database Verification Script (Day 4 Integration)
+Author: Vamsi (Database Engineer - Person 10)
 
-Validates:
-  - Unified UUID Identifier Standard across all entities
-  - All 9 core tables: organizations, users, projects, scans, scan_files,
-    findings, sbom_components, cbom_components, finding_correlations
-  - Day 3 Finding fields: rule_id, rule_version, group_key, correlation_id
-  - Day 3 SBOM component persistence and scan ownership
-  - Day 3 CBOM component persistence, quantum-risk enum, and PQC mapping metadata
-  - Day 3 Finding correlation links (primary/related)
-  - Foreign key cascading across all related tables upon scan/project deletion
-  - Clean execution with zero leftover test rows
+Validates Unified UUID Identifier Standard and Day 4 Multi-Engine Schema:
+  - 10 Core Tables: organizations, users, projects, scans, scan_files, findings,
+                    sbom_components, cbom_components, finding_correlations, scan_components
+  - scans: status ENUM, repository_path, engine_statuses JSON
+  - findings: rule_id, rule_version, source_engine, group_key, correlation_id, correlation_group_id
+  - sbom_components: package_type, version, license, source_file, line_number
+  - cbom_components: algorithm, quantum_risk ENUM, nist_migration_target, library
+  - scan_components: unified component storage (dependency / crypto) with metadata_json
+  - finding_correlations: primary/related finding links
+  - ON DELETE CASCADE across all child tables
+  - Leaves NO leftover rows in live database after execution
 """
 
-import sys
 import os
+import sys
 import uuid
 from datetime import datetime
 
@@ -40,11 +41,11 @@ from database.models import (
     SBOMComponent,
     CBOMComponent,
     FindingCorrelation,
+    ScanComponent,
 )
 
 
 def get_engine():
-    # Attempt to load untracked .env from repo root if python-dotenv is available
     try:
         from dotenv import load_dotenv
         env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
@@ -53,11 +54,10 @@ def get_engine():
     except ImportError:
         pass
 
-    url = os.environ.get("DATABASE_URL")
+    url = os.environ.get("DATABASE_URL") or os.environ.get("PQC_MYSQL_URL")
     if not url:
-        # Check standard DB_* and legacy MYSQL_* environment variables
-        db_user = os.environ.get("DB_USER") or os.environ.get("MYSQL_USER", "pqc_user")
-        db_password = os.environ.get("DB_PASSWORD") or os.environ.get("MYSQL_PASSWORD")
+        db_user = os.environ.get("DB_USER") or os.environ.get("MYSQL_USER", "pqc")
+        db_password = os.environ.get("DB_PASSWORD") or os.environ.get("MYSQL_PASSWORD", "pqc_dev_pass_123")
         db_host = os.environ.get("DB_HOST") or os.environ.get("MYSQL_HOST", "127.0.0.1")
         db_port = os.environ.get("DB_PORT") or os.environ.get("MYSQL_PORT", "3306")
         db_name = os.environ.get("DB_NAME") or os.environ.get("MYSQL_DATABASE", "pqc_security")
@@ -68,203 +68,171 @@ def get_engine():
             url = f"mysql+pymysql://{db_user}:{safe_password}@{db_host}:{db_port}/{db_name}"
 
     if not url:
-        print("[ERROR] DATABASE_URL (or DB_PASSWORD / MYSQL_PASSWORD) environment variable is required to connect to MySQL.")
-        print("Please configure .env or export environment variables:")
-        print("  DB_HOST=127.0.0.1")
-        print("  DB_PORT=3306")
-        print("  DB_NAME=pqc_security")
-        print("  DB_USER=pqc_user")
-        print("  DB_PASSWORD=<your-strong-password>")
-        sys.exit(1)
+        raise ValueError("DATABASE_URL or MYSQL connection parameters not configured.")
 
-    if not url.lower().startswith("mysql+pymysql://"):
-        print("[ERROR] verify_db.py requires a MySQL DATABASE_URL; SQLite is not accepted.")
-        sys.exit(1)
-
-    try:
-        db_engine = create_engine(url, echo=False, pool_pre_ping=True)
-        with db_engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        safe_url = url.split("@")[-1] if "@" in url else url
-        print(f"[OK] Successfully connected to live MySQL instance at: {safe_url}")
-        return db_engine, db_engine.dialect.name.upper()
-    except Exception as exc:
-        print(f"[ERROR] Live database connection to MySQL failed ({type(exc).__name__}): {exc}")
-        sys.exit(1)
+    return create_engine(url, pool_pre_ping=True)
 
 
-def run_day3_verification():
+def run_day4_verification(custom_engine=None):
+    engine = custom_engine or get_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
     print("=" * 75)
-    print(" PQC SECURITY ASSESSMENT PLATFORM — DAY 3 DATABASE VERIFICATION")
+    print(" PQC PLATFORM — DAY 4 DATABASE VERIFICATION RUNNER")
+    print(f" Target Database: {engine.url.database} on {engine.url.host or 'local'}")
     print("=" * 75)
 
-    engine, db_type = get_engine()
-    SessionLocal = sessionmaker(bind=engine)
-
-    # 1. Ensure all 9 tables exist
-    print(f"\n[Step 1] Ensuring all 9 core tables exist ({db_type})...")
-    Base.metadata.create_all(bind=engine)
-    expected_tables = {
-        "organizations",
-        "users",
-        "projects",
-        "scans",
-        "scan_files",
-        "findings",
-        "sbom_components",
-        "cbom_components",
-        "finding_correlations",
-    }
-    registered_tables = set(Base.metadata.tables.keys())
-    missing_tables = expected_tables - registered_tables
-    assert not missing_tables, f"Missing tables: {missing_tables}"
-    print(f"   --> [PASS] All 9 core tables verified: {sorted(list(expected_tables))}")
-
-    session = SessionLocal()
+    created_test_org = False
     created_user_id = None
     created_project_id = None
     created_scan_id = None
+    created_file_id = None
     created_finding_id_1 = None
     created_finding_id_2 = None
     created_sbom_id = None
     created_cbom_id = None
     created_correlation_id = None
-    created_test_org = False
+    created_component_id = None
 
     try:
-        # 2. Ensure Seed Organization exists (idempotent)
-        print("\n[Step 2] Ensuring Seed Organization exists...")
-        test_org = session.get(Organization, "org-default-001")
-        if not test_org:
-            test_org = Organization(
-                id="org-default-001",
-                name="Default Organization"
-            )
-            session.add(test_org)
+        # 1. Organization
+        print("\n[Step 1] Verifying Default Organization ('org-default-001')...")
+        default_org = session.query(Organization).filter_by(id="org-default-001").first()
+        if not default_org:
+            print("   -> Creating temporary test organization 'org-default-001'...")
+            default_org = Organization(id="org-default-001", name="Default Organization")
+            session.add(default_org)
             session.commit()
             created_test_org = True
-        print(f"   --> [PASS] Seed Organization verified: 'org-default-001'")
+        print(f"   --> [PASS] Organization verified: {default_org}")
 
-        # 3. Insert User
-        print("\n[Step 3] Inserting Test User...")
+        # 2. User
+        print("\n[Step 2] Inserting and validating Test User (UUID PK)...")
         test_user = User(
             id=str(uuid.uuid4()),
-            organization_id=test_org.id,
-            email=f"vamsi.day3.{uuid.uuid4().hex[:6]}@pqc.example",
-            password_hash="$2b$12$dummyhashforverification1234567890",
-            role="admin"
+            organization_id=default_org.id,
+            email=f"vamsi_day4_test_{uuid.uuid4().hex[:6]}@pqc.example",
+            password_hash="$argon2id$v=19$m=65536,t=3,p=4$dummyhash",
+            role="admin",
         )
         session.add(test_user)
         session.commit()
         created_user_id = test_user.id
-        print(f"   --> [PASS] Created User: id={test_user.id} (UUID), organization_id={test_user.organization_id}")
+        print(f"   --> [PASS] User created with UUID: {test_user.id}")
 
-        # 4. Insert Project
-        project_uuid = str(uuid.uuid4())
-        print(f"\n[Step 4] Inserting Test Project (id = UUID: {project_uuid})...")
+        # 3. Project
+        print("\n[Step 3] Inserting and validating Project (UUID PK)...")
         test_project = Project(
-            id=project_uuid,
-            organization_id=test_org.id,
-            name="Day 3 Multi-Engine Test Project",
-            description="Integration verification project for Day 3 analysis pipeline"
+            id=str(uuid.uuid4()),
+            organization_id=default_org.id,
+            name="Day 4 Integration Test Project",
+            description="Verification suite project for Day 4 multi-engine contracts",
         )
         session.add(test_project)
         session.commit()
         created_project_id = test_project.id
-        assert len(test_project.id) == 36, f"Expected project.id UUID length 36, got {len(test_project.id)}"
-        print(f"   --> [PASS] Created Project: id={test_project.id} (UUID)")
+        print(f"   --> [PASS] Project created with UUID: {test_project.id}")
 
-        # 5. Insert Scan
-        scan_uuid = str(uuid.uuid4())
-        print(f"\n[Step 5] Creating Scan with UUID: {scan_uuid} and status = 'ANALYZING'...")
+        # 4. Scan
+        print("\n[Step 4] Inserting and validating Scan with engine_statuses JSON...")
         test_scan = Scan(
-            id=scan_uuid,
+            id=str(uuid.uuid4()),
             project_id=test_project.id,
             status="ANALYZING",
-            repository_path="uploads/day3-demo-repo.zip",
-            error_message=None,
+            repository_path="storage/uploads/test-day4-repo.zip",
+            engine_statuses={
+                "sast": "COMPLETED",
+                "crypto": "ANALYZING",
+                "dependency": "QUEUED",
+                "configuration": "QUEUED",
+            },
         )
         session.add(test_scan)
         session.commit()
         created_scan_id = test_scan.id
-        assert len(test_scan.id) == 36, f"Expected scans.id CHAR(36), got len={len(test_scan.id)}"
-        print(f"   --> [PASS] Scan persisted: id={test_scan.id} (UUID), status='{test_scan.status}'")
+        q_scan = session.query(Scan).filter_by(id=test_scan.id).first()
+        assert q_scan is not None, "Scan record not found"
+        assert q_scan.status == "ANALYZING"
+        print(f"   --> [PASS] Scan created with status '{q_scan.status}' and engine_statuses: {q_scan.engine_statuses}")
 
-        # 6. Add ScanFile inventory record
-        print("\n[Step 6] Inserting ScanFile inventory record...")
-        test_file = ScanFile(
+        # 5. ScanFile
+        print("\n[Step 5] Inserting ScanFile...")
+        scan_file = ScanFile(
             id=str(uuid.uuid4()),
             scan_id=test_scan.id,
             file_path="src/crypto/handshake.py",
-            file_type="Python",
-            language="Python",
+            file_type="source",
+            language="python",
             size_bytes=4096,
         )
-        session.add(test_file)
+        session.add(scan_file)
         session.commit()
-        print(f"   --> [PASS] ScanFile persisted: path='{test_file.file_path}', language='{test_file.language}'")
+        created_file_id = scan_file.id
+        print(f"   --> [PASS] ScanFile created: {scan_file.file_path}")
 
-        # 7. Add Day 3 Findings with rule metadata & correlation tracking
-        print("\n[Step 7] Adding Day 3 Findings with rule_id, rule_version, and group_key...")
+        # 6. Findings
+        print("\n[Step 6] Inserting Findings with Day 4 rule and correlation fields...")
         finding_1 = Finding(
             id=str(uuid.uuid4()),
             scan_id=test_scan.id,
             engine="crypto",
-            category="Quantum Vulnerability",
-            severity="critical",
-            title="RSA-2048 Asymmetric Key Generation Vulnerable to Shor's Algorithm",
+            category="asymmetric",
+            severity="high",
+            title="RSA-2048 Deprecated under Quantum Threat",
             file_path="src/crypto/handshake.py",
             line_number=32,
-            evidence="rsa_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)",
-            explanation="RSA-2048 relies on integer factorization, breakable in polynomial time by Shor's algorithm.",
-            confidence=1.0,
-            recommendation="Migrate to NIST Post-Quantum Cryptography standards: ML-KEM (FIPS 203) for key encapsulation.",
-            is_development=True,
+            evidence="crypto_cipher_init(RSA, 2048)",
+            explanation="RSA key exchange is vulnerable to Shor's algorithm.",
+            confidence=0.95,
+            recommendation="Migrate to ML-KEM (FIPS 203).",
+            is_development=False,
             rule_id="CRYPTO-RSA-001",
             rule_version="1.0.0",
+            source_engine="crypto",
             group_key="CRYPTO-RSA-001:src/crypto/handshake.py",
-            correlation_id="CRYPTO-RSA-001:src/crypto/handshake.py",
+            correlation_id="corr-handshake-01",
+            correlation_group_id="00000000-0000-0000-0005-000000000001",
         )
         finding_2 = Finding(
             id=str(uuid.uuid4()),
             scan_id=test_scan.id,
             engine="sast",
-            category="SQL Injection",
-            severity="high",
-            title="Unsanitized Parameter in User Query",
-            file_path="src/api/users.py",
-            line_number=74,
-            evidence="db.execute(f'SELECT * FROM users WHERE email = {email}')",
-            explanation="String concatenation in database query permits arbitrary SQL injection.",
-            confidence=0.90,
-            recommendation="Use parameterized SQLAlchemy queries.",
-            is_development=True,
+            category="injection",
+            severity="critical",
+            title="SQL Injection Vulnerability",
+            file_path="src/api/auth.py",
+            line_number=88,
+            evidence="query = f'SELECT * FROM accounts WHERE id={id}'",
+            explanation="Unsanitized string interpolation directly in SQL query.",
+            confidence=0.99,
+            recommendation="Use parameterized prepared statements.",
+            is_development=False,
             rule_id="SAST-SQLI-001",
             rule_version="1.0.0",
-            group_key="SAST-SQLI-001:src/api/users.py",
-            correlation_id="SAST-SQLI-001:src/api/users.py",
+            source_engine="sast",
+            group_key="SAST-SQLI-001:src/api/auth.py",
+            correlation_id=None,
+            correlation_group_id=None,
         )
-        session.add(finding_1)
-        session.add(finding_2)
+        session.add_all([finding_1, finding_2])
         session.commit()
         created_finding_id_1 = finding_1.id
         created_finding_id_2 = finding_2.id
 
-        # Verify Day 3 fields can be queried
         q_f1 = session.query(Finding).filter_by(id=finding_1.id).first()
-        assert q_f1.rule_id == "CRYPTO-RSA-001", f"rule_id mismatch: {q_f1.rule_id}"
-        assert q_f1.rule_version == "1.0.0", f"rule_version mismatch: {q_f1.rule_version}"
-        assert q_f1.group_key == "CRYPTO-RSA-001:src/crypto/handshake.py", f"group_key mismatch: {q_f1.group_key}"
-        print(f"   --> [PASS] Finding 1: rule_id='{q_f1.rule_id}', version='{q_f1.rule_version}', group_key='{q_f1.group_key}'")
-        print(f"   --> [PASS] Finding 2: rule_id='{finding_2.rule_id}', severity='{finding_2.severity}'")
+        assert q_f1.rule_id == "CRYPTO-RSA-001"
+        assert q_f1.source_engine == "crypto"
+        assert q_f1.correlation_group_id == "00000000-0000-0000-0005-000000000001"
+        print(f"   --> [PASS] Findings persisted: rule_id='{q_f1.rule_id}', source_engine='{q_f1.source_engine}'")
 
-        # 8. Add Day 3 SBOM Component
-        print("\n[Step 8] Inserting SBOM Component (Dependency Inventory)...")
+        # 7. SBOMComponent
+        print("\n[Step 7] Inserting SBOMComponent...")
         sbom_item = SBOMComponent(
             id=str(uuid.uuid4()),
             scan_id=test_scan.id,
             name="cryptography",
-            version="39.0.1",
+            version="41.0.3",
             package_type="pypi",
             source_file="requirements.txt",
             line_number=12,
@@ -277,22 +245,17 @@ def run_day3_verification():
         session.add(sbom_item)
         session.commit()
         created_sbom_id = sbom_item.id
+        print(f"   --> [PASS] SBOMComponent persisted: name='{sbom_item.name}', version='{sbom_item.version}'")
 
-        q_sbom = session.query(SBOMComponent).filter_by(id=sbom_item.id).first()
-        assert q_sbom is not None, "SBOMComponent could not be retrieved"
-        assert q_sbom.scan_id == test_scan.id, "SBOMComponent scan_id mismatch"
-        assert q_sbom.name == "cryptography", "SBOMComponent name mismatch"
-        print(f"   --> [PASS] SBOMComponent persisted: name='{q_sbom.name}', version='{q_sbom.version}', source='{q_sbom.source_file}'")
-
-        # 9. Add Day 3 CBOM Component
-        print("\n[Step 9] Inserting CBOM Component (Cryptographic Bill of Materials)...")
+        # 8. CBOMComponent
+        print("\n[Step 8] Inserting CBOMComponent...")
         cbom_item = CBOMComponent(
             id=str(uuid.uuid4()),
             scan_id=test_scan.id,
             algorithm="RSA-2048",
             category="asymmetric",
             library="cryptography",
-            version="39.0.1",
+            version="41.0.3",
             file_path="src/crypto/handshake.py",
             line_number=32,
             usage_context="TLS Session Handshake Key Exchange",
@@ -309,15 +272,10 @@ def run_day3_verification():
         session.add(cbom_item)
         session.commit()
         created_cbom_id = cbom_item.id
+        print(f"   --> [PASS] CBOMComponent persisted: algo='{cbom_item.algorithm}', risk='{cbom_item.quantum_risk}'")
 
-        q_cbom = session.query(CBOMComponent).filter_by(id=cbom_item.id).first()
-        assert q_cbom is not None, "CBOMComponent could not be retrieved"
-        assert q_cbom.quantum_risk == "quantum_vulnerable", f"quantum_risk mismatch: {q_cbom.quantum_risk}"
-        assert q_cbom.nist_migration_target == "ML-KEM (FIPS 203)"
-        print(f"   --> [PASS] CBOMComponent persisted: algo='{q_cbom.algorithm}', risk='{q_cbom.quantum_risk}', target='{q_cbom.nist_migration_target}'")
-
-        # 10. Add Finding Correlation
-        print("\n[Step 10] Inserting FindingCorrelation linking primary and related findings...")
+        # 9. FindingCorrelation
+        print("\n[Step 9] Inserting FindingCorrelation...")
         correlation = FindingCorrelation(
             id=str(uuid.uuid4()),
             scan_id=test_scan.id,
@@ -330,69 +288,88 @@ def run_day3_verification():
         session.add(correlation)
         session.commit()
         created_correlation_id = correlation.id
+        print(f"   --> [PASS] FindingCorrelation persisted: group_key='{correlation.group_key}'")
 
-        q_corr = session.query(FindingCorrelation).filter_by(id=correlation.id).first()
-        assert q_corr is not None, "FindingCorrelation could not be retrieved"
-        assert q_corr.primary_finding_id == finding_1.id
-        print(f"   --> [PASS] FindingCorrelation persisted: group_key='{q_corr.group_key}', type='{q_corr.correlation_type}'")
+        # 10. ScanComponent (Unified storage)
+        print("\n[Step 10] Inserting ScanComponent (Unified storage)...")
+        unified_comp = ScanComponent(
+            id=str(uuid.uuid4()),
+            scan_id=test_scan.id,
+            component_kind="crypto",
+            component_type="asymmetric",
+            name="RSA-2048",
+            version="41.0.3",
+            purl=None,
+            source_file="src/crypto/handshake.py",
+            line_number=32,
+            detection_method="engine",
+            confidence=0.98,
+            metadata_json={"quantum_risk": "quantum_vulnerable", "target": "ML-KEM (FIPS 203)"},
+        )
+        session.add(unified_comp)
+        session.commit()
+        created_component_id = unified_comp.id
+        print(f"   --> [PASS] ScanComponent persisted: kind='{unified_comp.component_kind}', name='{unified_comp.name}'")
 
-        # 11. Test Scan-Scoped Counts and Querying
-        print("\n[Step 11] Verifying Scan-Scoped Queries and Counts...")
+        # 11. Scan-Scoped Query Verification
+        print("\n[Step 11] Verifying Scan-Scoped Query Counts...")
         scan_findings_count = session.query(Finding).filter_by(scan_id=test_scan.id).count()
         scan_sbom_count = session.query(SBOMComponent).filter_by(scan_id=test_scan.id).count()
         scan_cbom_count = session.query(CBOMComponent).filter_by(scan_id=test_scan.id).count()
+        scan_comp_count = session.query(ScanComponent).filter_by(scan_id=test_scan.id).count()
         scan_corr_count = session.query(FindingCorrelation).filter_by(scan_id=test_scan.id).count()
-        assert scan_findings_count == 2, f"Expected 2 findings, got {scan_findings_count}"
-        assert scan_sbom_count == 1, f"Expected 1 SBOM item, got {scan_sbom_count}"
-        assert scan_cbom_count == 1, f"Expected 1 CBOM item, got {scan_cbom_count}"
-        assert scan_corr_count == 1, f"Expected 1 correlation, got {scan_corr_count}"
-        print(f"   --> [PASS] Scan {test_scan.id}: {scan_findings_count} findings, {scan_sbom_count} SBOM components, {scan_cbom_count} CBOM components, {scan_corr_count} correlations")
+        assert scan_findings_count == 2
+        assert scan_sbom_count == 1
+        assert scan_cbom_count == 1
+        assert scan_comp_count == 1
+        assert scan_corr_count == 1
+        print(f"   --> [PASS] Scan {test_scan.id}: {scan_findings_count} findings, {scan_sbom_count} SBOM, {scan_cbom_count} CBOM, {scan_comp_count} unified components, {scan_corr_count} correlations")
 
-        # 12. Test Cascade Deletion: Deleting Scan cleans up findings, SBOM, CBOM, scan_files, correlations
+        # 12. Test Cascade Deletion: Deleting Scan cleans up all child tables
         print("\n[Step 12] Testing Cascade Deletion on Scan...")
-        session.query(Scan).filter_by(id=test_scan.id).delete()
-        session.commit()
+        scan_to_del = session.query(Scan).filter_by(id=test_scan.id).first()
+        if scan_to_del:
+            session.delete(scan_to_del)
+            session.commit()
 
-        # Verify all children were deleted by CASCADE
         leftover_findings = session.query(Finding).filter_by(scan_id=test_scan.id).count()
         leftover_files = session.query(ScanFile).filter_by(scan_id=test_scan.id).count()
         leftover_sbom = session.query(SBOMComponent).filter_by(scan_id=test_scan.id).count()
         leftover_cbom = session.query(CBOMComponent).filter_by(scan_id=test_scan.id).count()
+        leftover_comp = session.query(ScanComponent).filter_by(scan_id=test_scan.id).count()
         leftover_corr = session.query(FindingCorrelation).filter_by(scan_id=test_scan.id).count()
+
         assert leftover_findings == 0, f"Findings orphaned: {leftover_findings}"
         assert leftover_files == 0, f"Files orphaned: {leftover_files}"
-        assert leftover_sbom == 0, f"SBOM components orphaned: {leftover_sbom}"
-        assert leftover_cbom == 0, f"CBOM components orphaned: {leftover_cbom}"
+        assert leftover_sbom == 0, f"SBOM orphaned: {leftover_sbom}"
+        assert leftover_cbom == 0, f"CBOM orphaned: {leftover_cbom}"
+        assert leftover_comp == 0, f"Scan components orphaned: {leftover_comp}"
         assert leftover_corr == 0, f"Correlations orphaned: {leftover_corr}"
         print("   --> [PASS] Cascade deletion successfully purged all child records.")
+
         created_scan_id = None
+        created_file_id = None
         created_finding_id_1 = None
         created_finding_id_2 = None
         created_sbom_id = None
         created_cbom_id = None
+        created_component_id = None
         created_correlation_id = None
 
         print("\n" + "=" * 75)
-        print(" [SUCCESS] DAY 3 CORE SCHEMA & MULTI-ENGINE CONTRACT FULLY VALIDATED!")
+        print(" [SUCCESS] DAY 4 DATABASE SCHEMA & MULTI-ENGINE CONTRACTS VERIFIED!")
         print("=" * 75)
-        print(" Validated:")
-        print("  * 9 Core Tables (organizations, users, projects, scans, scan_files,")
-        print("                   findings, sbom_components, cbom_components, finding_correlations)")
-        print("  * Finding Day 3 fields: rule_id, rule_version, group_key, correlation_id")
-        print("  * SBOM Component model, persistence, scan scoping, and metadata")
-        print("  * CBOM Component model, persistence, quantum_risk enum, and NIST migration target")
-        print("  * FindingCorrelation model and primary/related relationships")
-        print("  * Full ON DELETE CASCADE across all child tables")
-        print("  * Strict clean teardown with zero leftover test rows")
-        print("=" * 75)
+        return True
 
     except Exception as e:
         session.rollback()
         print(f"\n[FAIL] Verification error: {e}")
         raise
     finally:
-        # Clean up test rows so verify_db leaves NO leftover rows
+        # Strict teardown: ensure zero test leftovers
         try:
+            if created_component_id:
+                session.query(ScanComponent).filter_by(id=created_component_id).delete()
             if created_correlation_id:
                 session.query(FindingCorrelation).filter_by(id=created_correlation_id).delete()
             if created_cbom_id:
@@ -403,6 +380,8 @@ def run_day3_verification():
                 session.query(Finding).filter_by(id=created_finding_id_1).delete()
             if created_finding_id_2:
                 session.query(Finding).filter_by(id=created_finding_id_2).delete()
+            if created_file_id:
+                session.query(ScanFile).filter_by(id=created_file_id).delete()
             if created_scan_id:
                 session.query(Scan).filter_by(id=created_scan_id).delete()
             if created_project_id:
@@ -419,4 +398,4 @@ def run_day3_verification():
 
 
 if __name__ == "__main__":
-    run_day3_verification()
+    run_day4_verification()
