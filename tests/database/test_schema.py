@@ -284,14 +284,15 @@ def test_seed_users_are_clearly_dev_only(q):
         assert r["email"].endswith((".local", ".test", ".example")), f"seed user {r['email']} looks like a real domain"
 
 
-def test_seed_password_hash_is_real_bcrypt(q):
-    """A bcrypt hash is `$2b$NN$` + 53 chars of [./A-Za-z0-9] (60 total). Placeholders fail this."""
-    rx = re.compile(r"^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$")
+def test_seed_password_hash_is_real_hash(q):
+    """The backend accepts Argon2id (default) or bcrypt. Placeholders fail both formats."""
+    rx = re.compile(r"^(\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}"
+                    r"|\$argon2id\$v=19\$m=\d+,t=\d+,p=\d+\$[A-Za-z0-9+/]{16,}\$[A-Za-z0-9+/]{32,})$")
     rows = q("SELECT email,password_hash FROM users WHERE role='admin' AND email NOT LIKE 'qa-%%'")
     if not rows:
         blocked("no seeded admin user found (see test_seed_data_present)")
     bad = [(r["email"], r["password_hash"], len(r["password_hash"])) for r in rows if not rx.match(r["password_hash"])]
-    assert not bad, f"seed password_hash is not a valid bcrypt hash: {bad}"
+    assert not bad, f"seed password_hash is not a valid Argon2id or bcrypt hash: {bad}"
 
 
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")

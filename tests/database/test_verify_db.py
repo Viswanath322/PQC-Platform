@@ -3,6 +3,7 @@
 The script is looked up under PQC_SCAN_ROOT (default: repo root) at database/verify_db.py; Blocked if absent.
 """
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -40,7 +41,9 @@ def test_verify_db_script_passes_and_leaves_no_rows(q, run):
         out = proc.stdout + proc.stderr
         why = next((ln for ln in out.splitlines() if "[FAIL]" in ln or "Error" in ln), out.strip()[-200:])
         assert proc.returncode == 0, f"FINDING: verify_db.py failed on the freshly seeded database (exit {proc.returncode}): {why[:300]}"
-        assert "Successfully connected to live MySQL" in proc.stdout, "script fell back to SQLite instead of testing MySQL"
+        target = re.search(r"Target Database: (\S+) on (\S+)", proc.stdout)
+        assert target and "sqlite" not in proc.stdout.lower(), "script fell back to SQLite instead of testing MySQL"
+        assert target.group(2) == urlparse(MYSQL_URL).hostname, f"script tested {target.group(2)}, not the MySQL under test"
         assert not leftovers, ("FINDING: verify_db.py leaves rows behind in the live database: "
                                f"{ {t: len(v) for t, v in leftovers.items()} }")
     finally:
