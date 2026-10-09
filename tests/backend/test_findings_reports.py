@@ -164,7 +164,8 @@ def test_report_totals_match_findings(api, openapi):
         r = api.get(f"{R}/{sid}")
         assert r.status_code == 200, r.text
         rep = r.json()
-        mine = [f for f in items if f["scan_id"] == sid]
+        # one page of /findings spans every scan, so fetch this scan on its own
+        mine = api.get(F, params={"scan_id": sid, "limit": 500}).json()
         assert rep["total_findings"] == len(mine) == sum(rep["findings_by_severity"].values())
         for sev in SEVERITIES:
             assert rep["findings_by_severity"].get(sev, 0) == sum(1 for f in mine if str(f["severity"]).lower() == sev)
